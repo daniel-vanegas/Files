@@ -1,0 +1,4670 @@
+{
+  "scenario": "E01",
+  "seed": 20261013,
+  "map_yaml": "/home/devan/GIT/mapless/src/Hardware/justina_description/webots_env/environments/maps/E01_C2_02/map_E01_C2_02_prohibition.yaml",
+  "diagnostic_only": true,
+  "constraints": {
+    "euclidean_min_m": 2.0,
+    "euclidean_max_m": 3.0,
+    "path_length_max_m": 3.0,
+    "clearance_min_m": 0.35,
+    "hard_footprint_clearance_m": 0.35,
+    "preferred_clearance_m": 0.45,
+    "max_near_optimal_ratio": 1.18
+  },
+  "attempts": 1200,
+  "rejections": {
+    "baseline_smoothing_not_safe": 288,
+    "class_quota_full_straight": 655,
+    "path_too_long": 25,
+    "class_quota_full_semi_complex": 182,
+    "no_endpoint_pair": 2,
+    "class_quota_full_complex": 17,
+    "detour_turns_not_supported_by_obstacles": 1
+  },
+  "paths": [
+    {
+      "id": 1,
+      "purposeful_class": "straight",
+      "reason": "direct_line_fits_clearance",
+      "start": [
+        -0.6750000000000007,
+        3.5550000000000006
+      ],
+      "goal": [
+        0.22499999999999964,
+        1.3049999999999997
+      ],
+      "poses": [
+        [
+          -0.6750000000000007,
+          3.5550000000000006
+        ],
+        [
+          0.22499999999999964,
+          1.3049999999999997
+        ]
+      ],
+      "metrics": {
+        "euclidean_distance_m": 2.423324163210528,
+        "path_length_m": 2.423324163210528,
+        "sinuosity": 1.0,
+        "max_lateral_deviation_m": 3.022573056195221e-17,
+        "lateral_lobes": 0.0,
+        "lateral_sign_changes": 0.0,
+        "max_turn_window_deg": 0.0,
+        "total_turn_deg": 0.0,
+        "turn_lobes": 0.0,
+        "num_turns_30": 0.0,
+        "num_turns_60": 0.0,
+        "turn_sign_changes": 0.0,
+        "reverse_progress_m": 0.0,
+        "max_backtrack_m": 0.0,
+        "turn_event_count": 0,
+        "supported_turn_count": 0,
+        "supported_turn_fraction": 0.0,
+        "supported_maneuver_count": 0,
+        "min_clearance_m": 0.5852349955359814,
+        "mean_clearance_m": 0.7170320839605686,
+        "direct_line_min_clearance_m": 0.5852349955359814,
+        "direct_line_collision": false,
+        "detour_ratio": 1.0,
+        "near_obstacle_fraction": 0.78,
+        "obstacle_interaction": "near_obstacle",
+        "purposeful_class_reason": "direct_line_fits_clearance"
+      },
+      "turn_events": [],
+      "near_optimal_baseline_length_m": 2.423324163210528
+    },
+    {
+      "id": 2,
+      "purposeful_class": "straight",
+      "reason": "direct_line_fits_clearance",
+      "start": [
+        0.8949999999999996,
+        3.3050000000000006
+      ],
+      "goal": [
+        -1.6450000000000005,
+        3.0650000000000004
+      ],
+      "poses": [
+        [
+          0.8949999999999996,
+          3.3050000000000006
+        ],
+        [
+          -1.6450000000000005,
+          3.0650000000000004
+        ]
+      ],
+      "metrics": {
+        "euclidean_distance_m": 2.55131338725763,
+        "path_length_m": 2.5513133872576295,
+        "sinuosity": 1.0,
+        "max_lateral_deviation_m": 9.741177206700118e-17,
+        "lateral_lobes": 0.0,
+        "lateral_sign_changes": 0.0,
+        "max_turn_window_deg": 0.0,
+        "total_turn_deg": 0.0,
+        "turn_lobes": 0.0,
+        "num_turns_30": 0.0,
+        "num_turns_60": 0.0,
+        "turn_sign_changes": 0.0,
+        "reverse_progress_m": 0.0,
+        "max_backtrack_m": 0.0,
+        "turn_event_count": 0,
+        "supported_turn_count": 0,
+        "supported_turn_fraction": 0.0,
+        "supported_maneuver_count": 0,
+        "min_clearance_m": 0.383275357934736,
+        "mean_clearance_m": 0.6325487395695174,
+        "direct_line_min_clearance_m": 0.383275357934736,
+        "direct_line_collision": false,
+        "detour_ratio": 0.9999999999999998,
+        "near_obstacle_fraction": 0.7924528301886793,
+        "obstacle_interaction": "direct_line_too_close",
+        "purposeful_class_reason": "direct_line_fits_clearance"
+      },
+      "turn_events": [],
+      "near_optimal_baseline_length_m": 2.55131338725763
+    },
+    {
+      "id": 3,
+      "purposeful_class": "straight",
+      "reason": "direct_line_fits_clearance",
+      "start": [
+        0.5649999999999995,
+        1.5649999999999995
+      ],
+      "goal": [
+        -0.04499999999999993,
+        -0.39500000000000046
+      ],
+      "poses": [
+        [
+          0.5649999999999995,
+          1.5649999999999995
+        ],
+        [
+          -0.04499999999999993,
+          -0.39500000000000046
+        ]
+      ],
+      "metrics": {
+        "euclidean_distance_m": 2.0527298896834916,
+        "path_length_m": 2.0527298896834916,
+        "sinuosity": 1.0,
+        "max_lateral_deviation_m": 2.0809654187795265e-17,
+        "lateral_lobes": 0.0,
+        "lateral_sign_changes": 0.0,
+        "max_turn_window_deg": 0.0,
+        "total_turn_deg": 0.0,
+        "turn_lobes": 0.0,
+        "num_turns_30": 0.0,
+        "num_turns_60": 0.0,
+        "turn_sign_changes": 0.0,
+        "reverse_progress_m": 0.0,
+        "max_backtrack_m": 0.0,
+        "turn_event_count": 0,
+        "supported_turn_count": 0,
+        "supported_turn_fraction": 0.0,
+        "supported_maneuver_count": 0,
+        "min_clearance_m": 0.7810249675906654,
+        "mean_clearance_m": 1.0517707090648536,
+        "direct_line_min_clearance_m": 0.7810249675906654,
+        "direct_line_collision": false,
+        "detour_ratio": 1.0,
+        "near_obstacle_fraction": 0.046511627906976744,
+        "obstacle_interaction": "open_space",
+        "purposeful_class_reason": "direct_line_fits_clearance"
+      },
+      "turn_events": [],
+      "near_optimal_baseline_length_m": 2.0527298896834916
+    },
+    {
+      "id": 4,
+      "purposeful_class": "straight",
+      "reason": "direct_line_fits_clearance",
+      "start": [
+        -0.22500000000000053,
+        0.07500000000000018
+      ],
+      "goal": [
+        -0.08500000000000085,
+        -2.165
+      ],
+      "poses": [
+        [
+          -0.22500000000000053,
+          0.07500000000000018
+        ],
+        [
+          -0.08500000000000085,
+          -2.165
+        ]
+      ],
+      "metrics": {
+        "euclidean_distance_m": 2.244370735863396,
+        "path_length_m": 2.2443707358633955,
+        "sinuosity": 1.0,
+        "max_lateral_deviation_m": 3.6734012835969394e-18,
+        "lateral_lobes": 0.0,
+        "lateral_sign_changes": 0.0,
+        "max_turn_window_deg": 0.0,
+        "total_turn_deg": 0.0,
+        "turn_lobes": 0.0,
+        "num_turns_30": 0.0,
+        "num_turns_60": 0.0,
+        "turn_sign_changes": 0.0,
+        "reverse_progress_m": 0.0,
+        "max_backtrack_m": 0.0,
+        "turn_event_count": 0,
+        "supported_turn_count": 0,
+        "supported_turn_fraction": 0.0,
+        "supported_maneuver_count": 0,
+        "min_clearance_m": 0.36,
+        "mean_clearance_m": 0.71204547476514,
+        "direct_line_min_clearance_m": 0.36,
+        "direct_line_collision": false,
+        "detour_ratio": 0.9999999999999998,
+        "near_obstacle_fraction": 0.5217391304347826,
+        "obstacle_interaction": "direct_line_too_close",
+        "purposeful_class_reason": "direct_line_fits_clearance"
+      },
+      "turn_events": [],
+      "near_optimal_baseline_length_m": 2.244370735863396
+    },
+    {
+      "id": 5,
+      "purposeful_class": "straight",
+      "reason": "direct_line_fits_clearance",
+      "start": [
+        -1.3250000000000002,
+        -0.4450000000000003
+      ],
+      "goal": [
+        0.1349999999999998,
+        1.4749999999999996
+      ],
+      "poses": [
+        [
+          -1.3250000000000002,
+          -0.4450000000000003
+        ],
+        [
+          0.1349999999999998,
+          1.4749999999999996
+        ]
+      ],
+      "metrics": {
+        "euclidean_distance_m": 2.4120530674095875,
+        "path_length_m": 2.4120530674095875,
+        "sinuosity": 1.0,
+        "max_lateral_deviation_m": 3.4808944441918206e-17,
+        "lateral_lobes": 0.0,
+        "lateral_sign_changes": 0.0,
+        "max_turn_window_deg": 0.0,
+        "total_turn_deg": 0.0,
+        "turn_lobes": 0.0,
+        "num_turns_30": 0.0,
+        "num_turns_60": 0.0,
+        "turn_sign_changes": 0.0,
+        "reverse_progress_m": 0.0,
+        "max_backtrack_m": 0.0,
+        "turn_event_count": 0,
+        "supported_turn_count": 0,
+        "supported_turn_fraction": 0.0,
+        "supported_maneuver_count": 0,
+        "min_clearance_m": 0.46,
+        "mean_clearance_m": 0.7058729455950556,
+        "direct_line_min_clearance_m": 0.46,
+        "direct_line_collision": false,
+        "detour_ratio": 1.0,
+        "near_obstacle_fraction": 0.7,
+        "obstacle_interaction": "near_obstacle",
+        "purposeful_class_reason": "direct_line_fits_clearance"
+      },
+      "turn_events": [],
+      "near_optimal_baseline_length_m": 2.4120530674095875
+    },
+    {
+      "id": 6,
+      "purposeful_class": "straight",
+      "reason": "direct_line_fits_clearance",
+      "start": [
+        1.3650000000000002,
+        -0.47500000000000053
+      ],
+      "goal": [
+        -1.0150000000000006,
+        -0.004999999999999893
+      ],
+      "poses": [
+        [
+          1.3650000000000002,
+          -0.47500000000000053
+        ],
+        [
+          -1.0150000000000006,
+          -0.004999999999999893
+        ]
+      ],
+      "metrics": {
+        "euclidean_distance_m": 2.425963726027247,
+        "path_length_m": 2.425963726027247,
+        "sinuosity": 1.0,
+        "max_lateral_deviation_m": 8.216473546265066e-18,
+        "lateral_lobes": 0.0,
+        "lateral_sign_changes": 0.0,
+        "max_turn_window_deg": 0.0,
+        "total_turn_deg": 0.0,
+        "turn_lobes": 0.0,
+        "num_turns_30": 0.0,
+        "num_turns_60": 0.0,
+        "turn_sign_changes": 0.0,
+        "reverse_progress_m": 0.0,
+        "max_backtrack_m": 0.0,
+        "turn_event_count": 0,
+        "supported_turn_count": 0,
+        "supported_turn_fraction": 0.0,
+        "supported_maneuver_count": 0,
+        "min_clearance_m": 0.41109609582188933,
+        "mean_clearance_m": 0.8842497616586951,
+        "direct_line_min_clearance_m": 0.41109609582188933,
+        "direct_line_collision": false,
+        "detour_ratio": 1.0,
+        "near_obstacle_fraction": 0.3,
+        "obstacle_interaction": "direct_line_too_close",
+        "purposeful_class_reason": "direct_line_fits_clearance"
+      },
+      "turn_events": [],
+      "near_optimal_baseline_length_m": 2.425963726027247
+    },
+    {
+      "id": 8,
+      "purposeful_class": "straight",
+      "reason": "direct_line_fits_clearance",
+      "start": [
+        0.3849999999999998,
+        2.045
+      ],
+      "goal": [
+        -1.2650000000000006,
+        3.835
+      ],
+      "poses": [
+        [
+          0.3849999999999998,
+          2.045
+        ],
+        [
+          -1.2650000000000006,
+          3.835
+        ]
+      ],
+      "metrics": {
+        "euclidean_distance_m": 2.434460925954656,
+        "path_length_m": 2.4344609259546557,
+        "sinuosity": 1.0,
+        "max_lateral_deviation_m": 5.764527630737104e-17,
+        "lateral_lobes": 0.0,
+        "lateral_sign_changes": 0.0,
+        "max_turn_window_deg": 0.0,
+        "total_turn_deg": 0.0,
+        "turn_lobes": 0.0,
+        "num_turns_30": 0.0,
+        "num_turns_60": 0.0,
+        "turn_sign_changes": 0.0,
+        "reverse_progress_m": 0.0,
+        "max_backtrack_m": 0.0,
+        "turn_event_count": 0,
+        "supported_turn_count": 0,
+        "supported_turn_fraction": 0.0,
+        "supported_maneuver_count": 0,
+        "min_clearance_m": 0.44,
+        "mean_clearance_m": 0.7387279527725742,
+        "direct_line_min_clearance_m": 0.44,
+        "direct_line_collision": false,
+        "detour_ratio": 0.9999999999999998,
+        "near_obstacle_fraction": 0.68,
+        "obstacle_interaction": "direct_line_too_close",
+        "purposeful_class_reason": "direct_line_fits_clearance"
+      },
+      "turn_events": [],
+      "near_optimal_baseline_length_m": 2.434460925954656
+    },
+    {
+      "id": 9,
+      "purposeful_class": "straight",
+      "reason": "direct_line_fits_clearance",
+      "start": [
+        -0.4450000000000003,
+        -0.1349999999999998
+      ],
+      "goal": [
+        -0.22500000000000053,
+        2.085
+      ],
+      "poses": [
+        [
+          -0.4450000000000003,
+          -0.1349999999999998
+        ],
+        [
+          -0.22500000000000053,
+          2.085
+        ]
+      ],
+      "metrics": {
+        "euclidean_distance_m": 2.2308742680841513,
+        "path_length_m": 2.230874268084152,
+        "sinuosity": 1.0,
+        "max_lateral_deviation_m": 1.0244560701074812e-17,
+        "lateral_lobes": 0.0,
+        "lateral_sign_changes": 0.0,
+        "max_turn_window_deg": 0.0,
+        "total_turn_deg": 0.0,
+        "turn_lobes": 0.0,
+        "num_turns_30": 0.0,
+        "num_turns_60": 0.0,
+        "turn_sign_changes": 0.0,
+        "reverse_progress_m": 0.0,
+        "max_backtrack_m": 0.0,
+        "turn_event_count": 0,
+        "supported_turn_count": 0,
+        "supported_turn_fraction": 0.0,
+        "supported_maneuver_count": 0,
+        "min_clearance_m": 0.41303752856126763,
+        "mean_clearance_m": 0.6344948941625004,
+        "direct_line_min_clearance_m": 0.41303752856126763,
+        "direct_line_collision": false,
+        "detour_ratio": 1.0000000000000002,
+        "near_obstacle_fraction": 0.7391304347826086,
+        "obstacle_interaction": "direct_line_too_close",
+        "purposeful_class_reason": "direct_line_fits_clearance"
+      },
+      "turn_events": [],
+      "near_optimal_baseline_length_m": 2.2308742680841513
+    },
+    {
+      "id": 10,
+      "purposeful_class": "straight",
+      "reason": "direct_line_fits_clearance",
+      "start": [
+        0.2649999999999988,
+        0.5350000000000001
+      ],
+      "goal": [
+        0.504999999999999,
+        3.0349999999999993
+      ],
+      "poses": [
+        [
+          0.2649999999999988,
+          0.5350000000000001
+        ],
+        [
+          0.504999999999999,
+          3.0349999999999993
+        ]
+      ],
+      "metrics": {
+        "euclidean_distance_m": 2.5114935795259354,
+        "path_length_m": 2.5114935795259354,
+        "sinuosity": 1.0,
+        "max_lateral_deviation_m": 2.0826300161457158e-17,
+        "lateral_lobes": 0.0,
+        "lateral_sign_changes": 0.0,
+        "max_turn_window_deg": 0.0,
+        "total_turn_deg": 0.0,
+        "turn_lobes": 0.0,
+        "num_turns_30": 0.0,
+        "num_turns_60": 0.0,
+        "turn_sign_changes": 0.0,
+        "reverse_progress_m": 0.0,
+        "max_backtrack_m": 0.0,
+        "turn_event_count": 0,
+        "supported_turn_count": 0,
+        "supported_turn_fraction": 0.0,
+        "supported_maneuver_count": 0,
+        "min_clearance_m": 0.9055385138137417,
+        "mean_clearance_m": 1.06066780418172,
+        "direct_line_min_clearance_m": 0.9055385138137417,
+        "direct_line_collision": false,
+        "detour_ratio": 1.0,
+        "near_obstacle_fraction": 0.0,
+        "obstacle_interaction": "open_space",
+        "purposeful_class_reason": "direct_line_fits_clearance"
+      },
+      "turn_events": [],
+      "near_optimal_baseline_length_m": 2.5114935795259354
+    },
+    {
+      "id": 11,
+      "purposeful_class": "straight",
+      "reason": "direct_line_fits_clearance",
+      "start": [
+        0.45500000000000007,
+        2.8950000000000005
+      ],
+      "goal": [
+        0.22499999999999964,
+        0.6150000000000002
+      ],
+      "poses": [
+        [
+          0.45500000000000007,
+          2.8950000000000005
+        ],
+        [
+          0.22499999999999964,
+          0.6150000000000002
+        ]
+      ],
+      "metrics": {
+        "euclidean_distance_m": 2.2915715131760566,
+        "path_length_m": 2.2915715131760566,
+        "sinuosity": 1.0,
+        "max_lateral_deviation_m": 7.834997767800037e-18,
+        "lateral_lobes": 0.0,
+        "lateral_sign_changes": 0.0,
+        "max_turn_window_deg": 0.0,
+        "total_turn_deg": 0.0,
+        "turn_lobes": 0.0,
+        "num_turns_30": 0.0,
+        "num_turns_60": 0.0,
+        "turn_sign_changes": 0.0,
+        "reverse_progress_m": 0.0,
+        "max_backtrack_m": 0.0,
+        "turn_event_count": 0,
+        "supported_turn_count": 0,
+        "supported_turn_fraction": 0.0,
+        "supported_maneuver_count": 0,
+        "min_clearance_m": 1.0071742649611337,
+        "mean_clearance_m": 1.0907701334231419,
+        "direct_line_min_clearance_m": 1.0071742649611337,
+        "direct_line_collision": false,
+        "detour_ratio": 1.0,
+        "near_obstacle_fraction": 0.0,
+        "obstacle_interaction": "open_space",
+        "purposeful_class_reason": "direct_line_fits_clearance"
+      },
+      "turn_events": [],
+      "near_optimal_baseline_length_m": 2.2915715131760566
+    },
+    {
+      "id": 12,
+      "purposeful_class": "semi_complex",
+      "reason": "constrained_corridor_minimal_bend",
+      "start": [
+        -1.2250000000000005,
+        3.4850000000000003
+      ],
+      "goal": [
+        0.3149999999999995,
+        1.7149999999999999
+      ],
+      "poses": [
+        [
+          -1.2250000000000005,
+          3.4850000000000003
+        ],
+        [
+          -1.202499686643256,
+          3.462667979867856
+        ],
+        [
+          -1.157499059929767,
+          3.418003939603566
+        ],
+        [
+          -1.109999445674084,
+          3.375153295261314
+        ],
+        [
+          -1.060000843876207,
+          3.3341160468410993
+        ],
+        [
+          -1.0075016216384969,
+          3.298316782964701
+        ],
+        [
+          -0.9525017789609538,
+          3.2677555036321184
+        ],
+        [
+          -0.9025016901275613,
+          3.2306475628402014
+        ],
+        [
+          -0.8575013551383194,
+          3.1869929605889498
+        ],
+        [
+          -0.8125013360879311,
+          3.144078125698745
+        ],
+        [
+          -0.7675016329763963,
+          3.1019030581695883
+        ],
+        [
+          -0.7225013567277695,
+          3.0593088405728963
+        ],
+        [
+          -0.6775005073420507,
+          3.016295472908669
+        ],
+        [
+          -0.6325001546215386,
+          2.972338926652899
+        ],
+        [
+          -0.5875002985662333,
+          2.9274392018055875
+        ],
+        [
+          -0.5425003314452101,
+          2.882491870057136
+        ],
+        [
+          -0.49750025325846897,
+          2.8374969314075447
+        ],
+        [
+          -0.45250017679584054,
+          2.79249958971507
+        ],
+        [
+          -0.40750010205732473,
+          2.747499844979711
+        ],
+        [
+          -0.3625000642401295,
+          2.702499979127187
+        ],
+        [
+          -0.31750006334425473,
+          2.6574999921574975
+        ],
+        [
+          -0.27250038173942137,
+          2.6124999989987128
+        ],
+        [
+          -0.22750101942562925,
+          2.567499999650833
+        ],
+        [
+          -0.18250763191640618,
+          2.522499999981294
+        ],
+        [
+          -0.13752021921175214,
+          2.477499999990097
+        ],
+        [
+          -0.09265119929105652,
+          2.4325000000005326
+        ],
+        [
+          -0.04790057215431934,
+          2.3875000000126017
+        ],
+        [
+          -0.005495525910077841,
+          2.3425000000149003
+        ],
+        [
+          0.034563939441667975,
+          2.2975000000074277
+        ],
+        [
+          0.06862096176699128,
+          2.24750000000224
+        ],
+        [
+          0.09667554106589207,
+          2.192499999999337
+        ],
+        [
+          0.12324252728702953,
+          2.1374999999990156
+        ],
+        [
+          0.14832192043040365,
+          2.0825000000012763
+        ],
+        [
+          0.17336251768231972,
+          2.027500000001887
+        ],
+        [
+          0.19836431904277768,
+          1.972500000000847
+        ],
+        [
+          0.22336019969173643,
+          1.9175000000004727
+        ],
+        [
+          0.2483501596291959,
+          1.8625000000007639
+        ],
+        [
+          0.27315098180507147,
+          1.8075000000006542
+        ],
+        [
+          0.2977626662193632,
+          1.7525000000001436
+        ],
+        [
+          0.3113013813198816,
+          1.7224999999999162
+        ],
+        [
+          0.3137671271066269,
+          1.7174999999999718
+        ],
+        [
+          0.3149999999999995,
+          1.7149999999999999
+        ]
+      ],
+      "metrics": {
+        "euclidean_distance_m": 2.3461670869739866,
+        "path_length_m": 2.382463184766177,
+        "sinuosity": 1.0154703806023484,
+        "max_lateral_deviation_m": 0.16155272362552336,
+        "lateral_lobes": 1.0,
+        "lateral_sign_changes": 0.0,
+        "max_turn_window_deg": 0.0,
+        "total_turn_deg": 0.0,
+        "turn_lobes": 0.0,
+        "num_turns_30": 0.0,
+        "num_turns_60": 0.0,
+        "turn_sign_changes": 0.0,
+        "reverse_progress_m": 0.0,
+        "max_backtrack_m": 0.0,
+        "turn_event_count": 1,
+        "supported_turn_count": 0,
+        "supported_turn_fraction": 0.0,
+        "supported_maneuver_count": 0,
+        "min_clearance_m": 0.4341658669218482,
+        "mean_clearance_m": 0.6912080029840205,
+        "direct_line_min_clearance_m": 0.3252691193458119,
+        "direct_line_collision": false,
+        "detour_ratio": 1.0154703806023484,
+        "near_obstacle_fraction": 0.6122448979591837,
+        "obstacle_interaction": "direct_line_too_close",
+        "purposeful_class_reason": "constrained_corridor_minimal_bend"
+      },
+      "turn_events": [
+        {
+          "sign": -1,
+          "turn_deg": 18.218446607802097,
+          "x": 0.07059494166319048,
+          "y": 2.2436300829687332,
+          "s_m": 1.8,
+          "clearance_m": 0.8709190547921202,
+          "obstacle_supported": false
+        }
+      ],
+      "near_optimal_baseline_length_m": 2.3475852102927464
+    },
+    {
+      "id": 13,
+      "purposeful_class": "semi_complex",
+      "reason": "single_obstacle_avoidance_maneuver",
+      "start": [
+        -1.2750000000000004,
+        0.23499999999999943
+      ],
+      "goal": [
+        0.004999999999999005,
+        2.0649999999999995
+      ],
+      "poses": [
+        [
+          -1.2750000000000004,
+          0.23499999999999943
+        ],
+        [
+          -1.2524998920122101,
+          0.2548590218755625
+        ],
+        [
+          -1.2074996760366292,
+          0.2945770656266885
+        ],
+        [
+          -1.1550000640714533,
+          0.31984358733439056
+        ],
+        [
+          -1.0950010561166819,
+          0.3306585869986685
+        ],
+        [
+          -1.0350009791750887,
+          0.34900175289708857
+        ],
+        [
+          -0.9749998332466732,
+          0.3748730850296509
+        ],
+        [
+          -0.9224988162718206,
+          0.4096417479671856
+        ],
+        [
+          -0.877497928250531,
+          0.4533077417096929
+        ],
+        [
+          -0.8324981138004557,
+          0.49760224307183976
+        ],
+        [
+          -0.787499372921595,
+          0.5425252520536262
+        ],
+        [
+          -0.7425004819433314,
+          0.5873891035598027
+        ],
+        [
+          -0.697501440865665,
+          0.6321937975903689
+        ],
+        [
+          -0.6525022682556488,
+          0.6751950417500507
+        ],
+        [
+          -0.6075029641132831,
+          0.7163928360388482
+        ],
+        [
+          -0.5600182245936962,
+          0.7547336963730606
+        ],
+        [
+          -0.5100480496968881,
+          0.790217622752688
+        ],
+        [
+          -0.4628574393887058,
+          0.8297570356951092
+        ],
+        [
+          -0.4184463936691492,
+          0.8733519352003241
+        ],
+        [
+          -0.37739399329579215,
+          0.9201133914178664
+        ],
+        [
+          -0.33970023826863455,
+          0.9700414043477366
+        ],
+        [
+          -0.31246400006548036,
+          1.0250040833356304
+        ],
+        [
+          -0.29568527868632943,
+          1.085001428381548
+        ],
+        [
+          -0.28672987826621554,
+          1.1450000761489072
+        ],
+        [
+          -0.28559779880513847,
+          1.2050000266377077
+        ],
+        [
+          -0.2848756363163206,
+          1.2650000014250904
+        ],
+        [
+          -0.2845633907997619,
+          1.325000000511055
+        ],
+        [
+          -0.2787030631311588,
+          1.3850000000371325
+        ],
+        [
+          -0.2672946533105113,
+          1.445000000003323
+        ],
+        [
+          -0.24943005235316185,
+          1.5024999999917685
+        ],
+        [
+          -0.22510926025911046,
+          1.5575000000024692
+        ],
+        [
+          -0.2004576930543026,
+          1.6125000000051082
+        ],
+        [
+          -0.17547535073873827,
+          1.6674999999996856
+        ],
+        [
+          -0.1504844575143908,
+          1.7224999999985529
+        ],
+        [
+          -0.12548501338126025,
+          1.7775000000017103
+        ],
+        [
+          -0.10048716242199374,
+          1.8325000000023448
+        ],
+        [
+          -0.07549090463659128,
+          1.8875000000004567
+        ],
+        [
+          -0.05056453019133232,
+          1.942499999999669
+        ],
+        [
+          -0.025708039086216834,
+          1.9974999999999827
+        ],
+        [
+          -0.008709845150244566,
+          2.0350000000001045
+        ],
+        [
+          0.0004300516165844817,
+          2.0550000000000344
+        ],
+        [
+          0.004999999999999005,
+          2.0649999999999995
+        ]
+      ],
+      "metrics": {
+        "euclidean_distance_m": 2.2332263655975404,
+        "path_length_m": 2.3742001579888954,
+        "sinuosity": 1.0631256170726942,
+        "max_lateral_deviation_m": 0.3236637258118243,
+        "lateral_lobes": 1.0,
+        "lateral_sign_changes": 0.0,
+        "max_turn_window_deg": 26.03295239998558,
+        "total_turn_deg": 26.03295239998558,
+        "turn_lobes": 1.0,
+        "num_turns_30": 0.0,
+        "num_turns_60": 0.0,
+        "turn_sign_changes": 0.0,
+        "reverse_progress_m": 0.0,
+        "max_backtrack_m": 0.0,
+        "turn_event_count": 1,
+        "supported_turn_count": 1,
+        "supported_turn_fraction": 1.0,
+        "supported_maneuver_count": 1,
+        "min_clearance_m": 0.43185645763378366,
+        "mean_clearance_m": 0.5905457166125938,
+        "direct_line_min_clearance_m": 0.09219544457292887,
+        "direct_line_collision": false,
+        "detour_ratio": 1.0631256170726942,
+        "near_obstacle_fraction": 0.8571428571428571,
+        "obstacle_interaction": "direct_line_too_close",
+        "purposeful_class_reason": "single_obstacle_avoidance_maneuver"
+      },
+      "turn_events": [
+        {
+          "sign": 1,
+          "turn_deg": 39.387953440768875,
+          "x": -0.3049985183126773,
+          "y": 1.051699149934298,
+          "s_m": 1.3,
+          "clearance_m": 0.4464302857109943,
+          "obstacle_supported": true
+        }
+      ],
+      "near_optimal_baseline_length_m": 2.295354245606175
+    },
+    {
+      "id": 14,
+      "purposeful_class": "semi_complex",
+      "reason": "constrained_corridor_minimal_bend",
+      "start": [
+        0.08499999999999908,
+        0.17499999999999982
+      ],
+      "goal": [
+        -0.5650000000000004,
+        2.5650000000000004
+      ],
+      "poses": [
+        [
+          0.08499999999999908,
+          0.17499999999999982
+        ],
+        [
+          -0.4847350374729767,
+          2.484235315253744
+        ],
+        [
+          -0.5650000000000004,
+          2.5650000000000004
+        ]
+      ],
+      "metrics": {
+        "euclidean_distance_m": 2.476812467668879,
+        "path_length_m": 2.492345418732042,
+        "sinuosity": 1.0062713472521327,
+        "max_lateral_deviation_m": 0.048934217290289364,
+        "lateral_lobes": 0.0,
+        "lateral_sign_changes": 0.0,
+        "max_turn_window_deg": 0.0,
+        "total_turn_deg": 0.0,
+        "turn_lobes": 0.0,
+        "num_turns_30": 0.0,
+        "num_turns_60": 0.0,
+        "turn_sign_changes": 0.0,
+        "reverse_progress_m": 0.0,
+        "max_backtrack_m": 0.0,
+        "turn_event_count": 0,
+        "supported_turn_count": 0,
+        "supported_turn_fraction": 0.0,
+        "supported_maneuver_count": 0,
+        "min_clearance_m": 0.37107950630558945,
+        "mean_clearance_m": 0.6290552374610247,
+        "direct_line_min_clearance_m": 0.327566787083184,
+        "direct_line_collision": false,
+        "detour_ratio": 1.0062713472521327,
+        "near_obstacle_fraction": 0.7647058823529411,
+        "obstacle_interaction": "direct_line_too_close",
+        "purposeful_class_reason": "constrained_corridor_minimal_bend"
+      },
+      "turn_events": [],
+      "near_optimal_baseline_length_m": 2.479781676018852
+    },
+    {
+      "id": 15,
+      "purposeful_class": "semi_complex",
+      "reason": "single_obstacle_avoidance_maneuver",
+      "start": [
+        1.625,
+        -0.3550000000000004
+      ],
+      "goal": [
+        -0.6750000000000007,
+        0.6150000000000002
+      ],
+      "poses": [
+        [
+          1.625,
+          -0.3550000000000004
+        ],
+        [
+          1.5949999999999998,
+          -0.3548007528282691
+        ],
+        [
+          1.5349999999999993,
+          -0.35440225848480655
+        ],
+        [
+          1.4749999999999994,
+          -0.3520345777232733
+        ],
+        [
+          1.4150000000000003,
+          -0.34769771054366927
+        ],
+        [
+          1.3550000000000004,
+          -0.34482999871462516
+        ],
+        [
+          1.295,
+          -0.34343144223614086
+        ],
+        [
+          1.2349999999999999,
+          -0.334587959873349
+        ],
+        [
+          1.1750000000000003,
+          -0.3182995516262497
+        ],
+        [
+          1.1175000000000002,
+          -0.29270679020616
+        ],
+        [
+          1.0624999999999996,
+          -0.25780967561307994
+        ],
+        [
+          1.0124999999999993,
+          -0.21917813262030486
+        ],
+        [
+          0.9674999999999994,
+          -0.17681216122783477
+        ],
+        [
+          0.9199999999999993,
+          -0.13433421290273065
+        ],
+        [
+          0.869999999999999,
+          -0.09174428764499254
+        ],
+        [
+          0.8224999999999989,
+          -0.049038810487364144
+        ],
+        [
+          0.7774999999999991,
+          -0.006217781429845495
+        ],
+        [
+          0.7324999999999994,
+          0.03746054559220853
+        ],
+        [
+          0.6874999999999999,
+          0.08199617057879795
+        ],
+        [
+          0.64,
+          0.12429359035199566
+        ],
+        [
+          0.5899999999999996,
+          0.16435280491180165
+        ],
+        [
+          0.5349999999999996,
+          0.18698973154726956
+        ],
+        [
+          0.47499999999999964,
+          0.19220437025839932
+        ],
+        [
+          0.4149999999999996,
+          0.1949869901353398
+        ],
+        [
+          0.3549999999999995,
+          0.19533759117809105
+        ],
+        [
+          0.29499999999999943,
+          0.20048334501935716
+        ],
+        [
+          0.23499999999999946,
+          0.2104242516591382
+        ],
+        [
+          0.17749999999999944,
+          0.22779859370677324
+        ],
+        [
+          0.12249999999999935,
+          0.2526063711622623
+        ],
+        [
+          0.06749999999999934,
+          0.2775077615922207
+        ],
+        [
+          0.012499999999999392,
+          0.30250276499664835
+        ],
+        [
+          -0.04250000000000056,
+          0.32750020178526157
+        ],
+        [
+          -0.09750000000000052,
+          0.3525000719580604
+        ],
+        [
+          -0.1525000000000005,
+          0.37750000519465077
+        ],
+        [
+          -0.20750000000000046,
+          0.4025000014950328
+        ],
+        [
+          -0.2625000000000005,
+          0.4274999948503542
+        ],
+        [
+          -0.31750000000000056,
+          0.4524999852606151
+        ],
+        [
+          -0.3725000000000006,
+          0.4774997976676525
+        ],
+        [
+          -0.4275000000000007,
+          0.5024994320714666
+        ],
+        [
+          -0.48250000000000076,
+          0.5274922164740634
+        ],
+        [
+          -0.5375000000000008,
+          0.5524781508754428
+        ],
+        [
+          -0.5925000000000008,
+          0.5774783385570994
+        ],
+        [
+          -0.6475000000000007,
+          0.6024927795190334
+        ],
+        [
+          -0.6750000000000007,
+          0.6150000000000002
+        ]
+      ],
+      "metrics": {
+        "euclidean_distance_m": 2.4961770770520277,
+        "path_length_m": 2.5724537035222923,
+        "sinuosity": 1.030557377988723,
+        "max_lateral_deviation_m": 0.11952965478195385,
+        "lateral_lobes": 0.0,
+        "lateral_sign_changes": 0.0,
+        "max_turn_window_deg": 31.54418210056931,
+        "total_turn_deg": 51.911665173876216,
+        "turn_lobes": 2.0,
+        "num_turns_30": 1.0,
+        "num_turns_60": 0.0,
+        "turn_sign_changes": 1.0,
+        "reverse_progress_m": 0.0,
+        "max_backtrack_m": 0.0,
+        "turn_event_count": 2,
+        "supported_turn_count": 1,
+        "supported_turn_fraction": 0.5,
+        "supported_maneuver_count": 1,
+        "min_clearance_m": 0.4410215414239989,
+        "mean_clearance_m": 0.7183853225705099,
+        "direct_line_min_clearance_m": 0.30364452901377953,
+        "direct_line_collision": false,
+        "detour_ratio": 1.030557377988723,
+        "near_obstacle_fraction": 0.6415094339622641,
+        "obstacle_interaction": "direct_line_too_close",
+        "purposeful_class_reason": "single_obstacle_avoidance_maneuver"
+      },
+      "turn_events": [
+        {
+          "sign": -1,
+          "turn_deg": 39.01679945269947,
+          "x": 1.1321615471541886,
+          "y": -0.29923252026470853,
+          "s_m": 0.5,
+          "clearance_m": 0.4428317965096906,
+          "obstacle_supported": true
+        },
+        {
+          "sign": 1,
+          "turn_deg": 27.77064692873918,
+          "x": 0.5098382328774117,
+          "y": 0.1891765569619009,
+          "s_m": 1.3,
+          "clearance_m": 0.8200000000000001,
+          "obstacle_supported": false
+        }
+      ],
+      "near_optimal_baseline_length_m": 2.5447993295769153
+    },
+    {
+      "id": 17,
+      "purposeful_class": "semi_complex",
+      "reason": "single_obstacle_avoidance_maneuver",
+      "start": [
+        0.29499999999999993,
+        -3.225
+      ],
+      "goal": [
+        0.125,
+        -0.7850000000000001
+      ],
+      "poses": [
+        [
+          0.29499999999999993,
+          -3.225
+        ],
+        [
+          -0.1847986468789241,
+          -1.5950000000000006
+        ],
+        [
+          0.125,
+          -0.7850000000000001
+        ]
+      ],
+      "metrics": {
+        "euclidean_distance_m": 2.4459149617270017,
+        "path_length_m": 2.566371522902408,
+        "sinuosity": 1.0492480577044898,
+        "max_lateral_deviation_m": 0.3306191349110258,
+        "lateral_lobes": 1.0,
+        "lateral_sign_changes": 0.0,
+        "max_turn_window_deg": 31.719973557645282,
+        "total_turn_deg": 31.719973557645282,
+        "turn_lobes": 1.0,
+        "num_turns_30": 1.0,
+        "num_turns_60": 0.0,
+        "turn_sign_changes": 0.0,
+        "reverse_progress_m": 0.0,
+        "max_backtrack_m": 0.0,
+        "turn_event_count": 1,
+        "supported_turn_count": 1,
+        "supported_turn_fraction": 1.0,
+        "supported_maneuver_count": 1,
+        "min_clearance_m": 0.37,
+        "mean_clearance_m": 0.6086773122577841,
+        "direct_line_min_clearance_m": 0.06,
+        "direct_line_collision": false,
+        "detour_ratio": 1.0492480577044898,
+        "near_obstacle_fraction": 0.7924528301886793,
+        "obstacle_interaction": "direct_line_too_close",
+        "purposeful_class_reason": "single_obstacle_avoidance_maneuver"
+      },
+      "turn_events": [
+        {
+          "sign": -1,
+          "turn_deg": 37.33228234371106,
+          "x": -0.1487715033826579,
+          "y": -1.5008033773679446,
+          "s_m": 1.8,
+          "clearance_m": 0.4308131845707603,
+          "obstacle_supported": true
+        }
+      ],
+      "near_optimal_baseline_length_m": 2.5415516705253838
+    },
+    {
+      "id": 18,
+      "purposeful_class": "semi_complex",
+      "reason": "single_obstacle_avoidance_maneuver",
+      "start": [
+        -0.04499999999999993,
+        -2.4250000000000003
+      ],
+      "goal": [
+        -1.0550000000000006,
+        -0.33499999999999996
+      ],
+      "poses": [
+        [
+          -0.04499999999999993,
+          -2.4250000000000003
+        ],
+        [
+          -0.052319459349187136,
+          -2.3949999999999996
+        ],
+        [
+          -0.06695837804756156,
+          -2.334999999999999
+        ],
+        [
+          -0.07495946974422125,
+          -2.2749999999999986
+        ],
+        [
+          -0.07632273443916619,
+          -2.214999999999999
+        ],
+        [
+          -0.08969016297444563,
+          -2.157499999999999
+        ],
+        [
+          -0.11506175535005954,
+          -2.1024999999999983
+        ],
+        [
+          -0.1492617531555497,
+          -2.0524999999999984
+        ],
+        [
+          -0.19229015639091618,
+          -2.0074999999999994
+        ],
+        [
+          -0.23098737758108692,
+          -1.9599999999999995
+        ],
+        [
+          -0.265353416726062,
+          -1.9099999999999995
+        ],
+        [
+          -0.28559180898187475,
+          -1.8549999999999995
+        ],
+        [
+          -0.2917025543485252,
+          -1.795
+        ],
+        [
+          -0.2950280239339751,
+          -1.7324992673375876
+        ],
+        [
+          -0.2955682177382244,
+          -1.6674978020127633
+        ],
+        [
+          -0.3012841643805541,
+          -1.6049984747069035
+        ],
+        [
+          -0.3121758638609643,
+          -1.5450012854200088
+        ],
+        [
+          -0.3323503534547123,
+          -1.4875018373624667
+        ],
+        [
+          -0.36180763316179804,
+          -1.4325001305342766
+        ],
+        [
+          -0.39858027792406314,
+          -1.3799995189902985
+        ],
+        [
+          -0.44266828774150746,
+          -1.3300000027305323
+        ],
+        [
+          -0.48463389833243187,
+          -1.2800001704264048
+        ],
+        [
+          -0.5244771096968361,
+          -1.2300000220779164
+        ],
+        [
+          -0.5469997397757709,
+          -1.1749999583485793
+        ],
+        [
+          -0.5522017885692363,
+          -1.114999979238394
+        ],
+        [
+          -0.554858873631318,
+          -1.0549999910062902
+        ],
+        [
+          -0.5549709949620163,
+          -0.9949999936522675
+        ],
+        [
+          -0.5554322173882597,
+          -0.9350000008148597
+        ],
+        [
+          -0.556242540910048,
+          -0.8750000124940666
+        ],
+        [
+          -0.5640424525986614,
+          -0.8150001203722081
+        ],
+        [
+          -0.5788319524540996,
+          -0.7550003244492843
+        ],
+        [
+          -0.6038523715748625,
+          -0.7000031860188443
+        ],
+        [
+          -0.6391037099609502,
+          -0.6500087050808876
+        ],
+        [
+          -0.6788188568232998,
+          -0.6025654060490314
+        ],
+        [
+          -0.7229978121619114,
+          -0.5576732889232756
+        ],
+        [
+          -0.7675665688816328,
+          -0.5137958788669538
+        ],
+        [
+          -0.8125251269824643,
+          -0.4709331758800662
+        ],
+        [
+          -0.8625033331149674,
+          -0.43347775936671806
+        ],
+        [
+          -0.9175011872791421,
+          -0.4014296293269094
+        ],
+        [
+          -0.9725000857709223,
+          -0.37280417323025383
+        ],
+        [
+          -1.0275000285903078,
+          -0.34760139107675125
+        ],
+        [
+          -1.0550000000000006,
+          -0.33499999999999996
+        ]
+      ],
+      "metrics": {
+        "euclidean_distance_m": 2.321249663435625,
+        "path_length_m": 2.4631092867102016,
+        "sinuosity": 1.0611134706917367,
+        "max_lateral_deviation_m": 0.22272324027784668,
+        "lateral_lobes": 1.0,
+        "lateral_sign_changes": 0.0,
+        "max_turn_window_deg": 37.554288354073734,
+        "total_turn_deg": 37.554288354073734,
+        "turn_lobes": 1.0,
+        "num_turns_30": 1.0,
+        "num_turns_60": 0.0,
+        "turn_sign_changes": 0.0,
+        "reverse_progress_m": 0.0,
+        "max_backtrack_m": 0.0,
+        "turn_event_count": 2,
+        "supported_turn_count": 2,
+        "supported_turn_fraction": 1.0,
+        "supported_maneuver_count": 1,
+        "min_clearance_m": 0.43185645763378366,
+        "mean_clearance_m": 0.48456767309886556,
+        "direct_line_min_clearance_m": 0.196468827043885,
+        "direct_line_collision": false,
+        "detour_ratio": 1.0611134706917367,
+        "near_obstacle_fraction": 1.0,
+        "obstacle_interaction": "direct_line_too_close",
+        "purposeful_class_reason": "single_obstacle_avoidance_maneuver"
+      },
+      "turn_events": [
+        {
+          "sign": -1,
+          "turn_deg": 22.0020768600647,
+          "x": -0.5543797417194863,
+          "y": -1.065819331900483,
+          "s_m": 1.5,
+          "clearance_m": 0.45,
+          "obstacle_supported": true
+        },
+        {
+          "sign": 1,
+          "turn_deg": 55.706272605897695,
+          "x": -0.7517955924876322,
+          "y": -0.5293222172519314,
+          "s_m": 2.1,
+          "clearance_m": 0.4465422712353222,
+          "obstacle_supported": true
+        }
+      ],
+      "near_optimal_baseline_length_m": 2.3544378412309976
+    },
+    {
+      "id": 19,
+      "purposeful_class": "semi_complex",
+      "reason": "single_obstacle_avoidance_maneuver",
+      "start": [
+        -0.22500000000000053,
+        -1.1450000000000005
+      ],
+      "goal": [
+        1.8249999999999993,
+        -0.47500000000000053
+      ],
+      "poses": [
+        [
+          -0.22500000000000053,
+          -1.1450000000000005
+        ],
+        [
+          1.454999999999998,
+          -0.44500037527786773
+        ],
+        [
+          1.8249999999999993,
+          -0.47500000000000053
+        ]
+      ],
+      "metrics": {
+        "euclidean_distance_m": 2.156710458081937,
+        "path_length_m": 2.191214049199585,
+        "sinuosity": 1.0159982490873316,
+        "max_lateral_deviation_m": 0.12554332847405159,
+        "lateral_lobes": 1.0,
+        "lateral_sign_changes": 0.0,
+        "max_turn_window_deg": 17.45294821448681,
+        "total_turn_deg": 17.45294821448681,
+        "turn_lobes": 0.0,
+        "num_turns_30": 0.0,
+        "num_turns_60": 0.0,
+        "turn_sign_changes": 0.0,
+        "reverse_progress_m": 0.0,
+        "max_backtrack_m": 0.0,
+        "turn_event_count": 1,
+        "supported_turn_count": 1,
+        "supported_turn_fraction": 1.0,
+        "supported_maneuver_count": 1,
+        "min_clearance_m": 0.37947331922020555,
+        "mean_clearance_m": 0.5843817758593822,
+        "direct_line_min_clearance_m": 0.2529822128134704,
+        "direct_line_collision": false,
+        "detour_ratio": 1.0159982490873316,
+        "near_obstacle_fraction": 0.9333333333333333,
+        "obstacle_interaction": "direct_line_too_close",
+        "purposeful_class_reason": "single_obstacle_avoidance_maneuver"
+      },
+      "turn_events": [
+        {
+          "sign": -1,
+          "turn_deg": 25.670763234138086,
+          "x": 1.5347384742292973,
+          "y": -0.45146557609623106,
+          "s_m": 1.9000000000000001,
+          "clearance_m": 0.44,
+          "obstacle_supported": true
+        }
+      ],
+      "near_optimal_baseline_length_m": 2.1699290676098832
+    },
+    {
+      "id": 20,
+      "purposeful_class": "semi_complex",
+      "reason": "single_obstacle_avoidance_maneuver",
+      "start": [
+        -1.2850000000000001,
+        3.1550000000000002
+      ],
+      "goal": [
+        0.9149999999999991,
+        1.4749999999999996
+      ],
+      "poses": [
+        [
+          -1.2850000000000001,
+          3.1550000000000002
+        ],
+        [
+          -1.2550000000000001,
+          3.1526073895306737
+        ],
+        [
+          -1.195,
+          3.147822168592021
+        ],
+        [
+          -1.1350000000000002,
+          3.1453136032369193
+        ],
+        [
+          -1.0750000000000002,
+          3.14508169346537
+        ],
+        [
+          -1.0150000000000003,
+          3.144406422781748
+        ],
+        [
+          -0.9550000000000002,
+          3.143287791186054
+        ],
+        [
+          -0.8950000000000002,
+          3.1346612952338626
+        ],
+        [
+          -0.8350000000000003,
+          3.118526934925173
+        ],
+        [
+          -0.7775000000000005,
+          3.0943318719963404
+        ],
+        [
+          -0.7225000000000008,
+          3.062076106447365
+        ],
+        [
+          -0.672500000000001,
+          3.025596943853255
+        ],
+        [
+          -0.627500000000001,
+          2.9848943842140097
+        ],
+        [
+          -0.5825000000000007,
+          2.9421515631398005
+        ],
+        [
+          -0.5375000000000005,
+          2.897368480630628
+        ],
+        [
+          -0.4925000000000004,
+          2.852482412392475
+        ],
+        [
+          -0.4475000000000004,
+          2.8074933584253428
+        ],
+        [
+          -0.40250000000000036,
+          2.7624991086859456
+        ],
+        [
+          -0.35750000000000026,
+          2.7174996631742836
+        ],
+        [
+          -0.31250000000000033,
+          2.6724999554960895
+        ],
+        [
+          -0.2675000000000004,
+          2.627499985651363
+        ],
+        [
+          -0.22250000000000048,
+          2.582500000523427
+        ],
+        [
+          -0.1775000000000005,
+          2.537500000112283
+        ],
+        [
+          -0.13250000000000045,
+          2.4924963763906836
+        ],
+        [
+          -0.08750000000000042,
+          2.4474891293586287
+        ],
+        [
+          -0.04250000000000048,
+          2.4024888310138826
+        ],
+        [
+          0.0024999999999993847,
+          2.3574954813564437
+        ],
+        [
+          0.047499999999999334,
+          2.3124994361344524
+        ],
+        [
+          0.09249999999999937,
+          2.267500695347908
+        ],
+        [
+          0.13749999999999946,
+          2.2225011684286793
+        ],
+        [
+          0.18249999999999952,
+          2.1775008553767665
+        ],
+        [
+          0.22749999999999956,
+          2.132500744387545
+        ],
+        [
+          0.2724999999999996,
+          2.087500835461016
+        ],
+        [
+          0.31749999999999956,
+          2.042500653663426
+        ],
+        [
+          0.3624999999999995,
+          1.997500198994775
+        ],
+        [
+          0.40749999999999953,
+          1.9524999405597683
+        ],
+        [
+          0.4524999999999996,
+          1.9074998783584052
+        ],
+        [
+          0.4974999999999997,
+          1.862500010613712
+        ],
+        [
+          0.5424999999999999,
+          1.8175003373256884
+        ],
+        [
+          0.5874999999999997,
+          1.7725023440833185
+        ],
+        [
+          0.6324999999999994,
+          1.7275060308866028
+        ],
+        [
+          0.6774999999999992,
+          1.682545113733333
+        ],
+        [
+          0.7224999999999995,
+          1.6376195926235089
+        ],
+        [
+          0.7674999999999994,
+          1.593394335818256
+        ],
+        [
+          0.8124999999999992,
+          1.5498693433175748
+        ],
+        [
+          0.8549999999999991,
+          1.5148301353004254
+        ],
+        [
+          0.8949999999999991,
+          1.4882767117668083
+        ],
+        [
+          0.9149999999999991,
+          1.4749999999999996
+        ]
+      ],
+      "metrics": {
+        "euclidean_distance_m": 2.768104044287353,
+        "path_length_m": 2.861895254606818,
+        "sinuosity": 1.0338828341777924,
+        "max_lateral_deviation_m": 0.2547514153979664,
+        "lateral_lobes": 1.0,
+        "lateral_sign_changes": 0.0,
+        "max_turn_window_deg": 33.598128510649815,
+        "total_turn_deg": 33.598128510649815,
+        "turn_lobes": 1.0,
+        "num_turns_30": 1.0,
+        "num_turns_60": 0.0,
+        "turn_sign_changes": 0.0,
+        "reverse_progress_m": 0.0,
+        "max_backtrack_m": 0.0,
+        "turn_event_count": 1,
+        "supported_turn_count": 1,
+        "supported_turn_fraction": 1.0,
+        "supported_maneuver_count": 1,
+        "min_clearance_m": 0.43,
+        "mean_clearance_m": 0.6760670157202592,
+        "direct_line_min_clearance_m": 0.17492855684535902,
+        "direct_line_collision": false,
+        "detour_ratio": 1.0338828341777924,
+        "near_obstacle_fraction": 0.6779661016949152,
+        "obstacle_interaction": "direct_line_too_close",
+        "purposeful_class_reason": "single_obstacle_avoidance_maneuver"
+      },
+      "turn_events": [
+        {
+          "sign": -1,
+          "turn_deg": 40.11505825045749,
+          "x": -0.7917723307495772,
+          "y": 3.1003374361811598,
+          "s_m": 0.5,
+          "clearance_m": 0.45188494110780014,
+          "obstacle_supported": true
+        }
+      ],
+      "near_optimal_baseline_length_m": 2.806412853056882
+    },
+    {
+      "id": 21,
+      "purposeful_class": "semi_complex",
+      "reason": "single_obstacle_avoidance_maneuver",
+      "start": [
+        -0.39500000000000046,
+        -1.1749999999999998
+      ],
+      "goal": [
+        -0.5750000000000002,
+        -3.3150000000000004
+      ],
+      "poses": [
+        [
+          -0.39500000000000046,
+          -1.1749999999999998
+        ],
+        [
+          -0.39005475844560733,
+          -1.2049999999999996
+        ],
+        [
+          -0.3801642753368211,
+          -1.2649999999999992
+        ],
+        [
+          -0.37064392461433904,
+          -1.324999999999999
+        ],
+        [
+          -0.361493706278161,
+          -1.3849999999999991
+        ],
+        [
+          -0.34575189217585095,
+          -1.4449999999999994
+        ],
+        [
+          -0.3234184823074087,
+          -1.5049999999999997
+        ],
+        [
+          -0.3104725652482753,
+          -1.5650000000000002
+        ],
+        [
+          -0.3069141409984508,
+          -1.6250000000000009
+        ],
+        [
+          -0.3051017850253581,
+          -1.685000000000001
+        ],
+        [
+          -0.3050354973289972,
+          -1.745
+        ],
+        [
+          -0.30500224029115625,
+          -1.8049999999999997
+        ],
+        [
+          -0.3050020139118352,
+          -1.8649999999999998
+        ],
+        [
+          -0.30502847028921887,
+          -1.9249999999999994
+        ],
+        [
+          -0.30508160942330725,
+          -1.9849999999999985
+        ],
+        [
+          -0.3064450055556823,
+          -2.044999999999998
+        ],
+        [
+          -0.30911865868634403,
+          -2.104999999999998
+        ],
+        [
+          -0.32921831353240283,
+          -2.1624999999999988
+        ],
+        [
+          -0.3667439700938587,
+          -2.2174999999999994
+        ],
+        [
+          -0.4066902937347332,
+          -2.27
+        ],
+        [
+          -0.44905728445502635,
+          -2.32
+        ],
+        [
+          -0.47386150586534104,
+          -2.375
+        ],
+        [
+          -0.4811029579656775,
+          -2.4349999999999996
+        ],
+        [
+          -0.4847914248711132,
+          -2.495
+        ],
+        [
+          -0.4849269065816483,
+          -2.5549999999999997
+        ],
+        [
+          -0.48499594395131357,
+          -2.615
+        ],
+        [
+          -0.48499853698010914,
+          -2.675
+        ],
+        [
+          -0.4849999690688285,
+          -2.7350000000000003
+        ],
+        [
+          -0.4850002402174717,
+          -2.7950000000000004
+        ],
+        [
+          -0.4850056995802835,
+          -2.8550000000000004
+        ],
+        [
+          -0.4850163471572638,
+          -2.915
+        ],
+        [
+          -0.4853067463325603,
+          -2.9749999999999996
+        ],
+        [
+          -0.4858768971061729,
+          -3.0349999999999993
+        ],
+        [
+          -0.49399577254857074,
+          -3.0949999999999993
+        ],
+        [
+          -0.5096633726597539,
+          -3.1549999999999994
+        ],
+        [
+          -0.5307158721702383,
+          -3.2124999999999995
+        ],
+        [
+          -0.557153271080024,
+          -3.2674999999999987
+        ],
+        [
+          -0.5715289779011876,
+          -3.299999999999999
+        ],
+        [
+          -0.5738429926337294,
+          -3.3099999999999996
+        ],
+        [
+          -0.5750000000000002,
+          -3.3150000000000004
+        ]
+      ],
+      "metrics": {
+        "euclidean_distance_m": 2.147556751287379,
+        "path_length_m": 2.215935318135901,
+        "sinuosity": 1.0318401675799866,
+        "max_lateral_deviation_m": 0.14834058503567946,
+        "lateral_lobes": 1.0,
+        "lateral_sign_changes": 0.0,
+        "max_turn_window_deg": 17.81646706223194,
+        "total_turn_deg": 25.944916483764224,
+        "turn_lobes": 0.0,
+        "num_turns_30": 0.0,
+        "num_turns_60": 0.0,
+        "turn_sign_changes": 0.0,
+        "reverse_progress_m": 0.0,
+        "max_backtrack_m": 0.0,
+        "turn_event_count": 3,
+        "supported_turn_count": 3,
+        "supported_turn_fraction": 1.0,
+        "supported_maneuver_count": 1,
+        "min_clearance_m": 0.41000000000000003,
+        "mean_clearance_m": 0.4981563967435881,
+        "direct_line_min_clearance_m": 0.29832867780352595,
+        "direct_line_collision": false,
+        "detour_ratio": 1.0318401675799866,
+        "near_obstacle_fraction": 1.0,
+        "obstacle_interaction": "direct_line_too_close",
+        "purposeful_class_reason": "single_obstacle_avoidance_maneuver"
+      },
+      "turn_events": [
+        {
+          "sign": -1,
+          "turn_deg": 27.702327598107157,
+          "x": -0.30506369718469045,
+          "y": -1.9647750878811534,
+          "s_m": 0.8,
+          "clearance_m": 0.4833218389437829,
+          "obstacle_supported": true
+        },
+        {
+          "sign": 1,
+          "turn_deg": 19.22317147836013,
+          "x": -0.4848361736411054,
+          "y": -2.5148176284380193,
+          "s_m": 1.4000000000000001,
+          "clearance_m": 0.46,
+          "obstacle_supported": true
+        },
+        {
+          "sign": -1,
+          "turn_deg": 18.20600684355685,
+          "x": -0.4988637392846383,
+          "y": -3.1136421661321037,
+          "s_m": 2.0,
+          "clearance_m": 0.61,
+          "obstacle_supported": true
+        }
+      ],
+      "near_optimal_baseline_length_m": 2.1777722635447625
+    },
+    {
+      "id": 22,
+      "purposeful_class": "semi_complex",
+      "reason": "single_obstacle_avoidance_maneuver",
+      "start": [
+        -0.28500000000000014,
+        -1.7350000000000003
+      ],
+      "goal": [
+        1.8049999999999997,
+        -2.4250000000000003
+      ],
+      "poses": [
+        [
+          -0.28500000000000014,
+          -1.7350000000000003
+        ],
+        [
+          0.09751201719587395,
+          -2.184231866274124
+        ],
+        [
+          1.8049999999999997,
+          -2.4250000000000003
+        ]
+      ],
+      "metrics": {
+        "euclidean_distance_m": 2.200954338463204,
+        "path_length_m": 2.314400398063304,
+        "sinuosity": 1.0515440314310713,
+        "max_lateral_deviation_m": 0.2730119039071393,
+        "lateral_lobes": 1.0,
+        "lateral_sign_changes": 0.0,
+        "max_turn_window_deg": 27.16741917243739,
+        "total_turn_deg": 27.16741917243739,
+        "turn_lobes": 1.0,
+        "num_turns_30": 0.0,
+        "num_turns_60": 0.0,
+        "turn_sign_changes": 0.0,
+        "reverse_progress_m": 0.0,
+        "max_backtrack_m": 0.0,
+        "turn_event_count": 1,
+        "supported_turn_count": 1,
+        "supported_turn_fraction": 1.0,
+        "supported_maneuver_count": 1,
+        "min_clearance_m": 0.3889730067755345,
+        "mean_clearance_m": 0.4977959049511656,
+        "direct_line_min_clearance_m": 0.13601470508735444,
+        "direct_line_collision": false,
+        "detour_ratio": 1.0515440314310713,
+        "near_obstacle_fraction": 1.0,
+        "obstacle_interaction": "direct_line_too_close",
+        "purposeful_class_reason": "single_obstacle_avoidance_maneuver"
+      },
+      "turn_events": [
+        {
+          "sign": 1,
+          "turn_deg": 41.56006225073017,
+          "x": 0.2064137545202937,
+          "y": -2.199587797512976,
+          "s_m": 0.7000000000000001,
+          "clearance_m": 0.43289721643826723,
+          "obstacle_supported": true
+        }
+      ],
+      "near_optimal_baseline_length_m": 2.2647690000176786
+    },
+    {
+      "id": 7,
+      "purposeful_class": "complex",
+      "reason": "multiple_obstacle_supported_maneuvers",
+      "start": [
+        1.174999999999999,
+        -0.5650000000000004
+      ],
+      "goal": [
+        -0.4350000000000005,
+        -2.0450000000000004
+      ],
+      "poses": [
+        [
+          1.174999999999999,
+          -0.5650000000000004
+        ],
+        [
+          1.1424990124564418,
+          -0.5650355373417882
+        ],
+        [
+          1.0774970373693278,
+          -0.5651066120253638
+        ],
+        [
+          1.0149974741304422,
+          -0.567011316205587
+        ],
+        [
+          0.9550003227397852,
+          -0.5707496498824577
+        ],
+        [
+          0.9000006282673321,
+          -0.59096710576516
+        ],
+        [
+          0.8499983907130825,
+          -0.6276636838536942
+        ],
+        [
+          0.8024978671358932,
+          -0.6681294425821254
+        ],
+        [
+          0.7574990575357643,
+          -0.7123643819504537
+        ],
+        [
+          0.712499785131776,
+          -0.7551499476642962
+        ],
+        [
+          0.6675000499239283,
+          -0.7964861397236527
+        ],
+        [
+          0.6224999887193486,
+          -0.8391427382959247
+        ],
+        [
+          0.577499601518037,
+          -0.8831197433811122
+        ],
+        [
+          0.5324996400097767,
+          -0.9275798568589004
+        ],
+        [
+          0.4875001041945677,
+          -0.9725230787292893
+        ],
+        [
+          0.4425001864406458,
+          -1.0174481190293034
+        ],
+        [
+          0.3974998867480112,
+          -1.0623549777589423
+        ],
+        [
+          0.35249981417094156,
+          -1.1064042638383302
+        ],
+        [
+          0.30749996870943697,
+          -1.1495959772674669
+        ],
+        [
+          0.255000083131733,
+          -1.1834369581538828
+        ],
+        [
+          0.1950001574378297,
+          -1.207927206497578
+        ],
+        [
+          0.13500141731616352,
+          -1.2320399254773902
+        ],
+        [
+          0.07500386276673449,
+          -1.2557751150933196
+        ],
+        [
+          0.020038656522310117,
+          -1.2895965146279798
+        ],
+        [
+          -0.02989420141710957,
+          -1.3335041240813705
+        ],
+        [
+          -0.07670541479112077,
+          -1.3778492270095843
+        ],
+        [
+          -0.12039498359972348,
+          -1.4226318234126214
+        ],
+        [
+          -0.15963069777284045,
+          -1.4725174916404913
+        ],
+        [
+          -0.1944125573104717,
+          -1.5275062316931942
+        ],
+        [
+          -0.22431152069050203,
+          -1.5825004488323686
+        ],
+        [
+          -0.24932758791293153,
+          -1.6375001430580145
+        ],
+        [
+          -0.2699358196381223,
+          -1.6949996712059707
+        ],
+        [
+          -0.2861362158660743,
+          -1.754999033276237
+        ],
+        [
+          -0.29961773189753615,
+          -1.8149818013281875
+        ],
+        [
+          -0.3103803677325079,
+          -1.874947975361822
+        ],
+        [
+          -0.33341313960757973,
+          -1.9294724953849753
+        ],
+        [
+          -0.36871604752275183,
+          -1.9785553613976472
+        ],
+        [
+          -0.39852562611025355,
+          -2.0135725958029873
+        ],
+        [
+          -0.42284187537008483,
+          -2.0345241986009963
+        ],
+        [
+          -0.4350000000000005,
+          -2.0450000000000004
+        ]
+      ],
+      "metrics": {
+        "euclidean_distance_m": 2.1868927728629033,
+        "path_length_m": 2.3192440254980085,
+        "sinuosity": 1.0605202295592397,
+        "max_lateral_deviation_m": 0.23603900031098324,
+        "lateral_lobes": 1.0,
+        "lateral_sign_changes": 0.0,
+        "max_turn_window_deg": 33.83597890273546,
+        "total_turn_deg": 57.12957895406416,
+        "turn_lobes": 2.0,
+        "num_turns_30": 1.0,
+        "num_turns_60": 0.0,
+        "turn_sign_changes": 1.0,
+        "reverse_progress_m": 0.0,
+        "max_backtrack_m": 0.0,
+        "turn_event_count": 2,
+        "supported_turn_count": 2,
+        "supported_turn_fraction": 1.0,
+        "supported_maneuver_count": 2,
+        "min_clearance_m": 0.388329756778952,
+        "mean_clearance_m": 0.5328389729428323,
+        "direct_line_min_clearance_m": 0.18384776310850234,
+        "direct_line_collision": false,
+        "detour_ratio": 1.0605202295592397,
+        "near_obstacle_fraction": 1.0,
+        "obstacle_interaction": "direct_line_too_close",
+        "purposeful_class_reason": "multiple_obstacle_supported_maneuvers"
+      },
+      "turn_events": [
+        {
+          "sign": 1,
+          "turn_deg": 39.95115761513108,
+          "x": 0.8049080626731052,
+          "y": -0.6660761938229054,
+          "s_m": 0.4,
+          "clearance_m": 0.6296824596572467,
+          "obstacle_supported": true
+        },
+        {
+          "sign": 1,
+          "turn_deg": 36.4936979159195,
+          "x": -0.1747351129006135,
+          "y": -1.4963969727306443,
+          "s_m": 1.7000000000000002,
+          "clearance_m": 0.46238512086787564,
+          "obstacle_supported": true
+        }
+      ],
+      "near_optimal_baseline_length_m": 2.217027729131284
+    },
+    {
+      "id": 16,
+      "purposeful_class": "complex",
+      "reason": "multiple_obstacle_supported_maneuvers",
+      "start": [
+        -0.6150000000000002,
+        3.175
+      ],
+      "goal": [
+        -0.7350000000000003,
+        0.7149999999999999
+      ],
+      "poses": [
+        [
+          -0.6150000000000002,
+          3.175
+        ],
+        [
+          -0.610054818197057,
+          3.1449999999999996
+        ],
+        [
+          -0.6001644545911706,
+          3.085
+        ],
+        [
+          -0.5906151905251142,
+          3.025
+        ],
+        [
+          -0.5814070259988877,
+          2.9650000000000003
+        ],
+        [
+          -0.5643827444137413,
+          2.9050000000000002
+        ],
+        [
+          -0.5395423457696746,
+          2.845
+        ],
+        [
+          -0.5199725669133737,
+          2.785
+        ],
+        [
+          -0.505673407844838,
+          2.7250000000000005
+        ],
+        [
+          -0.4953373038933049,
+          2.665
+        ],
+        [
+          -0.4889642550587741,
+          2.6050000000000004
+        ],
+        [
+          -0.4826633668726359,
+          2.545
+        ],
+        [
+          -0.4764346393348902,
+          2.4850000000000003
+        ],
+        [
+          -0.46956907668693904,
+          2.425
+        ],
+        [
+          -0.4620666789287824,
+          2.365
+        ],
+        [
+          -0.4428613316472519,
+          2.3075
+        ],
+        [
+          -0.4119530348423476,
+          2.2525000000000004
+        ],
+        [
+          -0.37975218042144954,
+          2.2
+        ],
+        [
+          -0.3462587683845578,
+          2.1500000000000004
+        ],
+        [
+          -0.3194892072210953,
+          2.0950000052967708
+        ],
+        [
+          -0.29944349693106187,
+          2.035000015890313
+        ],
+        [
+          -0.2883361135467125,
+          1.9749991003953553
+        ],
+        [
+          -0.2861670570680472,
+          1.9149972588118978
+        ],
+        [
+          -0.28506220918364283,
+          1.8524964685538814
+        ],
+        [
+          -0.28502156989349936,
+          1.787496729621306
+        ],
+        [
+          -0.28500093710529184,
+          1.722497915713259
+        ],
+        [
+          -0.28500031081902016,
+          1.6575000268297402
+        ],
+        [
+          -0.2850000136358165,
+          1.5950006998511004
+        ],
+        [
+          -0.2850000455556808,
+          1.5349999347773398
+        ],
+        [
+          -0.2850001483017184,
+          1.472499663461939
+        ],
+        [
+          -0.2850003218739292,
+          1.407499885904898
+        ],
+        [
+          -0.285005819507991,
+          1.3449999945469908
+        ],
+        [
+          -0.2850166412039038,
+          1.2849999893882176
+        ],
+        [
+          -0.28531215869840376,
+          1.2250000016868487
+        ],
+        [
+          -0.2858923719914911,
+          1.1650000314428843
+        ],
+        [
+          -0.29257091660172535,
+          1.105000824846134
+        ],
+        [
+          -0.3053477925291066,
+          1.045002381896598
+        ],
+        [
+          -0.3304845171970352,
+          0.9875327564930436
+        ],
+        [
+          -0.36798109060551115,
+          0.9325919486354707
+        ],
+        [
+          -0.40881885573061216,
+          0.8831931631704477
+        ],
+        [
+          -0.45299781257233834,
+          0.8393364000979748
+        ],
+        [
+          -0.5025660354148126,
+          0.8000367954529382
+        ],
+        [
+          -0.557523524258035,
+          0.7652943492353375
+        ],
+        [
+          -0.6150017106441082,
+          0.7414516005377363
+        ],
+        [
+          -0.6750005945730323,
+          0.7285085493601346
+        ],
+        [
+          -0.7125000274031208,
+          0.7202777678285003
+        ],
+        [
+          -0.7275000091343738,
+          0.7167592559428333
+        ],
+        [
+          -0.7350000000000003,
+          0.7149999999999999
+        ]
+      ],
+      "metrics": {
+        "euclidean_distance_m": 2.4629250902128548,
+        "path_length_m": 2.759171651236263,
+        "sinuosity": 1.120282408182299,
+        "max_lateral_deviation_m": 0.4176666217218088,
+        "lateral_lobes": 1.0,
+        "lateral_sign_changes": 0.0,
+        "max_turn_window_deg": 51.15874473630612,
+        "total_turn_deg": 69.64854246879231,
+        "turn_lobes": 1.0,
+        "num_turns_30": 1.0,
+        "num_turns_60": 1.0,
+        "turn_sign_changes": 0.0,
+        "reverse_progress_m": 0.0,
+        "max_backtrack_m": 0.0,
+        "turn_event_count": 2,
+        "supported_turn_count": 2,
+        "supported_turn_fraction": 1.0,
+        "supported_maneuver_count": 2,
+        "min_clearance_m": 0.43139309220245986,
+        "mean_clearance_m": 0.45696519378912365,
+        "direct_line_min_clearance_m": 0.02,
+        "direct_line_collision": false,
+        "detour_ratio": 1.120282408182299,
+        "near_obstacle_fraction": 1.0,
+        "obstacle_interaction": "direct_line_too_close",
+        "purposeful_class_reason": "multiple_obstacle_supported_maneuvers"
+      },
+      "turn_events": [
+        {
+          "sign": -1,
+          "turn_deg": 19.643233635550622,
+          "x": -0.2850503212227938,
+          "y": 1.8334824958958595,
+          "s_m": 1.4000000000000001,
+          "clearance_m": 0.45,
+          "obstacle_supported": true
+        },
+        {
+          "sign": -1,
+          "turn_deg": 70.92017705411003,
+          "x": -0.42050300627824877,
+          "y": 0.8715942242433333,
+          "s_m": 2.4000000000000004,
+          "clearance_m": 0.43139309220245986,
+          "obstacle_supported": true
+        }
+      ],
+      "near_optimal_baseline_length_m": 2.6347882987501574
+    },
+    {
+      "id": 23,
+      "purposeful_class": "complex",
+      "reason": "multiple_obstacle_supported_maneuvers",
+      "start": [
+        -0.4450000000000003,
+        -3.2750000000000004
+      ],
+      "goal": [
+        0.6049999999999986,
+        -1.0250000000000004
+      ],
+      "poses": [
+        [
+          -0.4450000000000003,
+          -3.2750000000000004
+        ],
+        [
+          -0.43768064458826406,
+          -3.245
+        ],
+        [
+          -0.4230419337647916,
+          -3.185
+        ],
+        [
+          -0.41504071722566105,
+          -3.125
+        ],
+        [
+          -0.41367699497087246,
+          -3.0650000000000004
+        ],
+        [
+          -0.40030938042450953,
+          -3.0075000000000003
+        ],
+        [
+          -0.37493787358657227,
+          -2.9525
+        ],
+        [
+          -0.34073908702324623,
+          -2.9025000000000003
+        ],
+        [
+          -0.2977130207345314,
+          -2.8575000000000004
+        ],
+        [
+          -0.25901649011200506,
+          -2.8100000000000005
+        ],
+        [
+          -0.2246494951556673,
+          -2.7600000000000007
+        ],
+        [
+          -0.20441271057311505,
+          -2.7050000000000005
+        ],
+        [
+          -0.19830613636434832,
+          -2.6450000000000005
+        ],
+        [
+          -0.1951908386693994,
+          -2.5849996943177236
+        ],
+        [
+          -0.19506681748826832,
+          -2.5249990829531703
+        ],
+        [
+          -0.19500360744882336,
+          -2.4624989080114204
+        ],
+        [
+          -0.19500120855106456,
+          -2.3974991694924737
+        ],
+        [
+          -0.1950000057763841,
+          -2.3324990560327676
+        ],
+        [
+          -0.19499999912478191,
+          -2.2674985676323023
+        ],
+        [
+          -0.194999996064515,
+          -2.2024984963910867
+        ],
+        [
+          -0.19499999659558345,
+          -2.137498842309122
+        ],
+        [
+          -0.194999992952223,
+          -2.074998792172948
+        ],
+        [
+          -0.19499998513443373,
+          -2.0149983459825656
+        ],
+        [
+          -0.1949998402179725,
+          -1.952498703837113
+        ],
+        [
+          -0.19499955820283937,
+          -1.8874998657365902
+        ],
+        [
+          -0.19499187843325305,
+          -1.8250003118281528
+        ],
+        [
+          -0.19497680090921352,
+          -1.7650000421118006
+        ],
+        [
+          -0.19456500461649504,
+          -1.704999947163945
+        ],
+        [
+          -0.1937564895550976,
+          -1.6450000269845853
+        ],
+        [
+          -0.18595749801732336,
+          -1.5850011455166346
+        ],
+        [
+          -0.1711680300031722,
+          -1.5250033027600933
+        ],
+        [
+          -0.14614762727143504,
+          -1.4700335557599324
+        ],
+        [
+          -0.11089628982211187,
+          -1.4200919045161526
+        ],
+        [
+          -0.07118114332631711,
+          -1.3731905083692826
+        ],
+        [
+          -0.02700218778405078,
+          -1.3293293673193223
+        ],
+        [
+          0.02256603468254259,
+          -1.2899411710687372
+        ],
+        [
+          0.077523524073463,
+          -1.2550259196175273
+        ],
+        [
+          0.13500171215662554,
+          -1.2272941584410142
+        ],
+        [
+          0.1950005989320302,
+          -1.2067458875391983
+        ],
+        [
+          0.25250003200373783,
+          -1.1842383957295992
+        ],
+        [
+          0.3075000113717485,
+          -1.1597716830122167
+        ],
+        [
+          0.3625000008070897,
+          -1.1350465954441373
+        ],
+        [
+          0.41750000030976153,
+          -1.1100631330253607
+        ],
+        [
+          0.47250000004479215,
+          -1.0851230747093554
+        ],
+        [
+          0.5275000000121817,
+          -1.0602264204961211
+        ],
+        [
+          0.5674999999969069,
+          -1.042083570042128
+        ],
+        [
+          0.5924999999989681,
+          -1.0306945233473763
+        ],
+        [
+          0.6049999999999986,
+          -1.0250000000000004
+        ]
+      ],
+      "metrics": {
+        "euclidean_distance_m": 2.482941803587027,
+        "path_length_m": 2.7683119738007207,
+        "sinuosity": 1.1149322830689905,
+        "max_lateral_deviation_m": 0.46719820534006656,
+        "lateral_lobes": 1.0,
+        "lateral_sign_changes": 0.0,
+        "max_turn_window_deg": 48.75200525424865,
+        "total_turn_deg": 67.22480817344491,
+        "turn_lobes": 1.0,
+        "num_turns_30": 1.0,
+        "num_turns_60": 0.0,
+        "turn_sign_changes": 0.0,
+        "reverse_progress_m": 0.0,
+        "max_backtrack_m": 0.0,
+        "turn_event_count": 2,
+        "supported_turn_count": 2,
+        "supported_turn_fraction": 1.0,
+        "supported_maneuver_count": 2,
+        "min_clearance_m": 0.43139309220245986,
+        "mean_clearance_m": 0.5689840579759207,
+        "direct_line_min_clearance_m": 0.0,
+        "direct_line_collision": true,
+        "detour_ratio": 1.1149322830689903,
+        "near_obstacle_fraction": 1.0,
+        "obstacle_interaction": "direct_line_blocked",
+        "purposeful_class_reason": "multiple_obstacle_supported_maneuvers"
+      },
+      "turn_events": [
+        {
+          "sign": 1,
+          "turn_deg": 24.697474770448803,
+          "x": -0.19510105123141605,
+          "y": -2.5415611371073767,
+          "s_m": 0.8,
+          "clearance_m": 0.75,
+          "obstacle_supported": true
+        },
+        {
+          "sign": -1,
+          "turn_deg": 64.95685520655489,
+          "x": -0.07237583542450382,
+          "y": -1.3746013738026135,
+          "s_m": 2.0,
+          "clearance_m": 0.43931765272977596,
+          "obstacle_supported": true
+        }
+      ],
+      "near_optimal_baseline_length_m": 2.6612088389733604
+    },
+    {
+      "id": 24,
+      "purposeful_class": "complex",
+      "reason": "multiple_obstacle_supported_maneuvers",
+      "start": [
+        1.4149999999999991,
+        2.5149999999999997
+      ],
+      "goal": [
+        0.625,
+        0.6749999999999998
+      ],
+      "poses": [
+        [
+          1.4149999999999991,
+          2.5149999999999997
+        ],
+        [
+          1.409745345186482,
+          2.4849999999999994
+        ],
+        [
+          1.3992360355594475,
+          2.425
+        ],
+        [
+          1.3804981788164417,
+          2.3649999999999993
+        ],
+        [
+          1.3535317749574642,
+          2.3049999999999997
+        ],
+        [
+          1.3187239832178737,
+          2.2524999999999995
+        ],
+        [
+          1.2760748035976697,
+          2.2074999999999996
+        ],
+        [
+          1.2323095744890242,
+          2.1624999999999996
+        ],
+        [
+          1.187428295891937,
+          2.117499999999999
+        ],
+        [
+          1.1424904571898513,
+          2.072499999999999
+        ],
+        [
+          1.0974960583827666,
+          2.027499999999999
+        ],
+        [
+          1.0524991551266936,
+          1.982499999999999
+        ],
+        [
+          1.0074997474216323,
+          1.9374999999999996
+        ],
+        [
+          0.9625006661052526,
+          1.8924999999999996
+        ],
+        [
+          0.9175019111775549,
+          1.8474999999999997
+        ],
+        [
+          0.8725150230521368,
+          1.8025
+        ],
+        [
+          0.8275400017289983,
+          1.7575000000000003
+        ],
+        [
+          0.7828003851688218,
+          1.7125000000000004
+        ],
+        [
+          0.7382961733716071,
+          1.6675000000000002
+        ],
+        [
+          0.697687427608344,
+          1.62
+        ],
+        [
+          0.6609741478790326,
+          1.5699999999999994
+        ],
+        [
+          0.6407487914647347,
+          1.5149999999999995
+        ],
+        [
+          0.6370113583654502,
+          1.455
+        ],
+        [
+          0.6351077126370783,
+          1.3950000000000002
+        ],
+        [
+          0.6350378542796191,
+          1.3350000000000004
+        ],
+        [
+          0.6350022268210369,
+          1.2750000000000006
+        ],
+        [
+          0.6350008302613319,
+          1.2150000000000005
+        ],
+        [
+          0.6350000903863596,
+          1.155
+        ],
+        [
+          0.6350000071961198,
+          1.094999999999999
+        ],
+        [
+          0.6349996499989645,
+          1.0349999999999988
+        ],
+        [
+          0.6349990187948937,
+          0.9749999999999994
+        ],
+        [
+          0.6349817933592387,
+          0.9149999999999997
+        ],
+        [
+          0.6349479736919995,
+          0.8549999999999998
+        ],
+        [
+          0.634024384268263,
+          0.7949999999999998
+        ],
+        [
+          0.632211025088029,
+          0.735
+        ],
+        [
+          0.629728259123434,
+          0.6975
+        ],
+        [
+          0.626576086374478,
+          0.6824999999999999
+        ],
+        [
+          0.625,
+          0.6749999999999998
+        ]
+      ],
+      "metrics": {
+        "euclidean_distance_m": 2.002423531623617,
+        "path_length_m": 2.130990852309872,
+        "sinuosity": 1.0642058578796312,
+        "max_lateral_deviation_m": 0.28898029787323176,
+        "lateral_lobes": 1.0,
+        "lateral_sign_changes": 0.0,
+        "max_turn_window_deg": 36.503217201759675,
+        "total_turn_deg": 54.043995751819715,
+        "turn_lobes": 1.0,
+        "num_turns_30": 1.0,
+        "num_turns_60": 0.0,
+        "turn_sign_changes": 0.0,
+        "reverse_progress_m": 0.0,
+        "max_backtrack_m": 0.0,
+        "turn_event_count": 2,
+        "supported_turn_count": 2,
+        "supported_turn_fraction": 1.0,
+        "supported_maneuver_count": 2,
+        "min_clearance_m": 0.4525483399593905,
+        "mean_clearance_m": 0.6175860041970441,
+        "direct_line_min_clearance_m": 0.28460498941515416,
+        "direct_line_collision": false,
+        "detour_ratio": 1.0642058578796312,
+        "near_obstacle_fraction": 1.0,
+        "obstacle_interaction": "direct_line_too_close",
+        "purposeful_class_reason": "multiple_obstacle_supported_maneuvers"
+      },
+      "turn_events": [
+        {
+          "sign": -1,
+          "turn_deg": 25.570665803286342,
+          "x": 1.3070298249808008,
+          "y": 2.2401612604192036,
+          "s_m": 0.30000000000000004,
+          "clearance_m": 0.6020797289396148,
+          "obstacle_supported": true
+        },
+        {
+          "sign": 1,
+          "turn_deg": 44.318275506538065,
+          "x": 0.6401417793275864,
+          "y": 1.5052551491193595,
+          "s_m": 1.3,
+          "clearance_m": 0.7000000000000001,
+          "obstacle_supported": true
+        }
+      ],
+      "near_optimal_baseline_length_m": 2.0079790000501325
+    },
+    {
+      "id": 25,
+      "purposeful_class": "complex",
+      "reason": "multiple_obstacle_supported_maneuvers",
+      "start": [
+        -0.955000000000001,
+        -0.4350000000000005
+      ],
+      "goal": [
+        0.0649999999999995,
+        -2.495
+      ],
+      "poses": [
+        [
+          -0.955000000000001,
+          -0.4350000000000005
+        ],
+        [
+          -0.9250011006828925,
+          -0.44525235724834744
+        ],
+        [
+          -0.8650033020486756,
+          -0.46575707174504133
+        ],
+        [
+          -0.8100337166225369,
+          -0.493687448950231
+        ],
+        [
+          -0.7600923444044762,
+          -0.5290434888639164
+        ],
+        [
+          -0.7131942243600526,
+          -0.5688128548653573
+        ],
+        [
+          -0.6693393564892666,
+          -0.6129955469545534
+        ],
+        [
+          -0.6300568007897566,
+          -0.6625657343734151
+        ],
+        [
+          -0.5953465572615226,
+          -0.7175234171219422
+        ],
+        [
+          -0.5723864259085997,
+          -0.7750017044290091
+        ],
+        [
+          -0.5611764067309875,
+          -0.8350005962946156
+        ],
+        [
+          -0.5517335110237762,
+          -0.8950000318539312
+        ],
+        [
+          -0.5440577387869661,
+          -0.9550000111069558
+        ],
+        [
+          -0.5187817227374969,
+          -1.0100000005663534
+        ],
+        [
+          -0.4759054628753689,
+          -1.0600000002321237
+        ],
+        [
+          -0.4321117173614489,
+          -1.1075000000457829
+        ],
+        [
+          -0.3874004861957368,
+          -1.1525000000073309
+        ],
+        [
+          -0.34289593681589464,
+          -1.1974999999906784
+        ],
+        [
+          -0.29859806922192245,
+          -1.2424999999958248
+        ],
+        [
+          -0.25956776180344054,
+          -1.292499999999884
+        ],
+        [
+          -0.22580501456044907,
+          -1.3475000000028552
+        ],
+        [
+          -0.20796102640232839,
+          -1.4050000000010816
+        ],
+        [
+          -0.20603579732907848,
+          -1.4649999999945638
+        ],
+        [
+          -0.20505509898137572,
+          -1.5249999999937758
+        ],
+        [
+          -0.20501893135922009,
+          -1.5849999999987183
+        ],
+        [
+          -0.20499358463653172,
+          -1.6450000000009326
+        ],
+        [
+          -0.2049790588133106,
+          -1.7050000000004177
+        ],
+        [
+          -0.20460049666500366,
+          -1.7650000000001507
+        ],
+        [
+          -0.20385789819161088,
+          -1.8250000000001312
+        ],
+        [
+          -0.1954245473639588,
+          -1.8850000000000617
+        ],
+        [
+          -0.17930044418204746,
+          -1.944999999999943
+        ],
+        [
+          -0.158880085143054,
+          -2.0024999999999533
+        ],
+        [
+          -0.1341634702469784,
+          -2.057500000000092
+        ],
+        [
+          -0.1093088588494391,
+          -2.1125000000001517
+        ],
+        [
+          -0.08431625095043616,
+          -2.167500000000131
+        ],
+        [
+          -0.05932053735337691,
+          -2.2225000000000983
+        ],
+        [
+          -0.03432171805826139,
+          -2.2775000000000523
+        ],
+        [
+          -0.009341340796459173,
+          -2.332500000000027
+        ],
+        [
+          0.01562059443202974,
+          -2.3875000000000233
+        ],
+        [
+          0.03732617153470552,
+          -2.4350000000000156
+        ],
+        [
+          0.05577539051156818,
+          -2.4750000000000054
+        ],
+        [
+          0.0649999999999995,
+          -2.495
+        ]
+      ],
+      "metrics": {
+        "euclidean_distance_m": 2.298695282111137,
+        "path_length_m": 2.4279332970365304,
+        "sinuosity": 1.0562223344395176,
+        "max_lateral_deviation_m": 0.22005078193192995,
+        "lateral_lobes": 1.0,
+        "lateral_sign_changes": 0.0,
+        "max_turn_window_deg": 32.10120555162513,
+        "total_turn_deg": 54.341122946760095,
+        "turn_lobes": 2.0,
+        "num_turns_30": 1.0,
+        "num_turns_60": 0.0,
+        "turn_sign_changes": 1.0,
+        "reverse_progress_m": 0.0,
+        "max_backtrack_m": 0.0,
+        "turn_event_count": 3,
+        "supported_turn_count": 3,
+        "supported_turn_fraction": 1.0,
+        "supported_maneuver_count": 2,
+        "min_clearance_m": 0.43139309220245986,
+        "mean_clearance_m": 0.5134024374303706,
+        "direct_line_min_clearance_m": 0.24596747752497689,
+        "direct_line_collision": false,
+        "detour_ratio": 1.0562223344395174,
+        "near_obstacle_fraction": 1.0,
+        "obstacle_interaction": "direct_line_too_close",
+        "purposeful_class_reason": "multiple_obstacle_supported_maneuvers"
+      },
+      "turn_events": [
+        {
+          "sign": -1,
+          "turn_deg": 37.12152865861817,
+          "x": -0.6987143372231785,
+          "y": -0.5834009821569458,
+          "s_m": 0.30000000000000004,
+          "clearance_m": 0.43840620433565947,
+          "obstacle_supported": true
+        },
+        {
+          "sign": -1,
+          "turn_deg": 36.55322136564163,
+          "x": -0.20742070356754405,
+          "y": -1.4218392273605625,
+          "s_m": 1.3,
+          "clearance_m": 0.5188448708429139,
+          "obstacle_supported": true
+        },
+        {
+          "sign": 1,
+          "turn_deg": 18.1820996993184,
+          "x": -0.15352417239802513,
+          "y": -2.014418104571146,
+          "s_m": 1.9000000000000001,
+          "clearance_m": 0.4802082881417188,
+          "obstacle_supported": true
+        }
+      ],
+      "near_optimal_baseline_length_m": 2.3179969744740134
+    },
+    {
+      "id": 26,
+      "purposeful_class": "complex",
+      "reason": "multiple_obstacle_supported_maneuvers",
+      "start": [
+        0.24499999999999922,
+        -2.3150000000000004
+      ],
+      "goal": [
+        1.3149999999999995,
+        -0.3650000000000002
+      ],
+      "poses": [
+        [
+          0.24499999999999922,
+          -2.3150000000000004
+        ],
+        [
+          0.22250012184821868,
+          -2.2936929016963017
+        ],
+        [
+          0.1775003655446576,
+          -2.2510787050889043
+        ],
+        [
+          0.12750456019480594,
+          -2.2130726436160737
+        ],
+        [
+          0.07251270579866376,
+          -2.179674717277809
+        ],
+        [
+          0.020128223582092403,
+          -2.1408729301546647
+        ],
+        [
+          -0.029648886454908083,
+          -2.0966672822466412
+        ],
+        [
+          -0.07486193162263244,
+          -2.052167966943344
+        ],
+        [
+          -0.11551091192108069,
+          -2.0073749842447737
+        ],
+        [
+          -0.1474175486208952,
+          -1.9549834218620852
+        ],
+        [
+          -0.17058184172207602,
+          -1.8949932797952787
+        ],
+        [
+          -0.18285795983237782,
+          -1.834999122172955
+        ],
+        [
+          -0.18424590295180068,
+          -1.7750009489951144
+        ],
+        [
+          -0.18485782974426937,
+          -1.715001179699801
+        ],
+        [
+          -0.18469374020978388,
+          -1.654999814287015
+        ],
+        [
+          -0.18038205304372584,
+          -1.5949993363876662
+        ],
+        [
+          -0.17192276824609526,
+          -1.534999746001754
+        ],
+        [
+          -0.14908379129479032,
+          -1.4774999500414165
+        ],
+        [
+          -0.11186512218981105,
+          -1.4224999485066538
+        ],
+        [
+          -0.07116983097501604,
+          -1.372500014563604
+        ],
+        [
+          -0.026997917650405295,
+          -1.3275001482122666
+        ],
+        [
+          0.017567140199581745,
+          -1.2825002477151342
+        ],
+        [
+          0.06252534257494509,
+          -1.2375003130722066
+        ],
+        [
+          0.10750338887925542,
+          -1.1925001845740535
+        ],
+        [
+          0.1525012791125127,
+          -1.1474998622206745
+        ],
+        [
+          0.197500171001268,
+          -1.1024997662374345
+        ],
+        [
+          0.24250006454552123,
+          -1.0574998966243332
+        ],
+        [
+          0.28750000861942726,
+          -1.0125002793204567
+        ],
+        [
+          0.33250000322298606,
+          -0.9675009143258055
+        ],
+        [
+          0.3775000004037741,
+          -0.9225070004361269
+        ],
+        [
+          0.4225000001617914,
+          -0.8775185376514206
+        ],
+        [
+          0.46750000003237263,
+          -0.8326385758102299
+        ],
+        [
+          0.5125000000155179,
+          -0.7878671149125547
+        ],
+        [
+          0.5575000000081693,
+          -0.7452453143724688
+        ],
+        [
+          0.6025000000103272,
+          -0.7047731741899719
+        ],
+        [
+          0.6525000000091026,
+          -0.670489069369766
+        ],
+        [
+          0.7075000000044955,
+          -0.6423929999118514
+        ],
+        [
+          0.762500000001819,
+          -0.6158047259268045
+        ],
+        [
+          0.817500000001073,
+          -0.5907242474146253
+        ],
+        [
+          0.8725000000020888,
+          -0.5656829640533076
+        ],
+        [
+          0.9275000000048668,
+          -0.5406808758428518
+        ],
+        [
+          0.9825000000047182,
+          -0.5156798720658423
+        ],
+        [
+          1.0375000000016432,
+          -0.4906799527222793
+        ],
+        [
+          1.092500000000335,
+          -0.4656825914521138
+        ],
+        [
+          1.147500000000794,
+          -0.44068778825534577
+        ],
+        [
+          1.2025000000007735,
+          -0.41579037526912177
+        ],
+        [
+          1.2575000000002738,
+          -0.3909903524934417
+        ],
+        [
+          1.292500000000018,
+          -0.3751927558292013
+        ],
+        [
+          1.3075000000000057,
+          -0.3683975852764006
+        ],
+        [
+          1.3149999999999995,
+          -0.3650000000000002
+        ]
+      ],
+      "metrics": {
+        "euclidean_distance_m": 2.2242751628339517,
+        "path_length_m": 2.895051897246111,
+        "sinuosity": 1.3015709322391218,
+        "max_lateral_deviation_m": 0.7227118911146968,
+        "lateral_lobes": 1.0,
+        "lateral_sign_changes": 0.0,
+        "max_turn_window_deg": 58.330638165587345,
+        "total_turn_deg": 83.86355042389519,
+        "turn_lobes": 1.0,
+        "num_turns_30": 1.0,
+        "num_turns_60": 1.0,
+        "turn_sign_changes": 0.0,
+        "reverse_progress_m": 0.0,
+        "max_backtrack_m": 0.0,
+        "turn_event_count": 2,
+        "supported_turn_count": 2,
+        "supported_turn_fraction": 1.0,
+        "supported_maneuver_count": 2,
+        "min_clearance_m": 0.43139309220245986,
+        "mean_clearance_m": 0.5533186895967473,
+        "direct_line_min_clearance_m": 0.0,
+        "direct_line_collision": true,
+        "detour_ratio": 1.3015709322391218,
+        "near_obstacle_fraction": 0.9152542372881356,
+        "obstacle_interaction": "direct_line_blocked",
+        "purposeful_class_reason": "multiple_obstacle_supported_maneuvers"
+      },
+      "turn_events": [
+        {
+          "sign": -1,
+          "turn_deg": 93.17444131242388,
+          "x": -0.18481050760465453,
+          "y": -1.697697254741716,
+          "s_m": 0.8,
+          "clearance_m": 0.44,
+          "obstacle_supported": true
+        },
+        {
+          "sign": -1,
+          "turn_deg": 18.206371434762275,
+          "x": 0.6832770020909225,
+          "y": -0.6547670186739546,
+          "s_m": 2.2,
+          "clearance_m": 0.7463243262818117,
+          "obstacle_supported": true
+        }
+      ],
+      "near_optimal_baseline_length_m": 2.725716708936023
+    },
+    {
+      "id": 27,
+      "purposeful_class": "complex",
+      "reason": "multiple_obstacle_supported_maneuvers",
+      "start": [
+        -0.5050000000000008,
+        2.7649999999999997
+      ],
+      "goal": [
+        -0.9750000000000005,
+        0.7649999999999997
+      ],
+      "poses": [
+        [
+          -0.5050000000000008,
+          2.7649999999999997
+        ],
+        [
+          -0.5000383315253312,
+          2.7349999999999994
+        ],
+        [
+          -0.49011499457599206,
+          2.675
+        ],
+        [
+          -0.4826393293357317,
+          2.6149999999999993
+        ],
+        [
+          -0.47761133580455023,
+          2.5549999999999997
+        ],
+        [
+          -0.47287903150846144,
+          2.4949999999999997
+        ],
+        [
+          -0.4684424164474655,
+          2.435
+        ],
+        [
+          -0.45695925684189515,
+          2.375
+        ],
+        [
+          -0.4384295526917505,
+          2.3150000000000004
+        ],
+        [
+          -0.4099530742917781,
+          2.26
+        ],
+        [
+          -0.3715298216419778,
+          2.21
+        ],
+        [
+          -0.3402468833562585,
+          2.155
+        ],
+        [
+          -0.3161042594346203,
+          2.095
+        ],
+        [
+          -0.29942431530508984,
+          2.034999098486914
+        ],
+        [
+          -0.2902070509676672,
+          1.974997295460742
+        ],
+        [
+          -0.28545083785901026,
+          1.9124970181110856
+        ],
+        [
+          -0.28515567597911895,
+          1.8474982664379447
+        ],
+        [
+          -0.28500608292916013,
+          1.7824991131215415
+        ],
+        [
+          -0.2850020587091337,
+          1.7174995581618755
+        ],
+        [
+          -0.28500002744316355,
+          1.6524998985447183
+        ],
+        [
+          -0.2849999891312497,
+          1.5875001342700699
+        ],
+        [
+          -0.28500000216081117,
+          1.524999786645033
+        ],
+        [
+          -0.28500006653184806,
+          1.464998855669608
+        ],
+        [
+          -0.28500112277244055,
+          1.402498798006822
+        ],
+        [
+          -0.2850031708825886,
+          1.337499613656675
+        ],
+        [
+          -0.28505940965691035,
+          1.274999902010537
+        ],
+        [
+          -0.28516983909540566,
+          1.214999663068408
+        ],
+        [
+          -0.2879071664261341,
+          1.1549997781953731
+        ],
+        [
+          -0.29327139164909566,
+          1.0950002473914324
+        ],
+        [
+          -0.30798679445118743,
+          1.0375061790057267
+        ],
+        [
+          -0.3320533748324094,
+          0.982517573038256
+        ],
+        [
+          -0.36442966009240507,
+          0.9326331036234641
+        ],
+        [
+          -0.40511565023117435,
+          0.8878527707613507
+        ],
+        [
+          -0.4478497716941558,
+          0.8451381048963702
+        ],
+        [
+          -0.49263202448134935,
+          0.8044891060285225
+        ],
+        [
+          -0.5450174711095538,
+          0.7725825298805884
+        ],
+        [
+          -0.6050061115787693,
+          0.7494183764525679
+        ],
+        [
+          -0.665000325955358,
+          0.7371462891742946
+        ],
+        [
+          -0.7250001142393199,
+          0.7357662680457683
+        ],
+        [
+          -0.7850000063069451,
+          0.7353704684169082
+        ],
+        [
+          -0.8450000021582337,
+          0.7359588902877141
+        ],
+        [
+          -0.9000000000629086,
+          0.7434398259173378
+        ],
+        [
+          -0.9500000000209698,
+          0.7578132753057791
+        ],
+        [
+          -0.9750000000000005,
+          0.7649999999999997
+        ]
+      ],
+      "metrics": {
+        "euclidean_distance_m": 2.0544829033116825,
+        "path_length_m": 2.5732258492310236,
+        "sinuosity": 1.252493191879652,
+        "max_lateral_deviation_m": 0.5664433807643202,
+        "lateral_lobes": 1.0,
+        "lateral_sign_changes": 0.0,
+        "max_turn_window_deg": 61.38690724896212,
+        "total_turn_deg": 86.01566043490892,
+        "turn_lobes": 1.0,
+        "num_turns_30": 1.0,
+        "num_turns_60": 1.0,
+        "turn_sign_changes": 0.0,
+        "reverse_progress_m": 0.0,
+        "max_backtrack_m": 0.0,
+        "turn_event_count": 2,
+        "supported_turn_count": 2,
+        "supported_turn_fraction": 1.0,
+        "supported_maneuver_count": 2,
+        "min_clearance_m": 0.41000000000000003,
+        "mean_clearance_m": 0.4494865717369827,
+        "direct_line_min_clearance_m": 0.0,
+        "direct_line_collision": true,
+        "detour_ratio": 1.252493191879652,
+        "near_obstacle_fraction": 1.0,
+        "obstacle_interaction": "direct_line_blocked",
+        "purposeful_class_reason": "multiple_obstacle_supported_maneuvers"
+      },
+      "turn_events": [
+        {
+          "sign": -1,
+          "turn_deg": 18.6318068438844,
+          "x": -0.2854269393375214,
+          "y": 1.9072342312492323,
+          "s_m": 0.9,
+          "clearance_m": 0.45,
+          "obstacle_supported": true
+        },
+        {
+          "sign": -1,
+          "turn_deg": 95.61395969749226,
+          "x": -0.515877018496361,
+          "y": 0.7903312011267644,
+          "s_m": 2.1,
+          "clearance_m": 0.439089968002003,
+          "obstacle_supported": true
+        }
+      ],
+      "near_optimal_baseline_length_m": 2.406753398462838
+    },
+    {
+      "id": 28,
+      "purposeful_class": "complex",
+      "reason": "multiple_obstacle_supported_maneuvers",
+      "start": [
+        1.6649999999999991,
+        -2.1350000000000002
+      ],
+      "goal": [
+        -0.1250000000000009,
+        -0.9649999999999999
+      ],
+      "poses": [
+        [
+          1.6649999999999991,
+          -2.1350000000000002
+        ],
+        [
+          1.639935015678586,
+          -2.153639748645935
+        ],
+        [
+          1.5898050470357592,
+          -2.190919245937805
+        ],
+        [
+          1.5323041771467205,
+          -2.2109010369581426
+        ],
+        [
+          1.46743240601147,
+          -2.2135851217069473
+        ],
+        [
+          1.4024973786775612,
+          -2.2149458704968987
+        ],
+        [
+          1.337499095144994,
+          -2.2149832833279954
+        ],
+        [
+          1.272499964883202,
+          -2.215001708018557
+        ],
+        [
+          1.2074999878921853,
+          -2.2150011445685838
+        ],
+        [
+          1.1449999270288302,
+          -2.2150007767055557
+        ],
+        [
+          1.0849997822931374,
+          -2.215000604429473
+        ],
+        [
+          1.0249996070958318,
+          -2.2150003581917335
+        ],
+        [
+          0.9649994014369134,
+          -2.2150000379923367
+        ],
+        [
+          0.9024994565912153,
+          -2.214999890758326
+        ],
+        [
+          0.8374997725587374,
+          -2.2149999164897007
+        ],
+        [
+          0.7749999089532307,
+          -2.2149999345199127
+        ],
+        [
+          0.7149998657746952,
+          -2.214999944848962
+        ],
+        [
+          0.6524999041987746,
+          -2.2149999512824667
+        ],
+        [
+          0.5875000242254689,
+          -2.2149999538204277
+        ],
+        [
+          0.5250000687837789,
+          -2.2149997652268665
+        ],
+        [
+          0.46500003787370453,
+          -2.214999385501784
+        ],
+        [
+          0.40500001529961877,
+          -2.2149886906848035
+        ],
+        [
+          0.3450000010615217,
+          -2.214967680775925
+        ],
+        [
+          0.2850000224821151,
+          -2.214393845309106
+        ],
+        [
+          0.225000079561399,
+          -2.213267184284345
+        ],
+        [
+          0.16500050304983227,
+          -2.204314520683084
+        ],
+        [
+          0.10500129294741484,
+          -2.1875358545053207
+        ],
+        [
+          0.05004422535618161,
+          -2.1602996296942405
+        ],
+        [
+          0.00012930027613259829,
+          -2.1226058462498427
+        ],
+        [
+          -0.04652437007608569,
+          -2.0815535555806086
+        ],
+        [
+          -0.08991678570047323,
+          -2.0371427576865377
+        ],
+        [
+          -0.12728654817303575,
+          -1.9874526120921443
+        ],
+        [
+          -0.15863365749377323,
+          -1.9324831187974272
+        ],
+        [
+          -0.176930556458959,
+          -1.874998771419613
+        ],
+        [
+          -0.18217724506859312,
+          -1.8149995699587018
+        ],
+        [
+          -0.1848495204844786,
+          -1.754999976833243
+        ],
+        [
+          -0.18494738270661554,
+          -1.6949999920432361
+        ],
+        [
+          -0.18499722820213826,
+          -1.6324999997111227
+        ],
+        [
+          -0.18499905697104685,
+          -1.5674999998369024
+        ],
+        [
+          -0.18499991967401685,
+          -1.50249999992598
+        ],
+        [
+          -0.18499981631104828,
+          -1.4374999999783558
+        ],
+        [
+          -0.1849964811883076,
+          -1.3749999999992153
+        ],
+        [
+          -0.18498991430579484,
+          -1.3149999999885584
+        ],
+        [
+          -0.18481080368939273,
+          -1.2549999999882722
+        ],
+        [
+          -0.18445914933910132,
+          -1.1949999999983565
+        ],
+        [
+          -0.17840039633433175,
+          -1.135000000001154
+        ],
+        [
+          -0.166634544675084,
+          -1.0749999999966646
+        ],
+        [
+          -0.15181371413409533,
+          -1.024999999995815
+        ],
+        [
+          -0.1339379047113657,
+          -0.984999999998605
+        ],
+        [
+          -0.1250000000000009,
+          -0.9649999999999999
+        ]
+      ],
+      "metrics": {
+        "euclidean_distance_m": 2.1384573879317776,
+        "path_length_m": 2.938438122643016,
+        "sinuosity": 1.3740924365506972,
+        "max_lateral_deviation_m": 0.8796200794713115,
+        "lateral_lobes": 1.0,
+        "lateral_sign_changes": 0.0,
+        "max_turn_window_deg": 59.502940199216326,
+        "total_turn_deg": 73.92281789664582,
+        "turn_lobes": 1.0,
+        "num_turns_30": 1.0,
+        "num_turns_60": 1.0,
+        "turn_sign_changes": 0.0,
+        "reverse_progress_m": 0.0,
+        "max_backtrack_m": 0.0,
+        "turn_event_count": 2,
+        "supported_turn_count": 2,
+        "supported_turn_fraction": 1.0,
+        "supported_maneuver_count": 2,
+        "min_clearance_m": 0.37,
+        "mean_clearance_m": 0.47878887675074633,
+        "direct_line_min_clearance_m": 0.0,
+        "direct_line_collision": true,
+        "detour_ratio": 1.3740924365506972,
+        "near_obstacle_fraction": 1.0,
+        "obstacle_interaction": "direct_line_blocked",
+        "purposeful_class_reason": "multiple_obstacle_supported_maneuvers"
+      },
+      "turn_events": [
+        {
+          "sign": -1,
+          "turn_deg": 18.514468526548335,
+          "x": 1.3869560465614788,
+          "y": -2.21495481604441,
+          "s_m": 0.30000000000000004,
+          "clearance_m": 0.45,
+          "obstacle_supported": true
+        },
+        {
+          "sign": -1,
+          "turn_deg": 87.31190368531283,
+          "x": -0.1296509978453108,
+          "y": -1.9833063733089773,
+          "s_m": 1.9000000000000001,
+          "clearance_m": 0.439089968002003,
+          "obstacle_supported": true
+        }
+      ],
+      "near_optimal_baseline_length_m": 2.7724757607870303
+    },
+    {
+      "id": 29,
+      "purposeful_class": "complex",
+      "reason": "multiple_obstacle_supported_maneuvers",
+      "start": [
+        -0.8650000000000002,
+        0.7949999999999999
+      ],
+      "goal": [
+        -0.3650000000000002,
+        2.874999999999999
+      ],
+      "poses": [
+        [
+          -0.8650000000000002,
+          0.7949999999999999
+        ],
+        [
+          -0.8374999549693076,
+          0.7807040719991322
+        ],
+        [
+          -0.7824998649079222,
+          0.7521122159973965
+        ],
+        [
+          -0.7225000156183023,
+          0.7381094010134821
+        ],
+        [
+          -0.6575004071004478,
+          0.7386956270473888
+        ],
+        [
+          -0.5950085241776425,
+          0.7521359126702197
+        ],
+        [
+          -0.5350243668498864,
+          0.7784302578819751
+        ],
+        [
+          -0.4826839916712418,
+          0.8125160719655551
+        ],
+        [
+          -0.4379873986417088,
+          0.8543933549209601
+        ],
+        [
+          -0.3946126832563514,
+          0.9002520035373789
+        ],
+        [
+          -0.3525598455151695,
+          0.9500920178148113
+        ],
+        [
+          -0.3210147370504321,
+          1.0050090746642717
+        ],
+        [
+          -0.2999773578621392,
+          1.0650031740857597
+        ],
+        [
+          -0.2883647941419436,
+          1.1250001690852935
+        ],
+        [
+          -0.2861770458898453,
+          1.1850000596628731
+        ],
+        [
+          -0.28506276662074514,
+          1.245000003582852
+        ],
+        [
+          -0.2850219563346431,
+          1.3050000008452296
+        ],
+        [
+          -0.28500117047599804,
+          1.3649999996876914
+        ],
+        [
+          -0.28500040904480994,
+          1.4250000001102374
+        ],
+        [
+          -0.28500002142222514,
+          1.4875000002119672
+        ],
+        [
+          -0.2850000076082438,
+          1.5524999999928806
+        ],
+        [
+          -0.2850016866468496,
+          1.6149999999186695
+        ],
+        [
+          -0.2850050585380427,
+          1.6749999999893337
+        ],
+        [
+          -0.2850056694139088,
+          1.7350000000173962
+        ],
+        [
+          -0.28500351927444795,
+          1.7950000000028565
+        ],
+        [
+          -0.2850022082712859,
+          1.8550000000022893
+        ],
+        [
+          -0.2850017364044227,
+          1.915000000015694
+        ],
+        [
+          -0.2850010989101593,
+          1.9775000000156087
+        ],
+        [
+          -0.2850002957884958,
+          2.0425000000020335
+        ],
+        [
+          -0.28499990769662986,
+          2.104999999999141
+        ],
+        [
+          -0.2849999346345617,
+          2.1650000000069323
+        ],
+        [
+          -0.2849999603389177,
+          2.2275000000079976
+        ],
+        [
+          -0.284999984809698,
+          2.292500000002337
+        ],
+        [
+          -0.2850003566766022,
+          2.354999999999475
+        ],
+        [
+          -0.28500107593963003,
+          2.414999999999412
+        ],
+        [
+          -0.2850209350965356,
+          2.4749999999997487
+        ],
+        [
+          -0.2850599341473188,
+          2.535000000000486
+        ],
+        [
+          -0.2861241877830546,
+          2.5950000000006703
+        ],
+        [
+          -0.288213696003743,
+          2.655000000000302
+        ],
+        [
+          -0.30021406909096376,
+          2.714999999999987
+        ],
+        [
+          -0.32212530704471676,
+          2.774999999999726
+        ],
+        [
+          -0.34106069451619503,
+          2.822499999999696
+        ],
+        [
+          -0.35702023150539847,
+          2.857499999999898
+        ],
+        [
+          -0.3650000000000002,
+          2.874999999999999
+        ]
+      ],
+      "metrics": {
+        "euclidean_distance_m": 2.139252205795286,
+        "path_length_m": 2.5530684210824073,
+        "sinuosity": 1.1934396581039315,
+        "max_lateral_deviation_m": 0.46360630631457345,
+        "lateral_lobes": 1.0,
+        "lateral_sign_changes": 0.0,
+        "max_turn_window_deg": 67.16513136284838,
+        "total_turn_deg": 93.50473532791118,
+        "turn_lobes": 1.0,
+        "num_turns_30": 1.0,
+        "num_turns_60": 1.0,
+        "turn_sign_changes": 0.0,
+        "reverse_progress_m": 0.0,
+        "max_backtrack_m": 0.0,
+        "turn_event_count": 2,
+        "supported_turn_count": 2,
+        "supported_turn_fraction": 1.0,
+        "supported_maneuver_count": 2,
+        "min_clearance_m": 0.38,
+        "mean_clearance_m": 0.497157060532641,
+        "direct_line_min_clearance_m": 0.0,
+        "direct_line_collision": true,
+        "detour_ratio": 1.1934396581039315,
+        "near_obstacle_fraction": 1.0,
+        "obstacle_interaction": "direct_line_blocked",
+        "purposeful_class_reason": "multiple_obstacle_supported_maneuvers"
+      },
+      "turn_events": [
+        {
+          "sign": 1,
+          "turn_deg": 100.64366758573323,
+          "x": -0.353239925644735,
+          "y": 0.9492860031630546,
+          "s_m": 0.6000000000000001,
+          "clearance_m": 0.4441846462902562,
+          "obstacle_supported": true
+        },
+        {
+          "sign": 1,
+          "turn_deg": 19.381522264553748,
+          "x": -0.3069521271115888,
+          "y": 2.7334509648468406,
+          "s_m": 2.4000000000000004,
+          "clearance_m": 0.6511528238439882,
+          "obstacle_supported": true
+        }
+      ],
+      "near_optimal_baseline_length_m": 2.396392960176605
+    },
+    {
+      "id": 30,
+      "purposeful_class": "complex",
+      "reason": "multiple_obstacle_supported_maneuvers",
+      "start": [
+        -0.8450000000000006,
+        0.7749999999999995
+      ],
+      "goal": [
+        -0.45500000000000096,
+        3.1450000000000005
+      ],
+      "poses": [
+        [
+          -0.8450000000000006,
+          0.7749999999999995
+        ],
+        [
+          -0.8150000137129076,
+          0.7652633327227889
+        ],
+        [
+          -0.7550000411387217,
+          0.7457899981683679
+        ],
+        [
+          -0.695000329518198,
+          0.7369454016166672
+        ],
+        [
+          -0.6350008788513367,
+          0.7387295430676868
+        ],
+        [
+          -0.5775121026258814,
+          0.7545414118970326
+        ],
+        [
+          -0.5225340008418321,
+          0.7843810081047047
+        ],
+        [
+          -0.47275636404563637,
+          0.8207798753068476
+        ],
+        [
+          -0.4281791922372942,
+          0.8637380135034614
+        ],
+        [
+          -0.3859506142323763,
+          0.9101647776631023
+        ],
+        [
+          -0.34607063003088256,
+          0.9600601677857705
+        ],
+        [
+          -0.31664789054004117,
+          1.0150059338570256
+        ],
+        [
+          -0.297682395759852,
+          1.0750020758768677
+        ],
+        [
+          -0.2874146575721237,
+          1.1350001108250318
+        ],
+        [
+          -0.2858446759768561,
+          1.1950000387015178
+        ],
+        [
+          -0.28504504228024263,
+          1.2550000019959626
+        ],
+        [
+          -0.2850157564822833,
+          1.3150000007083658
+        ],
+        [
+          -0.28500083889946676,
+          1.3775000000496764
+        ],
+        [
+          -0.28500028953179307,
+          1.4425000000198946
+        ],
+        [
+          -0.28499910966321185,
+          1.5075000000014778
+        ],
+        [
+          -0.28499729929372314,
+          1.5724999999944258
+        ],
+        [
+          -0.284998446574079,
+          1.6349999999952465
+        ],
+        [
+          -0.2850025515042794,
+          1.6950000000039396
+        ],
+        [
+          -0.2850025611960557,
+          1.7550000000055852
+        ],
+        [
+          -0.284998475649408,
+          1.8150000000001836
+        ],
+        [
+          -0.2849962000095,
+          1.8749999999980227
+        ],
+        [
+          -0.28499573427633174,
+          1.934999999999103
+        ],
+        [
+          -0.28499687964680953,
+          1.995000000000249
+        ],
+        [
+          -0.28499963612093326,
+          2.0550000000014608
+        ],
+        [
+          -0.28500070940400624,
+          2.1150000000016758
+        ],
+        [
+          -0.28500009949602834,
+          2.1750000000008933
+        ],
+        [
+          -0.284999836202975,
+          2.2375000000004803
+        ],
+        [
+          -0.28499991952484616,
+          2.302500000000437
+        ],
+        [
+          -0.28500001790664253,
+          2.3650000000004843
+        ],
+        [
+          -0.2850001313483641,
+          2.4250000000006224
+        ],
+        [
+          -0.28500274967916345,
+          2.485000000000474
+        ],
+        [
+          -0.2850078728990405,
+          2.545000000000041
+        ],
+        [
+          -0.28514765001984865,
+          2.6049999999997837
+        ],
+        [
+          -0.28542208104158784,
+          2.6649999999997034
+        ],
+        [
+          -0.2908131023327953,
+          2.7249999999997874
+        ],
+        [
+          -0.301320713893471,
+          2.785000000000035
+        ],
+        [
+          -0.3186909342825442,
+          2.8425000000001184
+        ],
+        [
+          -0.3429237635000149,
+          2.897500000000038
+        ],
+        [
+          -0.36752317878980395,
+          2.9524999999999944
+        ],
+        [
+          -0.3924891801519112,
+          3.007499999999987
+        ],
+        [
+          -0.4174791356247239,
+          3.0624999999999876
+        ],
+        [
+          -0.44249304520824195,
+          3.117499999999996
+        ],
+        [
+          -0.45500000000000096,
+          3.1450000000000005
+        ]
+      ],
+      "metrics": {
+        "euclidean_distance_m": 2.4018742681497725,
+        "path_length_m": 2.816844273997763,
+        "sinuosity": 1.1727692458138754,
+        "max_lateral_deviation_m": 0.47362737660483734,
+        "lateral_lobes": 1.0,
+        "lateral_sign_changes": 0.0,
+        "max_turn_window_deg": 64.20707173562869,
+        "total_turn_deg": 88.83344532412652,
+        "turn_lobes": 1.0,
+        "num_turns_30": 1.0,
+        "num_turns_60": 1.0,
+        "turn_sign_changes": 0.0,
+        "reverse_progress_m": 0.0,
+        "max_backtrack_m": 0.0,
+        "turn_event_count": 2,
+        "supported_turn_count": 2,
+        "supported_turn_fraction": 1.0,
+        "supported_maneuver_count": 2,
+        "min_clearance_m": 0.4,
+        "mean_clearance_m": 0.5169701017967361,
+        "direct_line_min_clearance_m": 0.0,
+        "direct_line_collision": true,
+        "detour_ratio": 1.1727692458138754,
+        "near_obstacle_fraction": 1.0,
+        "obstacle_interaction": "direct_line_blocked",
+        "purposeful_class_reason": "multiple_obstacle_supported_maneuvers"
+      },
+      "turn_events": [
+        {
+          "sign": 1,
+          "turn_deg": 95.60638306684578,
+          "x": -0.3402547953593116,
+          "y": 0.9709210018516367,
+          "s_m": 0.6000000000000001,
+          "clearance_m": 0.4382921400162226,
+          "obstacle_supported": true
+        },
+        {
+          "sign": 1,
+          "turn_deg": 23.024597513498442,
+          "x": -0.32471946346779207,
+          "y": 2.856182641107047,
+          "s_m": 2.5,
+          "clearance_m": 0.6580273550544841,
+          "obstacle_supported": true
+        }
+      ],
+      "near_optimal_baseline_length_m": 2.660056980633342
+    }
+  ]
+}
