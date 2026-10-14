@@ -1,0 +1,71 @@
+name: Dataset generator checks
+
+on:
+  push:
+    branches:
+      - fix/dataset-balanced-generation
+  pull_request:
+    paths:
+      - dataset.tar
+      - .github/workflows/dataset-generator-checks.yml
+
+permissions:
+  contents: read
+
+jobs:
+  syntax-and-quota-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Extract source archive
+        run: |
+          mkdir -p /tmp/dataset-source
+          tar -xf dataset.tar -C /tmp/dataset-source
+          test -f /tmp/dataset-source/dataset/scripts/generate_dataset.sh
+          test ! -e /tmp/dataset-source/dataset/scripts/run_production_dataset.sh
+      - name: Compile Python scripts
+        run: python3 -m compileall -q /tmp/dataset-source/dataset/scripts
+      - name: Check Bash syntax
+        run: bash -n /tmp/dataset-source/dataset/scripts/generate_dataset.sh
+      - name: Check quota allocation
+        run: |
+          python3 - <<'PY'
+          import argparse
+          import ast
+          from pathlib import Path
+          from types import SimpleNamespace
+
+          source = Path("/tmp/dataset-source/dataset/scripts/path_generator.py").read_text(encoding="utf-8")
+          module = ast.parse(source)
+          fn = next(n for n in module.body if isinstance(n, ast.FunctionDef) and n.name == "configure_targets")
+          namespace = {
+              "argparse": argparse,
+              "CLASSES": ("straight", "semi_complex", "complex", "v_complex"),
+          }
+          isolated = ast.Module(body=[fn], type_ignores=[])
+          exec(compile(isolated, "configure_targets_test.py", "exec"), namespace)
+          resolve = namespace["configure_targets"]
+
+          balanced = SimpleNamespace(st_sem_cmp_vc=None, n_goals=202, per_class=None, balance_class=False)
+          assert resolve(balanced) == {
+              "straight": 51, "semi_complex": 51, "complex": 50, "v_complex": 50
+          }
+          assert balanced.target_total == 202
+
+          explicit = SimpleNamespace(st_sem_cmp_vc="10_10_15_20", n_goals=None,
+                                     per_class=None, balance_class=False)
+          assert resolve(explicit) == {
+              "straight": 10, "semi_complex": 10, "complex": 15, "v_complex": 20
+          }
+          assert explicit.target_total == 55
+
+          invalid = SimpleNamespace(st_sem_cmp_vc="10_10_15_20", n_goals=202,
+                                    per_class=None, balance_class=False)
+          try:
+              resolve(invalid)
+          except ValueError:
+              pass
+          else:
+              raise AssertionError("Explicit quotas must be mutually exclusive with --n-goals")
+          print("Quota checks passed: 202 -> 51/51/50/50; explicit quotas -> 10/10/15/20.")
+          PY
