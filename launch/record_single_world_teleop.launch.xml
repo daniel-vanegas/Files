@@ -1,0 +1,274 @@
+<launch>
+    <arg name="world" default="E01"/>
+    <arg name="scenario" default="$(var world)"/>
+    <arg name="maps_root" default="$(find-pkg-share justina_description)/webots_env/environments/maps"/>
+
+    <arg name="map_folder" default="$(command 'find $(var maps_root) -maxdepth 1 -mindepth 1 -type d -name $(var world)_* -printf %f')"/>
+    <arg name="map_variant" default="prohibition"/>
+    <arg name="map_yaml" default="$(var maps_root)/$(var map_folder)/map_$(var map_folder)_$(var map_variant).yaml"/>
+
+    <arg name="initial_pose_x" default="0.0"/>
+    <arg name="initial_pose_y" default="0.0"/>
+    <arg name="initial_pose_yaw" default="0.0"/>
+    <arg name="world_offset_x" default="0.0"/>
+    <arg name="world_offset_y" default="0.0"/>
+    <arg name="world_offset_yaw" default="0.0"/>
+
+    <arg name="seed" default="1001"/>
+    <arg name="teacher" default="human"/>
+    <arg name="record_hz" default="5.0"/>
+    <arg name="record_button_index" default="1"/>
+    <arg name="goal_reached_radius_m" default="0.30"/>
+    <arg name="goal_timeout_s" default="180.0"/>
+    <arg name="goal_pause_s" default="0.5"/>
+    <arg name="idle_timeout_s" default="6.0"/>
+    <arg name="idle_eps_lin" default="0.02"/>
+    <arg name="idle_eps_ang" default="0.05"/>
+    <arg name="teleport_interval_min" default="2"/>
+    <arg name="teleport_interval_max" default="5"/>
+    <arg name="count_existing_goals" default="true"/>
+    <arg name="teleport_button_index" default="2"/>
+
+    <arg name="teleport_at_start" default="true"/>
+    <arg name="startup_delay_s" default="5.0"/>
+    <arg name="teleport_timeout_s" default="4.0"/>
+    <arg name="post_teleport_settle_s" default="1.5"/>
+    <arg name="post_teleport_amcl_grace_s" default="2.0"/>
+
+    <arg name="start_at_robot_prob" default="0.3"/>
+    <arg name="start_reached_radius_m" default="0.5"/>
+    <arg name="regenerate_button_index" default="3"/>
+    <arg name="head_pan_offset" default="0.0"/>
+    <arg name="head_tilt_offset" default="-0.5"/>
+
+    <arg name="room_radius_m" default="0.45"/>
+    <arg name="min_room_area_m2" default="0.5"/>
+    <arg name="zone_bin_m" default="0.8"/>
+    <arg name="recent_zone_window" default="8"/>
+    <arg name="recent_room_window" default="3"/>
+
+    <arg name="min_goal_distance_m" default="1.5"/>
+    <arg name="max_goal_distance_m" default="4.0"/>
+    <arg name="min_goal_distance_after_success_m" default="0.8"/>
+    <arg name="max_goal_distance_after_success_m" default="2.5"/>
+
+    <arg name="forward_scale" default="0.4"/>
+    <arg name="lateral_scale" default="0.4"/>
+    <arg name="rotate_scale" default="0.35"/>
+
+    <arg name="output_dir" default="src/Navigation/mapless_navigation/dataset/data"/>
+    <arg name="max_goals" default="100"/>
+    <arg name="stuck_window_s" default="2.0"/>
+    <arg name="stuck_eps_pos_m" default="0.02"/>
+    <arg name="stuck_eps_yaw_rad" default="0.10"/>
+    <arg name="stuck_eps_cmd_lin" default="0.05"/>
+    <arg name="stuck_eps_cmd_ang" default="0.10"/>
+    <arg name="stuck_min_duration_s" default="1.5"/>
+    <arg name="collision_lookback_frames" default="5"/>
+    <arg name="stuck_lookback_frames" default="5"/>
+
+    <arg name="camera_publish_hz" default="10.0"/>
+    <arg name="camera_enable" default="true"/>
+    <arg name="scan_publish_divider" default="2"/>
+
+    <arg name="rviz" default="true"/>
+
+    <let name="pkg_justina" value="$(find-pkg-share justina_description)"/>
+
+    <executable cmd="webots --mode=realtime --batch $(var pkg_justina)/webots_env/worlds/$(var world).wbt" output="screen">
+        <env name="WEBOTS_CONTROLLER_PATH" value="$(var pkg_justina)/webots_env/controllers"/>
+        <env name="JUSTINA_CAMERA_HZ" value="$(var camera_publish_hz)"/>
+        <env name="JUSTINA_CAMERA_ENABLE" value="$(var camera_enable)"/>
+        <env name="JUSTINA_SCAN_DIVIDER" value="$(var scan_publish_divider)"/>
+    </executable>
+
+    <node pkg="robot_state_publisher" exec="robot_state_publisher">
+        <param name="robot_description" value="$(command 'cat $(var pkg_justina)/urdf/justina.urdf')"/>
+        <param name="use_sim_time" value="true"/>
+        <remap from="joint_states" to="/hardware/joint_states"/>
+        <remap from="robot_description" to="/hardware/robot_description"/>
+    </node>
+
+    <node pkg="justina_description" exec="depth_to_pointcloud" name="depth_to_pointcloud" output="screen">
+        <param name="use_sim_time" value="true"/>
+        <param name="max_frequency" value="15.0"/>
+        <param name="min_depth" value="0.1"/>
+        <param name="max_depth" value="8.0"/>
+        <param name="downsample_step" value="2"/>
+        <param name="floor_filter_enable" value="true"/>
+        <param name="floor_z_m" value="0.15"/>
+        <param name="map_frame" value="map"/>
+    </node>
+
+    <node pkg="justina_description" exec="set_initial_pose.py" name="set_initial_pose" output="screen" args="--x $(var initial_pose_x) --y $(var initial_pose_y) --yaw $(var initial_pose_yaw)">
+        <param name="use_sim_time" value="true"/>
+    </node>
+
+    <node pkg="joy" exec="joy_node" name="joy_node" output="screen">
+        <param name="use_sim_time" value="true"/>
+        <remap from="joy" to="/hardware/joy"/>
+    </node>
+
+    <node pkg="justina_description" exec="robot_teleop.py" name="robot_teleop" output="screen">
+        <param name="use_sim_time" value="true"/>
+        <param name="forward_scale" value="$(var forward_scale)"/>
+        <param name="lateral_scale" value="$(var lateral_scale)"/>
+        <param name="rotate_scale" value="$(var rotate_scale)"/>
+        <remap from="/head/pan_cmd" to="/teleop/head/pan_cmd_raw"/>
+        <remap from="/head/tilt_cmd" to="/teleop/head/tilt_cmd_raw"/>
+        <remap from="/hardware/head/goal_pose" to="/teleop/head/goal_pose_raw"/>
+    </node>
+
+    <node pkg="mapless_nav" exec="local_occ_grid_node" name="local_occ_grid_nav" output="screen">
+        <param name="use_sim_time" value="true"/>
+        <param name="frame_id" value="base_link"/>
+        <param name="map_topic" value="/mapless/local_occ_grid"/>
+        <param name="min_x" value="0.0"/>
+        <param name="max_x" value="4.0"/>
+        <param name="min_y" value="-2.0"/>
+        <param name="max_y" value="2.0"/>
+        <param name="min_z" value="0.06"/>
+        <param name="max_z" value="2.0"/>
+        <param name="resolution" value="0.05"/>
+        <param name="lidar_downsample" value="2"/>
+        <param name="cloud_downsample" value="2"/>
+        <param name="use_lidar" value="true"/>
+        <param name="use_cloud" value="true"/>
+    </node>
+
+    <node pkg="mapless_dataset" exec="prohibition_map_publisher.py" name="prohibition_map_publisher" output="screen">
+        <param name="use_sim_time" value="true"/>
+        <param name="map_yaml" value="$(var maps_root)/$(var map_folder)/map_$(var map_folder)_prohibition.yaml"/>
+        <param name="topic_name" value="/navigation/prohibition_map"/>
+        <param name="frame_id" value="map"/>
+    </node>
+
+    <node pkg="mapless_nav" exec="get_goal_point" name="get_goal_point" output="screen">
+        <param name="use_sim_time" value="true"/>
+        <param name="goal_topic" value="/mapless_nav/current_goal"/>
+        <param name="output_topic" value="/NN_goal"/>
+        <param name="robot_frame" value="base_link"/>
+    </node>
+
+    <node pkg="nav2_map_server" exec="map_server" name="map_server" output="screen">
+        <param name="use_sim_time" value="true"/>
+        <param name="yaml_filename" value="$(var map_yaml)"/>
+    </node>
+
+    <node pkg="nav2_amcl" exec="amcl" name="amcl" output="screen">
+        <param name="use_sim_time" value="true"/>
+
+        <param name="alpha1" value="0.05"/>
+        <param name="alpha2" value="0.05"/>
+        <param name="alpha3" value="0.05"/>
+        <param name="alpha4" value="0.05"/>
+        <param name="alpha5" value="0.05"/>
+
+        <param name="base_frame_id" value="base_link"/>
+        <param name="global_frame_id" value="map"/>
+        <param name="odom_frame_id" value="odom"/>
+        <param name="scan_topic" value="/hardware/base/scan"/>
+
+        <param name="robot_model_type" value="nav2_amcl::OmniMotionModel"/>
+        <param name="laser_model_type" value="likelihood_field"/>
+        <param name="laser_likelihood_max_dist" value="2.0"/>
+        <param name="laser_max_range" value="4.0"/>
+        <param name="laser_min_range" value="0.06"/>
+        <param name="max_beams" value="60"/>
+
+        <param name="min_particles" value="500"/>
+        <param name="max_particles" value="4000"/>
+        <param name="pf_err" value="0.05"/>
+        <param name="pf_z" value="0.99"/>
+        <param name="resample_interval" value="1"/>
+
+        <param name="update_min_d" value="0.02"/>
+        <param name="update_min_a" value="0.02"/>
+        <param name="transform_tolerance" value="0.5"/>
+        <param name="tf_broadcast" value="true"/>
+
+        <param name="set_initial_pose" value="true"/>
+        <param name="initial_pose.x" value="$(var initial_pose_x)"/>
+        <param name="initial_pose.y" value="$(var initial_pose_y)"/>
+        <param name="initial_pose.z" value="0.0"/>
+        <param name="initial_pose.yaw" value="$(var initial_pose_yaw)"/>
+    </node>
+
+    <node pkg="nav2_lifecycle_manager" exec="lifecycle_manager" name="lifecycle_manager_localization" output="screen">
+        <param name="use_sim_time" value="true"/>
+        <param name="autostart" value="true"/>
+        <param name="node_names" value="['map_server', 'amcl']"/>
+    </node>
+
+    <node pkg="mapless_dataset" exec="teleop_dataset_recorder.py" name="teleop_dataset_recorder" output="screen">
+        <param name="use_sim_time" value="true"/>
+        <param name="map" value="$(var world)"/>
+        <param name="seed" value="$(var seed)"/>
+        <param name="record_button_index" value="$(var record_button_index)"/>
+        <param name="goal_reached_radius_m" value="$(var goal_reached_radius_m)"/>
+        <param name="goal_timeout_s" value="$(var goal_timeout_s)"/>
+        <param name="goal_pause_s" value="$(var goal_pause_s)"/>
+        <param name="teleport_at_start" value="$(var teleport_at_start)"/>
+        <param name="startup_delay_s" value="$(var startup_delay_s)"/>
+        <param name="world_offset_x" value="$(var world_offset_x)"/>
+        <param name="world_offset_y" value="$(var world_offset_y)"/>
+        <param name="world_offset_yaw" value="$(var world_offset_yaw)"/>
+        <param name="teleport_timeout_s" value="$(var teleport_timeout_s)"/>
+        <param name="post_teleport_settle_s" value="$(var post_teleport_settle_s)"/>
+        <param name="post_teleport_amcl_grace_s" value="$(var post_teleport_amcl_grace_s)"/>
+        <param name="scenario" value="$(var scenario)"/>
+        <param name="output_dir" value="$(var output_dir)"/>
+        <param name="count_existing_goals" value="$(var count_existing_goals)"/>
+        <param name="idle_timeout_s" value="$(var idle_timeout_s)"/>
+        <param name="idle_eps_lin" value="$(var idle_eps_lin)"/>
+        <param name="idle_eps_ang" value="$(var idle_eps_ang)"/>
+        <param name="teleport_interval_min" value="$(var teleport_interval_min)"/>
+        <param name="teleport_interval_max" value="$(var teleport_interval_max)"/>
+        <param name="teleport_button_index" value="$(var teleport_button_index)"/>  
+        <param name="start_at_robot_prob" value="$(var start_at_robot_prob)"/>
+        <param name="start_reached_radius_m" value="$(var start_reached_radius_m)"/>
+        <param name="regenerate_button_index" value="$(var regenerate_button_index)"/>
+        <param name="head_pan_offset" value="$(var head_pan_offset)"/>
+        <param name="head_tilt_offset" value="$(var head_tilt_offset)"/>
+        <param name="room_radius_m" value="$(var room_radius_m)"/>
+        <param name="min_room_area_m2" value="$(var min_room_area_m2)"/>
+        <param name="zone_bin_m" value="$(var zone_bin_m)"/>
+        <param name="recent_zone_window" value="$(var recent_zone_window)"/>
+        <param name="recent_room_window" value="$(var recent_room_window)"/>
+        <param name="min_goal_distance_m" value="$(var min_goal_distance_m)"/>
+        <param name="max_goal_distance_m" value="$(var max_goal_distance_m)"/>
+        <param name="min_goal_distance_after_success_m" value="$(var min_goal_distance_after_success_m)"/>
+        <param name="max_goal_distance_after_success_m" value="$(var max_goal_distance_after_success_m)"/>
+    </node>
+
+    <node pkg="mapless_dataset" exec="dataset_recorder" name="dataset_recorder" output="screen">
+        <param name="use_sim_time" value="true"/>
+        <param name="output_dir" value="$(var output_dir)"/>
+        <param name="scenario" value="$(var scenario)"/>
+        <param name="teacher" value="$(var teacher)"/>
+        <param name="record_hz" value="$(var record_hz)"/>
+        <param name="max_goals" value="$(var max_goals)"/>
+        <param name="costmap_topic" value="/mapless/local_occ_grid"/>
+        <param name="cmd_vel_topic" value="/hardware/base/cmd_vel"/>
+        <param name="nn_goal_topic" value="/NN_goal"/>
+        <param name="current_goal_topic" value="/mapless_nav/current_goal"/>
+        <param name="goal_active_topic" value="/mapless_nav/goal_active"/>
+        <param name="episode_id_topic" value="/mapless_nav/episode_id"/>
+        <param name="goal_success_topic" value="/mapless_nav/goal_success"/>
+        <param name="collision_topic" value="/navigation/collision"/>
+        <param name="stuck_window_s" value="$(var stuck_window_s)"/>
+        <param name="stuck_eps_pos_m" value="$(var stuck_eps_pos_m)"/>
+        <param name="stuck_eps_yaw_rad" value="$(var stuck_eps_yaw_rad)"/>
+        <param name="stuck_eps_cmd_lin" value="$(var stuck_eps_cmd_lin)"/>
+        <param name="stuck_eps_cmd_ang" value="$(var stuck_eps_cmd_ang)"/>
+        <param name="stuck_min_duration_s" value="$(var stuck_min_duration_s)"/>
+        <param name="collision_lookback_frames" value="$(var collision_lookback_frames)"/>
+        <param name="stuck_lookback_frames" value="$(var stuck_lookback_frames)"/>
+    </node>
+
+    <group if="$(var rviz)">
+        <node pkg="rviz2" exec="rviz2" name="rviz2" output="screen" args="-d $(var pkg_justina)/webots_env/rviz/justina_wbt.rviz">
+            <param name="use_sim_time" value="true"/>
+        </node>
+    </group>
+</launch>
