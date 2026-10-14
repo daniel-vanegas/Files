@@ -72,3 +72,30 @@ jobs:
               raise AssertionError("Explicit quotas must be mutually exclusive with --n-goals")
           print("Quota checks passed: 202 -> 51/51/50/50; explicit quotas -> 10/10/15/20.")
           PY
+      - name: Check scenario seed mapping
+        run: |
+          scenario=E03
+          scenario_number="${scenario#E}"
+          seed_base=2026101400
+          seed=$((seed_base + 10#$scenario_number))
+          test "$seed" -eq 2026101403
+          run_dir="data/$scenario/generation_seed_$seed"
+          test "$run_dir" = "data/E03/generation_seed_2026101403"
+
+      - name: Check v-complex hotspot refresh
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          source = Path("/tmp/dataset-source/dataset/scripts/path_generator.py").read_text(encoding="utf-8")
+          assert "hotspot_source_count = -1" in source
+          assert "if source_count != hotspot_source_count:" in source
+          assert "hotspot_source_count = source_count" in source
+          assert '"_diag_v_hotspot_refreshes"' in source
+          assert '"_diag_v_hotspot_cells"' in source
+          assert 'diagnostics[key] = diagnostics.get(key, 0) + 1' in source
+          assert 'diagnostics["_diag_v_goal_candidates_evaluated"] = diagnostics.get("_diag_v_goal_candidates_evaluated", 0) + 1' in source
+          assert 'diagnostics["_diag_v_theta_candidate_routes_evaluated"] = diagnostics.get("_diag_v_theta_candidate_routes_evaluated", 0) + 1' in source
+          assert "hotspot_ready" not in source
+          print("v_complex hotspot refresh and attempt-level diagnostics are present.")
+          PY
