@@ -22,7 +22,10 @@ jobs:
           mkdir -p /tmp/dataset-source
           tar -xf dataset.tar -C /tmp/dataset-source
           test -f /tmp/dataset-source/dataset/scripts/generate_dataset.sh
-          test ! -e /tmp/dataset-source/dataset/scripts/run_production_dataset.sh
+          if find /tmp/dataset-source/dataset/scripts -maxdepth 1 -type f -name 'run_*_dataset.sh' -print -quit | grep -q .; then
+            echo "Unexpected legacy launcher name found" >&2
+            exit 1
+          fi
       - name: Compile Python scripts
         run: python3 -m compileall -q /tmp/dataset-source/dataset/scripts
       - name: Check Bash syntax
