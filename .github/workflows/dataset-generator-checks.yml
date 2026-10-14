@@ -72,3 +72,12 @@ jobs:
               raise AssertionError("Explicit quotas must be mutually exclusive with --n-goals")
           print("Quota checks passed: 202 -> 51/51/50/50; explicit quotas -> 10/10/15/20.")
           PY
+      - name: Check scenario seed mapping
+        run: |
+          scenario=E03
+          scenario_number="${scenario#E}"
+          seed_base=2026101400
+          seed=$((seed_base + 10#$scenario_number))
+          test "$seed" -eq 2026101403
+          run_dir="data/$scenario/generation_seed_$seed"
+          test "$run_dir" = "data/E03/generation_seed_2026101403"
