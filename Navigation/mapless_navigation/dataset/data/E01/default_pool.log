@@ -1,0 +1,73 @@
+scenario: E01
+map: /home/devan/GIT/mapless/src/Hardware/justina_description/webots_env/environments/maps/E01_C2_02/map_E01_C2_02_prohibition.yaml
+map size: 1610x1106 at 0.010 m/cell
+safe cells: 166477; clearance >= 0.35 m
+target quotas: straight=5, semi_complex=5, complex=5, v_complex=5 (total=20)
+limits: max_attempts=unlimited, timeout_seconds=5
+planning grid: 322x222 at 0.050 m/cell (factor 5; full-resolution safety validation retained)
+0s 1/sin_tope 0/20 straight=0/5 semi_complex=0/5 complex=0/5 v_complex=0/5v_complex: búsqueda dirigida activada
+5s 224/sin_tope 14/20 straight=5/5 semi_complex=5/5 complex=2/5 v_complex=2/5
+wrote: /home/devan/GIT/mapless/src/Navigation/mapless_navigation/dataset/data/E01/default_pool
+accepted: 14 / target 20; classes={'straight': 5, 'semi_complex': 5, 'complex': 2, 'v_complex': 2}
+attempts=224 elapsed=5.0s
+individual route sheets:
+  /home/devan/GIT/mapless/src/Navigation/mapless_navigation/dataset/data/E01/default_pool/routes_straight.png
+  /home/devan/GIT/mapless/src/Navigation/mapless_navigation/dataset/data/E01/default_pool/routes_semi_complex.png
+  /home/devan/GIT/mapless/src/Navigation/mapless_navigation/dataset/data/E01/default_pool/routes_complex.png
+  /home/devan/GIT/mapless/src/Navigation/mapless_navigation/dataset/data/E01/default_pool/routes_v_complex.png
+scenario: E01
+map: /home/devan/GIT/mapless/src/Hardware/justina_description/webots_env/environments/maps/E01_C2_02/map_E01_C2_02_prohibition.yaml
+map size: 1610x1106 at 0.010 m/cell
+safe cells: 166477; clearance >= 0.35 m
+target quotas: straight=2, semi_complex=2, complex=2, v_complex=2 (total=8)
+limits: max_attempts=unlimited, timeout_seconds=1
+planning grid: 322x222 at 0.050 m/cell (factor 5; full-resolution safety validation retained)
+0s 1/sin_tope 0/8 straight=0/2 semi_complex=0/2 complex=0/2 v_complex=0/2v_complex: búsqueda dirigida activada
+1s 52/sin_tope 5/8 straight=2/2 semi_complex=2/2 complex=0/2 v_complex=1/2
+wrote: /home/devan/GIT/mapless/src/Navigation/mapless_navigation/dataset/data/E01/default_pool
+accepted: 5 / target 8; classes={'straight': 2, 'semi_complex': 2, 'v_complex': 1}
+attempts=52 elapsed=1.02s
+individual route sheets:
+  /home/devan/GIT/mapless/src/Navigation/mapless_navigation/dataset/data/E01/default_pool/routes_straight.png
+  /home/devan/GIT/mapless/src/Navigation/mapless_navigation/dataset/data/E01/default_pool/routes_semi_complex.png
+  /home/devan/GIT/mapless/src/Navigation/mapless_navigation/dataset/data/E01/default_pool/routes_v_complex.png
+scenario: E01
+map: /home/devan/GIT/mapless/src/Hardware/justina_description/webots_env/environments/maps/E01_C2_02/map_E01_C2_02_prohibition.yaml
+map size: 1610x1106 at 0.010 m/cell
+safe cells: 166477; clearance >= 0.35 m
+target quotas: straight=3, semi_complex=3, complex=2, v_complex=2 (total=10)
+limits: max_attempts=unlimited, timeout_seconds=8
+planning grid: 322x222 at 0.050 m/cell (factor 5; full-resolution safety validation retained)
+0s 1/sin_tope 0/10 straight=0/3 semi_complex=0/3 complex=0/2 v_complex=0/2v_complex: búsqueda dirigida activada
+5s 236/sin_tope 7/10 straight=3/3 semi_complex=3/3 complex=0/2 v_complex=1/28s 368/sin_tope 8/10 straight=3/3 semi_complex=3/3 complex=1/2 v_complex=1/2
+wrote: /home/devan/GIT/mapless/src/Navigation/mapless_navigation/dataset/data/E01/default_pool
+accepted: 8 / target 10; classes={'straight': 3, 'semi_complex': 3, 'v_complex': 1, 'complex': 1}
+attempts=368 elapsed=8.01s
+individual route sheets:
+  /home/devan/GIT/mapless/src/Navigation/mapless_navigation/dataset/data/E01/default_pool/routes_straight.png
+  /home/devan/GIT/mapless/src/Navigation/mapless_navigation/dataset/data/E01/default_pool/routes_semi_complex.png
+  /home/devan/GIT/mapless/src/Navigation/mapless_navigation/dataset/data/E01/default_pool/routes_complex.png
+  /home/devan/GIT/mapless/src/Navigation/mapless_navigation/dataset/data/E01/default_pool/routes_v_complex.png
+scenario: E01
+map: /home/devan/GIT/mapless/src/Hardware/justina_description/webots_env/environments/maps/E01_C2_02/map_E01_C2_02_prohibition.yaml
+map size: 1610x1106 at 0.010 m/cell
+safe cells: 166477; clearance >= 0.35 m
+target quotas: straight=25, semi_complex=25, complex=25, v_complex=25 (total=100)
+limits: max_attempts=unlimited, timeout=disabled
+planning grid: 322x222 at 0.050 m/cell (factor 5; full-resolution safety validation retained)
+0s 1/sin_tope 0/100 straight=0/25 semi_complex=0/25 complex=0/25 v_complex=0/255s 254/sin_tope 44/100 straight=25 semi_complex=19 complex=0 v_complex=0       scenario: E01
+map: /home/devan/GIT/mapless/src/Hardware/justina_description/webots_env/environments/maps/E01_C2_02/map_E01_C2_02_prohibition.yaml
+map size: 1610x1106 at 0.010 m/cell
+safe cells: 166477; clearance >= 0.35 m
+target quotas: straight=3, semi_complex=3, complex=2, v_complex=2 (total=10)
+limits: max_attempts=unlimited, timeout_seconds=8
+planning grid: 322x222 at 0.050 m/cell (factor 5; full-resolution safety validation retained)
+0s 1/sin_tope 0/10 straight=0/3 semi_complex=0/3 complex=0/2 v_complex=0/2v_complex: búsqueda dirigida activada
+5s 236/sin_tope 7/10 straight=3/3 semi_complex=3/3 complex=0/2 v_complex=1/28s 390/sin_tope 7/10 straight=3/3 semi_complex=3/3 complex=0/2 v_complex=1/2
+wrote: /home/devan/GIT/mapless/src/Navigation/mapless_navigation/dataset/data/E01/default_pool
+accepted: 7 / target 10; classes={'straight': 3, 'semi_complex': 3, 'v_complex': 1}
+attempts=390 elapsed=8.02s
+individual route sheets:
+  /home/devan/GIT/mapless/src/Navigation/mapless_navigation/dataset/data/E01/default_pool/routes_straight.png
+  /home/devan/GIT/mapless/src/Navigation/mapless_navigation/dataset/data/E01/default_pool/routes_semi_complex.png
+  /home/devan/GIT/mapless/src/Navigation/mapless_navigation/dataset/data/E01/default_pool/routes_v_complex.png
