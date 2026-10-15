@@ -1,0 +1,233 @@
+{
+  "pool_version": 5,
+  "scenario": "E03",
+  "generated_at": "2026-10-15T01:18:48.740531+00:00",
+  "seed": 2026101403,
+  "num_paths": 4,
+  "source_num_paths": 4,
+  "constraints": {
+    "min_goal_distance_m": 2.0,
+    "max_goal_distance_m": 3.0,
+    "v_max_goal_distance_m": 3.6,
+    "max_path_length_m": 3.0,
+    "v_max_path_length_m": 4.2,
+    "hard_clearance_m": 0.35,
+    "max_length_ratio_vs_theta_star": 1.18,
+    "v_goal_candidates": 10,
+    "v_plan_candidates": 3,
+    "v_hotspot_probability": 0.8,
+    "v_hotspot_radius_m": 0.35
+  },
+  "map_yaml": "/home/devan/GIT/mapless/src/Hardware/justina_description/webots_env/environments/maps/E03_C2_04/map_E03_C2_04_prohibition.yaml",
+  "classification_scope": "navigation_task_and_geometry",
+  "planner": "Theta*",
+  "smoothing_pipeline": [
+    "arc_length_resample",
+    "anchored_laplacian_smoothing",
+    "cubic_spline",
+    "dense_clearance_validation"
+  ],
+  "quota": {
+    "straight": 1,
+    "semi_complex": 1,
+    "complex": 1,
+    "v_complex": 1
+  },
+  "distribution": {
+    "straight": 1,
+    "semi_complex": 1,
+    "v_complex": 1,
+    "complex": 1
+  },
+  "task_distribution": {
+    "clear_travel": 1,
+    "single_obstacle_avoidance": 1,
+    "multiple_obstacle_navigation": 1,
+    "constrained_passage": 1
+  },
+  "generation_complete": true,
+  "paths": [
+    {
+      "id": 0,
+      "class": "straight",
+      "purposeful_class": "straight",
+      "task_type": "clear_travel",
+      "start": [
+        -0.225,
+        1.245
+      ],
+      "goal": [
+        -2.975,
+        0.695
+      ],
+      "start_yaw_rad": 2.74344,
+      "goal_yaw_rad": 0.05796,
+      "metrics": {
+        "path_length_m": 2.80446,
+        "min_clearance_m": 0.62888,
+        "mean_clearance_m": 1.09009,
+        "dense_samples": 114,
+        "occupied_samples": 0,
+        "out_of_bounds_samples": 0,
+        "map_collision": false,
+        "clearance_ok": true,
+        "safe": true,
+        "sinuosity": 1.0,
+        "total_turn_deg": 0.0,
+        "max_turn_deg": 0.0,
+        "turn_event_count": 0,
+        "supported_turn_count": 0,
+        "turn_sign_changes": 0,
+        "curvature_tv_deg_m2": 0.0,
+        "smoothing_status": "safe_fallback",
+        "smoothing_method": "theta_anchored_smooth_fallback",
+        "raw_path_length_m": 2.80446,
+        "length_ratio_vs_theta_star": 1.0
+      },
+      "direct_line_safe": true,
+      "orientation_policy": "independent_uniform_yaw",
+      "planner": "theta_star",
+      "smoother": "anchored_smooth+cubic_spline",
+      "search": {}
+    },
+    {
+      "id": 1,
+      "class": "semi_complex",
+      "purposeful_class": "semi_complex",
+      "task_type": "single_obstacle_avoidance",
+      "start": [
+        2.675,
+        3.445
+      ],
+      "goal": [
+        3.175,
+        1.395
+      ],
+      "start_yaw_rad": -3.13853,
+      "goal_yaw_rad": -1.4668,
+      "metrics": {
+        "path_length_m": 2.18491,
+        "min_clearance_m": 0.37773,
+        "mean_clearance_m": 0.46026,
+        "dense_samples": 89,
+        "occupied_samples": 0,
+        "out_of_bounds_samples": 0,
+        "map_collision": false,
+        "clearance_ok": true,
+        "safe": true,
+        "sinuosity": 1.03537,
+        "total_turn_deg": 48.63298,
+        "max_turn_deg": 2.74938,
+        "turn_event_count": 1,
+        "supported_turn_count": 1,
+        "turn_sign_changes": 0,
+        "curvature_tv_deg_m2": 7.80262,
+        "smoothing_status": "refined",
+        "smoothing_method": "theta_smooth_spline_sigma_0.020",
+        "raw_path_length_m": 2.18776,
+        "length_ratio_vs_theta_star": 0.9987
+      },
+      "direct_line_safe": false,
+      "orientation_policy": "independent_uniform_yaw",
+      "planner": "theta_star",
+      "smoother": "anchored_smooth+cubic_spline",
+      "search": {}
+    },
+    {
+      "id": 2,
+      "class": "v_complex",
+      "purposeful_class": "v_complex",
+      "task_type": "multiple_obstacle_navigation",
+      "start": [
+        -2.725,
+        1.745
+      ],
+      "goal": [
+        -5.075,
+        2.695
+      ],
+      "start_yaw_rad": -2.5987,
+      "goal_yaw_rad": 1.75923,
+      "metrics": {
+        "path_length_m": 3.10566,
+        "min_clearance_m": 0.36969,
+        "mean_clearance_m": 0.42159,
+        "dense_samples": 126,
+        "occupied_samples": 0,
+        "out_of_bounds_samples": 0,
+        "map_collision": false,
+        "clearance_ok": true,
+        "safe": true,
+        "sinuosity": 1.22464,
+        "total_turn_deg": 155.65723,
+        "max_turn_deg": 11.88823,
+        "turn_event_count": 3,
+        "supported_turn_count": 3,
+        "turn_sign_changes": 1,
+        "curvature_tv_deg_m2": 114.7515,
+        "smoothing_status": "refined",
+        "smoothing_method": "theta_smooth_spline_sigma_0.012",
+        "raw_path_length_m": 3.15315,
+        "length_ratio_vs_theta_star": 0.98494
+      },
+      "direct_line_safe": false,
+      "orientation_policy": "independent_uniform_yaw",
+      "planner": "theta_star",
+      "smoother": "anchored_smooth+cubic_spline",
+      "search": {
+        "search_strategy": "multi_goal_exploration",
+        "goal_candidates_evaluated": 10,
+        "theta_candidate_routes_evaluated": 3,
+        "direct_obstacle_bands": 1,
+        "raw_turn_events": 3,
+        "raw_supported_turns": 3,
+        "raw_total_turn_deg": 150.853,
+        "raw_sinuosity": 1.23887,
+        "hotspot_start": false
+      }
+    },
+    {
+      "id": 3,
+      "class": "complex",
+      "purposeful_class": "complex",
+      "task_type": "constrained_passage",
+      "start": [
+        -2.375,
+        -0.005
+      ],
+      "goal": [
+        -0.425,
+        -0.755
+      ],
+      "start_yaw_rad": -2.10291,
+      "goal_yaw_rad": -0.01984,
+      "metrics": {
+        "path_length_m": 2.59696,
+        "min_clearance_m": 0.35961,
+        "mean_clearance_m": 0.43755,
+        "dense_samples": 105,
+        "occupied_samples": 0,
+        "out_of_bounds_samples": 0,
+        "map_collision": false,
+        "clearance_ok": true,
+        "safe": true,
+        "sinuosity": 1.24233,
+        "total_turn_deg": 126.6159,
+        "max_turn_deg": 11.03893,
+        "turn_event_count": 2,
+        "supported_turn_count": 2,
+        "turn_sign_changes": 0,
+        "curvature_tv_deg_m2": 151.90771,
+        "smoothing_status": "refined",
+        "smoothing_method": "theta_smooth_spline_sigma_0.012",
+        "raw_path_length_m": 2.63433,
+        "length_ratio_vs_theta_star": 0.98582
+      },
+      "direct_line_safe": false,
+      "orientation_policy": "independent_uniform_yaw",
+      "planner": "theta_star",
+      "smoother": "anchored_smooth+cubic_spline",
+      "search": {}
+    }
+  ]
+}

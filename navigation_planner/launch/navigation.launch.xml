@@ -1,0 +1,21 @@
+<launch>
+    <arg name="use_sim_time" default="true"/>
+    <arg name="use_pot_fields" default="true"/>
+    <arg name="patience" default="true"/>
+    <arg name="goal_dmax_tolerance" default="0.40"/>
+
+    <include file="$(find-pkg-share navigation_tools)/launch/map_augmenter.launch.xml">
+        <arg name="use_sim_time" value="$(var use_sim_time)"/>
+    </include>
+
+    <include file="$(find-pkg-share navigation_controller)/launch/controller.launch.xml">
+        <arg name="use_sim_time" value="$(var use_sim_time)"/>
+        <arg name="use_pot_fields" value="$(var use_pot_fields)"/>
+        <arg name="goal_dmax_tolerance" value="$(var goal_dmax_tolerance)"/>
+    </include>
+
+    <include file="$(find-pkg-share navigation_planner)/launch/planner.launch.xml">
+        <arg name="use_sim_time" value="$(var use_sim_time)"/>
+        <arg name="patience" value="$(var patience)"/>
+    </include>
+</launch>

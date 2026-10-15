@@ -1,0 +1,23 @@
+<launch>
+    <arg name="use_sim_time" default="true"/>
+    <arg name="use_lidar" default="true"/>
+    <arg name="use_point_cloud" default="true"/>
+    <arg name="inflation_radius" default="0.05"/>
+    <arg name="cost_radius" default="0.5"/>
+    <arg name="decay_factor" default="10"/>
+
+    <node pkg="navigation_tools" exec="map_augmenter_node"
+          name="map_augmenter" output="screen">
+        <param name="use_sim_time" value="$(var use_sim_time)"/>
+        <param name="use_lidar" value="$(var use_lidar)"/>
+        <param name="use_point_cloud" value="$(var use_point_cloud)"/>
+        <param name="inflation_radius" value="$(var inflation_radius)"/>
+        <param name="cost_radius" value="$(var cost_radius)"/>
+        <param name="decay_factor" value="$(var decay_factor)"/>
+        <param name="laser_scan_topic" value="/hardware/base/scan"/>
+        <param name="point_cloud_topic" value="/hardware/camera/points"/>
+        <param name="map_topic" value="/map"/>
+        <param name="prohibition_map_topic" value="/navigation/prohibition_map"/>
+        <param name="base_link_name" value="base_link"/>
+    </node>
+</launch>

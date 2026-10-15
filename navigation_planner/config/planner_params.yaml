@@ -1,0 +1,14 @@
+path_planner:
+  ros__parameters:
+    diagonal_paths: false
+    smooth_alpha: 0.1
+    smooth_beta: 0.9
+    patience: true
+    proximity_criterion: 2.0
+    base_link_name: base_link
+    map_frame: map
+    odom_frame: odom
+    augmented_map_service: /mapless_nav/map_augmenter/get_augmented_map
+    augmented_cost_map_service: /mapless_nav/map_augmenter/get_augmented_cost_map
+    are_there_obs_service: /mapless_nav/map_augmenter/are_there_obstacles
+    is_in_obstacles_service: /mapless_nav/map_augmenter/is_inside_obstacles

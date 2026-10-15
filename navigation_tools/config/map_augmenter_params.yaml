@@ -1,0 +1,22 @@
+map_augmenter:
+  ros__parameters:
+    use_sim_time: true
+    use_lidar: true
+    use_point_cloud: true
+    laser_scan_topic: /hardware/base/scan
+    point_cloud_topic: /hardware/camera/points
+    map_topic: /map
+    prohibition_map_topic: /navigation/prohibition_map
+    base_link_name: base_link
+    min_x: 0.3
+    max_x: 0.8
+    min_y: -0.25
+    max_y: 0.25
+    min_z: 0.05
+    max_z: 1.30
+    inflation_radius: 0.2
+    cost_radius: 0.5
+    decay_factor: 10
+    cloud_downsampling: 9
+    lidar_downsampling: 2
+    debug: false

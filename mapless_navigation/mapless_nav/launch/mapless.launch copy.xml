@@ -1,0 +1,80 @@
+<?xml version="1.0"?>
+<launch>
+
+  <!-- ===================== -->
+  <!--   Real Robot Topics   -->
+  <!-- ===================== -->
+  <arg name="use_sim_time" default="false"/>
+  <arg name="frame_id" default="base_link"/>
+  <arg name="scan_topic" default="/hardware/base/scan"/>
+  <arg name="cloud_topic" default="/hardware/camera/points"/>
+  <arg name="cmd_vel_topic" default="/hardware/base/cmd_vel"/>
+
+  <!-- Grid limits (adjust to your robot's sensing range) -->
+  <arg name="min_x" default="0.0"/>
+  <arg name="max_x" default="4.0"/>
+  <arg name="min_y" default="-2.0"/>
+  <arg name="max_y" default="2.0"/>
+
+  <!-- ===================== -->
+  <!--   Occupancy Grids     -->
+  <!-- ===================== -->
+  <!-- Navigation grid (small, high‑res) -->
+  <node pkg="mapless_nav" exec="local_occ_grid_node" name="local_occ_grid_nav" output="screen">
+    <param name="use_sim_time" value="$(var use_sim_time)"/>
+    <param name="frame_id" value="$(var frame_id)"/>
+    <param name="map_topic" value="/mapless/local_occ_grid"/>
+    <param name="min_x" value="0.0"/>    <param name="max_x" value="4.0"/>
+    <param name="min_y" value="-2.0"/>   <param name="max_y" value="2.0"/>
+    <param name="min_z" value="0.06"/>   <param name="max_z" value="2.0"/>
+    <param name="resolution" value="0.05"/>
+    <param name="lidar_downsample" value="2"/>
+    <param name="cloud_downsample" value="2"/>
+    <param name="use_lidar" value="true"/>
+    <param name="use_cloud" value="true"/>
+    <remap from="~/lidar_scan" to="$(var scan_topic)"/>
+    <remap from="~/pointcloud" to="$(var cloud_topic)"/>
+  </node>
+
+  <!-- Visualisation grid (large, lower‑res) -->
+  <node pkg="mapless_nav" exec="local_occ_grid_node" name="local_occ_grid_rviz" output="screen">
+    <param name="use_sim_time" value="$(var use_sim_time)"/>
+    <param name="frame_id" value="$(var frame_id)"/>
+    <param name="map_topic" value="/mapless/local_occ_grid_large"/>
+    <param name="min_x" value="-10.0"/>  <param name="max_x" value="10.0"/>
+    <param name="min_y" value="-10.0"/>  <param name="max_y" value="10.0"/>
+    <param name="min_z" value="0.06"/>   <param name="max_z" value="2.0"/>
+    <param name="resolution" value="0.1"/>
+    <param name="lidar_downsample" value="3"/>
+    <param name="cloud_downsample" value="5"/>
+    <param name="use_lidar" value="true"/>
+    <param name="use_cloud" value="true"/>
+    <remap from="~/lidar_scan" to="$(var scan_topic)"/>
+    <remap from="~/pointcloud" to="$(var cloud_topic)"/>
+  </node>
+
+  <!-- ===================== -->
+  <!--   Mapless Controller  -->
+  <!-- ===================== -->
+  <node pkg="mapless_nav" exec="RNN_mapless.py" name="rnn_controller" output="screen">
+    <param name="use_sim_time" value="$(var use_sim_time)"/>
+    <param name="robot_name" value="justina"/>
+    <param name="turn_help" value="true"/>
+    <remap from="~/cmd_vel" to="$(var cmd_vel_topic)"/>
+  </node>
+
+  <!-- Goal selection node (listens to RViz 2D Nav Goal) -->
+  <!-- <node pkg="mapless_nav" exec="get_goal_point" name="get_goal_point" output="screen">
+    <param name="use_sim_time" value="$(var use_sim_time)"/>
+  </node> -->
+
+  <!-- TODO: Node to send nn_goal to navigate (mapless) -->
+  <!-- <node pkg="mapless_nav" exec="tf_goal_point" name="tf_goal_point" output="screen">
+    <param name="use_sim_time" value="$(var use_sim_time)"/>
+    <param name="robot_frame" value="base_link"/>
+    <param name="output_topic" value="/NN_goal"/>
+    <param name="goal_active_topic" value="/mapless_nav/goal_active"/>
+    <param name="service_name" value="/navigation/mapless_goto"/>
+    <param name="rate_hz" value="50.0"/>
+  </node> -->
+</launch>

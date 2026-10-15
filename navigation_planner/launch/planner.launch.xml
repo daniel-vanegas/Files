@@ -1,0 +1,23 @@
+<launch>
+    <arg name="use_sim_time" default="true"/>
+    <arg name="patience" default="true"/>
+    <arg name="proximity_criterion" default="2.0"/>
+    <arg name="diagonal_paths" default="true"/>
+
+    <node pkg="navigation_planner" exec="path_planner_node"
+          name="path_planner" output="screen">
+        <param name="use_sim_time" value="$(var use_sim_time)"/>
+        <param name="diagonal_paths" value="$(var diagonal_paths)"/>
+        <param name="smooth_alpha" value="0.1"/>
+        <param name="smooth_beta" value="0.9"/>
+        <param name="patience" value="$(var patience)"/>
+        <param name="proximity_criterion" value="$(var proximity_criterion)"/>
+        <param name="base_link_name" value="base_link"/>
+        <param name="map_frame" value="map"/>
+        <param name="odom_frame" value="odom"/>
+        <param name="augmented_map_service" value="/mapless_nav/map_augmenter/get_augmented_map"/>
+        <param name="augmented_cost_map_service" value="/mapless_nav/map_augmenter/get_augmented_cost_map"/>
+        <param name="are_there_obs_service" value="/mapless_nav/map_augmenter/are_there_obstacles"/>
+        <param name="is_in_obstacles_service" value="/mapless_nav/map_augmenter/is_inside_obstacles"/>
+    </node>
+</launch>

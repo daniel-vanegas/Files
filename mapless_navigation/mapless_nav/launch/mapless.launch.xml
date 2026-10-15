@@ -1,0 +1,87 @@
+<?xml version="1.0"?>
+<launch>
+
+  <!-- ===================== -->
+  <!--   Real Robot Topics   -->
+  <!-- ===================== -->
+  <arg name="use_sim_time" default="false"/>
+  <arg name="frame_id" default="base_link"/>
+  <arg name="scan_topic" default="/hardware/base/scan"/>
+  <arg name="cloud_topic" default="/hardware/camera/points"/>
+  <arg name="cmd_vel_topic" default="/hardware/base/cmd_vel"/>
+
+  <!-- Model & Output Tuning Arguments -->
+  <arg name="model_filename" default="RNN.pth"/>
+  <arg name="enable_denormalization" default="true"/>
+  <arg name="gain_linx" default="1.0"/>
+  <arg name="gain_liny" default="1.0"/>
+  <arg name="gain_angz" default="1.0"/>
+
+  <!-- Grid limits (adjust to your robot's sensing range) -->
+  <arg name="min_x" default="0.0"/>
+  <arg name="max_x" default="4.0"/>
+  <arg name="min_y" default="-2.0"/>
+  <arg name="max_y" default="2.0"/>
+
+  <!-- ===================== -->
+  <!--   Occupancy Grids     -->
+  <!-- ===================== -->
+  <!-- Navigation grid (small, high‑res) -->
+  <node pkg="mapless_nav" exec="local_occ_grid_node" name="local_occ_grid_nav" output="screen">
+    <param name="use_sim_time" value="$(var use_sim_time)"/>
+    <param name="frame_id" value="$(var frame_id)"/>
+    <param name="map_topic" value="/mapless/local_occ_grid"/>
+    <param name="min_x" value="$(var min_x)"/>
+    <param name="max_x" value="$(var max_x)"/>
+    <param name="min_y" value="$(var min_y)"/>
+    <param name="max_y" value="$(var max_y)"/>
+    <param name="min_z" value="0.06"/>
+    <param name="max_z" value="2.0"/>
+    <param name="resolution" value="0.05"/>
+    <param name="lidar_downsample" value="2"/>
+    <param name="cloud_downsample" value="2"/>
+    <param name="use_lidar" value="true"/>
+    <param name="use_cloud" value="true"/>
+    <remap from="~/lidar_scan" to="$(var scan_topic)"/>
+    <remap from="~/pointcloud" to="$(var cloud_topic)"/>
+  </node>
+
+  <!-- Visualisation grid (large, lower‑res) -->
+  <node pkg="mapless_nav" exec="local_occ_grid_node" name="local_occ_grid_rviz" output="screen">
+    <param name="use_sim_time" value="$(var use_sim_time)"/>
+    <param name="frame_id" value="$(var frame_id)"/>
+    <param name="map_topic" value="/mapless/local_occ_grid_large"/>
+    <param name="min_x" value="-10.0"/>
+    <param name="max_x" value="10.0"/>
+    <param name="min_y" value="-10.0"/>
+    <param name="max_y" value="10.0"/>
+    <param name="min_z" value="0.06"/>
+    <param name="max_z" value="2.0"/>
+    <param name="resolution" value="0.1"/>
+    <param name="lidar_downsample" value="3"/>
+    <param name="cloud_downsample" value="5"/>
+    <param name="use_lidar" value="true"/>
+    <param name="use_cloud" value="true"/>
+    <remap from="~/lidar_scan" to="$(var scan_topic)"/>
+    <remap from="~/pointcloud" to="$(var cloud_topic)"/>
+  </node>
+
+  <!-- ===================== -->
+  <!--   Mapless Controller  -->
+  <!-- ===================== -->
+  <node pkg="mapless_nav" exec="RNN_mapless.py" name="rnn_controller" output="screen">
+    <param name="use_sim_time" value="$(var use_sim_time)"/>
+    <param name="robot_name" value="justina"/>
+    <param name="turn_help" value="true"/>
+    <param name="model_filename" value="$(var model_filename)"/>
+
+    <!-- Output Refinement & Denormalization Parameters -->
+    <param name="enable_denormalization" value="$(var enable_denormalization)"/>
+    <param name="gain_linx" value="$(var gain_linx)"/>
+    <param name="gain_liny" value="$(var gain_liny)"/>
+    <param name="gain_angz" value="$(var gain_angz)"/>
+
+    <remap from="~/cmd_vel" to="$(var cmd_vel_topic)"/>
+  </node>
+
+</launch>
