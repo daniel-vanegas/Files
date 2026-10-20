@@ -1,1 +1,0 @@
-timestamp,episode_id,is_episode_start,d,theta,vx,vy,wz,pose_x,pose_y,pose_yaw,goal_x,goal_y,lom_file,collision_flag,stuck_flag

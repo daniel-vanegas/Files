@@ -1,0 +1,36 @@
+{
+  "scenario": "E17",
+  "generated_at": "2026-10-17T03:10:15",
+  "total_target": 200,
+  "total_recorded": 196,
+  "entries": [
+    {
+      "path_id": 149,
+      "class": "v_complex",
+      "attempts": 3,
+      "last_status": "collision",
+      "start": [
+        2.375,
+        -1.155
+      ],
+      "goal": [
+        1.125,
+        -4.105
+      ]
+    },
+    {
+      "path_id": 188,
+      "class": "complex",
+      "attempts": 3,
+      "last_status": "collision",
+      "start": [
+        2.875,
+        -2.405
+      ],
+      "goal": [
+        0.975,
+        -4.105
+      ]
+    }
+  ]
+}

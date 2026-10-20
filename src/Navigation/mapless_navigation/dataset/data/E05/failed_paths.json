@@ -1,0 +1,64 @@
+{
+  "scenario": "E05",
+  "generated_at": "2026-10-15T23:07:01",
+  "total_target": 157,
+  "total_recorded": 53,
+  "entries": [
+    {
+      "path_id": 63,
+      "class": "v_complex",
+      "attempts": 3,
+      "last_status": "failed",
+      "start": [
+        3.075,
+        -1.055
+      ],
+      "goal": [
+        1.925,
+        1.495
+      ]
+    },
+    {
+      "path_id": 142,
+      "class": "v_complex",
+      "attempts": 3,
+      "last_status": "failed",
+      "start": [
+        3.125,
+        -1.655
+      ],
+      "goal": [
+        2.075,
+        1.645
+      ]
+    },
+    {
+      "path_id": 149,
+      "class": "v_complex",
+      "attempts": 3,
+      "last_status": "failed",
+      "start": [
+        3.125,
+        -1.655
+      ],
+      "goal": [
+        2.125,
+        1.345
+      ]
+    },
+    {
+      "path_id": 139,
+      "class": "complex",
+      "attempts": 3,
+      "last_status": "failed",
+      "start": [
+        3.325,
+        -1.105
+      ],
+      "goal": [
+        2.075,
+        1.195
+      ]
+    }
+  ]
+}

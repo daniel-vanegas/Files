@@ -1,0 +1,70 @@
+<launch>
+  <!-- Get the package share directory -->
+  <let name="package_share" value="$(find-pkg-share justina_description)" />
+  <!-- Arguments for initial pose -->
+  <arg name="initial_pose_x" default="6.5" description="Initial X position (map frame)"/>
+  <arg name="initial_pose_y" default="3.2" description="Initial Y position (map frame)"/>
+  <arg name="initial_pose_yaw" default="0.0" description="Initial yaw angle (radians)"/>
+
+
+  <!-- ================= Launch Webots ================= -->
+  <let name="world_path" value="$(var package_share)/webots_env/worlds/configuring_robot.wbt" />
+  <let name="controllers_path" value="$(var package_share)/webots_env/controllers" />
+
+  <executable cmd="webots --mode=realtime $(var world_path)" output="screen">
+    <env name="WEBOTS_CONTROLLER_PATH" value="$(var controllers_path)" />
+    <env name="DISPLAY" value="$(env DISPLAY :0)" />
+  </executable>
+
+  <!-- =============== robot_state_publisher =============== -->
+  <node pkg="robot_state_publisher" exec="robot_state_publisher">
+    <param name="robot_description" value="$(command 'cat $(var package_share)/urdf/justina.urdf')" />
+    <param name="use_sim_time" value="true" />
+    <remap from="joint_states" to="/hardware/joint_states"/>
+    <remap from="robot_description" to="/hardware/robot_description"/>
+  </node>
+
+  <!-- ========== Static transform from map to odom ========== -->
+  <node pkg="tf2_ros" exec="static_transform_publisher" name="map_to_odom" args="--x 0 --y 0 --z 0 --roll 0 --pitch 0 --yaw 0 --frame-id map --child-frame-id odom">
+    <param name="use_sim_time" value="true" />
+  </node>
+
+  <!-- ========== Point Cloud Node ========== -->
+  <node pkg="justina_description" exec="depth_to_pointcloud" name="depth_to_pointcloud" output="screen">
+    <param name="use_sim_time" value="true" />
+    <param name="max_frequency" value="15.0" />
+    <param name="min_depth" value="0.1" />
+    <param name="max_depth" value="8.0" />
+    <param name="downsample_step" value="2" />
+  </node>
+
+  <!-- ========== RViz custom config ========== -->
+  <node pkg="rviz2" exec="rviz2" name="rviz2" output="screen" args="-d $(var package_share)/webots_env/rviz/justina_wbt.rviz">
+    <param name="use_sim_time" value="true" />
+  </node>
+
+  <!-- ========== JOYSTICK (optional) ========== -->
+  <node pkg="joy" exec="joy_node" name="joy_node" output="screen">
+    <remap from="joy" to="/hardware/joy"/>
+  </node>
+  <node pkg="justina_description" exec="robot_teleop.py" name="robot_teleop" output="screen">
+    <param name="use_sim_time" value="true" />
+  </node>
+
+  <!-- ========== NAVIGATION STACK ========== -->
+  <include file="$(find-pkg-share navigation_tools)/launch/navigation.launch.xml">
+    <arg name="use_sim_time" value="true" />
+    <arg name="namespace_nav" value="navigation" />
+    <arg name="namespace_hardware" value="hardware" />
+    <arg name="use_point_cloud" value="true" />
+    <arg name="use_lidar" value="true" />
+  </include>
+
+  <node pkg="justina_description" exec="set_initial_pose.py" name="set_initial_pose" output="screen"
+        args="--x $(var initial_pose_x) --y $(var initial_pose_y) --yaw $(var initial_pose_yaw)">
+    <param name="use_sim_time" value="true"/>
+  </node>
+
+</launch>
+
+

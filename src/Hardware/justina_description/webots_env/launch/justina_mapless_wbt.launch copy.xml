@@ -1,0 +1,120 @@
+<launch>
+
+  <arg name="min_x" default="0.0"/>
+  <arg name="max_x" default="4.0"/>
+  <arg name="min_y" default="-2.0"/>
+  <arg name="max_y" default="2.0"/>
+
+  <!-- Get the package share directory -->
+  <let name="package_share" value="$(find-pkg-share justina_description)" />
+  <!-- Arguments for initial pose -->
+  <arg name="initial_pose_x" default="6.5" description="Initial X position (map frame)"/>
+  <arg name="initial_pose_y" default="3.2" description="Initial Y position (map frame)"/>
+  <arg name="initial_pose_yaw" default="0.0" description="Initial yaw angle (radians)"/>
+
+
+  <!-- ================= Launch Webots ================= -->
+  <let name="world_path" value="$(var package_share)/webots_env/worlds/configuring_robot.wbt" />
+  <let name="controllers_path" value="$(var package_share)/webots_env/controllers" />
+
+  <executable cmd="webots --mode=realtime $(var world_path)" output="screen">
+    <env name="WEBOTS_CONTROLLER_PATH" value="$(var controllers_path)" />
+    <env name="DISPLAY" value="$(env DISPLAY :0)" />
+  </executable>
+
+  <!-- =============== robot_state_publisher =============== -->
+  <node pkg="robot_state_publisher" exec="robot_state_publisher">
+    <param name="robot_description" value="$(command 'cat $(var package_share)/urdf/justina.urdf')" />
+    <param name="use_sim_time" value="true" />
+    <remap from="joint_states" to="/hardware/joint_states"/>
+    <remap from="robot_description" to="/hardware/robot_description"/>
+  </node>
+
+  <!-- ========== Static transform from map to odom ========== -->
+
+
+  <!-- ========== Point Cloud Node ========== -->
+  <node pkg="justina_description" exec="depth_to_pointcloud" name="depth_to_pointcloud" output="screen">
+    <param name="use_sim_time" value="true" />
+    <param name="max_frequency" value="15.0" />
+    <param name="min_depth" value="0.1" />
+    <param name="max_depth" value="8.0" />
+    <param name="downsample_step" value="2" />
+  </node>
+
+  <!-- ========== RViz custom config ========== -->
+  <node pkg="rviz2" exec="rviz2" name="rviz2" output="screen" args="-d $(var package_share)/webots_env/rviz/justina_mapless_wbt.rviz">
+    <param name="use_sim_time" value="true" />
+  </node>
+
+  <!-- ========== JOYSTICK (optional) ========== -->
+  <node pkg="joy" exec="joy_node" name="joy_node" output="screen">
+    <remap from="joy" to="/hardware/joy"/>
+  </node>
+  <node pkg="justina_description" exec="robot_teleop.py" name="robot_teleop" output="screen">
+    <param name="use_sim_time" value="true" />
+  </node>
+
+  <node pkg="justina_description" exec="set_initial_pose.py" name="set_initial_pose" output="screen"
+        args="--x $(var initial_pose_x) --y $(var initial_pose_y) --yaw $(var initial_pose_yaw)">
+    <param name="use_sim_time" value="true"/>
+  </node>
+
+  <!-- ====================== MAPLESS NAVIGATION ====================== -->
+
+  <!-- ========== OCCUPANCY GRID NODE ========== -->
+  <!-- Navigation grid (small, high-res) -->
+  <node pkg="mapless_nav" exec="local_occ_grid_node" name="local_occ_grid_nav" output="screen">
+    <param name="use_sim_time" value="true"/>
+    <param name="frame_id" value="base_link"/>
+    <param name="map_topic" value="/mapless/local_occ_grid"/>
+    <param name="min_x" value="0.0"/>    <param name="max_x" value="4.0"/>
+    <param name="min_y" value="-2.0"/>   <param name="max_y" value="2.0"/>
+    <param name="min_z" value="0.06"/>   <param name="max_z" value="2.0"/>
+    <param name="resolution" value="0.05"/>
+    <param name="lidar_downsample" value="2"/>
+    <param name="cloud_downsample" value="2"/>
+    <param name="use_lidar" value="true"/>
+    <param name="use_cloud" value="true"/>
+  </node>
+
+  <!-- Visualization grid (large, lower-res) -->
+  <node pkg="mapless_nav" exec="local_occ_grid_node" name="local_occ_grid_rviz" output="screen">
+    <param name="use_sim_time" value="true"/>
+    <param name="frame_id" value="base_link"/>
+    <param name="map_topic" value="/mapless/local_occ_grid_large"/>
+    <param name="min_x" value="-10.0"/>  <param name="max_x" value="10.0"/>
+    <param name="min_y" value="-10.0"/>  <param name="max_y" value="10.0"/>
+    <param name="min_z" value="0.06"/>   <param name="max_z" value="2.0"/>
+    <param name="resolution" value="0.1"/>
+    <param name="lidar_downsample" value="3"/>
+    <param name="cloud_downsample" value="5"/>
+    <param name="use_lidar" value="true"/>
+    <param name="use_cloud" value="true"/>
+  </node>
+
+  <!-- ========== MAPLESS NAVIGATION PF  ========== -->
+  <!-- <node pkg="mapless_nav" exec="pot_fields.py" name="pot_fields" output="screen">
+    <param name="use_sim_time" value="true" />
+    <param name="nav_mode" value="mapless" />
+    <param name="tol" value="0.2" />
+  </node> -->
+
+  <!-- <node pkg="mapless_nav" exec="bt_navigation.py" name="bt_navigation" output="screen">
+    <param name="use_sim_time" value="true" />
+  </node> -->
+
+    <!-- RNN Controller -->
+  <node pkg="mapless_nav" exec="RNN_mapless.py" name="rnn_controller" output="screen">
+    <param name="use_sim_time" value="true" />
+    <param name="robot_name" value="justina" />
+    <param name="turn_help" value="true" />
+  </node>
+
+  <node pkg="mapless_nav" exec="get_goal_point" name="get_goal_point" output="screen">
+    <param name="use_sim_time" value="true" />
+  </node>
+
+</launch>
+
+

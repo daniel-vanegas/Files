@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+<launch>
+
+  <let name="urdf_file" value="$(command 'cat $(find-pkg-share justina_description)/urdf/justina.urdf')"/>
+
+  <group>
+    <push-ros-namespace namespace="hardware"/>
+
+    <set_remap from="/hardware/head/joint_states"                to="/hardware/joint_states"/>
+    <set_remap from="/hardware/arms/left_arm/joint_states"       to="/hardware/joint_states"/>
+    <set_remap from="/hardware/arms/right_arm/joint_states"      to="/hardware/joint_states"/>
+    <set_remap from="/hardware/torso/joint_states"               to="/hardware/joint_states"/>
+
+    <node pkg="robot_state_publisher" exec="robot_state_publisher" name="robot_state_publisher" output="screen">
+      <param name="robot_description" value="$(var urdf_file)"/>
+    </node>
+
+    <!-- Cabeza -->
+    <include file="$(find-pkg-share head)/launch/head.launch.xml"/>
+
+    <!-- Brazos -->
+    <include file="$(find-pkg-share arms)/launch/arms.launch.xml"/>
+
+    <!-- Torso -->
+    <include file="$(find-pkg-share torso)/launch/torso.launch.xml"/>
+
+    <!-- Joint States Parser -->
+    <include file="$(find-pkg-share joint_states_parser)/launch/joint_states_parser.launch.xml"/>
+
+  </group>
+
+  <node pkg="rviz2" exec="rviz2" name="rviz2" output="screen"
+        args="-d $(find-pkg-share justina_description)/rviz/justina.rviz"/>
+
+</launch>

@@ -1,0 +1,8 @@
+scenario=E24
+duration_s=2671
+reason=sampler_incomplete
+samples=4566
+goals=108
+goals_target=176
+saved_classes=straight=27 semi_complex=27 complex=27 v_complex=27
+log=run_20261017_144506/E24_recording_attempt1.log

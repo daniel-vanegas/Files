@@ -1,0 +1,12 @@
+image: map_E19_C5_05_prohibition.png
+resolution: 0.01
+origin:
+- -8.05
+- -5.53
+- 0.0
+negate: 0
+occupied_thresh: 0.65
+free_thresh: 0.196
+world_offset_x: -0.11628580093383745
+world_offset_y: -0.033511962890624636
+world_offset_yaw: 0.0

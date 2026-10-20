@@ -1,0 +1,274 @@
+{
+  "scenario": "E10",
+  "generated_at": "2026-10-16T15:14:30",
+  "total_target": 200,
+  "total_recorded": 154,
+  "entries": [
+    {
+      "path_id": 20,
+      "class": "straight",
+      "attempts": 3,
+      "last_status": "collision",
+      "start": [
+        0.625,
+        1.745
+      ],
+      "goal": [
+        0.825,
+        -1.055
+      ]
+    },
+    {
+      "path_id": 148,
+      "class": "complex",
+      "attempts": 3,
+      "last_status": "collision",
+      "start": [
+        1.275,
+        -1.805
+      ],
+      "goal": [
+        1.225,
+        0.745
+      ]
+    },
+    {
+      "path_id": 193,
+      "class": "v_complex",
+      "attempts": 3,
+      "last_status": "collision",
+      "start": [
+        0.575,
+        -1.155
+      ],
+      "goal": [
+        2.375,
+        -0.105
+      ]
+    },
+    {
+      "path_id": 150,
+      "class": "v_complex",
+      "attempts": 3,
+      "last_status": "failed",
+      "start": [
+        0.375,
+        0.745
+      ],
+      "goal": [
+        2.475,
+        -1.655
+      ]
+    },
+    {
+      "path_id": 139,
+      "class": "v_complex",
+      "attempts": 3,
+      "last_status": "collision",
+      "start": [
+        2.325,
+        0.595
+      ],
+      "goal": [
+        1.125,
+        -1.955
+      ]
+    },
+    {
+      "path_id": 145,
+      "class": "v_complex",
+      "attempts": 3,
+      "last_status": "collision",
+      "start": [
+        1.375,
+        -1.805
+      ],
+      "goal": [
+        2.225,
+        0.795
+      ]
+    },
+    {
+      "path_id": 64,
+      "class": "straight",
+      "attempts": 3,
+      "last_status": "collision",
+      "start": [
+        0.725,
+        -0.505
+      ],
+      "goal": [
+        1.225,
+        2.345
+      ]
+    },
+    {
+      "path_id": 63,
+      "class": "v_complex",
+      "attempts": 3,
+      "last_status": "collision",
+      "start": [
+        1.025,
+        -1.705
+      ],
+      "goal": [
+        2.375,
+        0.195
+      ]
+    },
+    {
+      "path_id": 100,
+      "class": "semi_complex",
+      "attempts": 3,
+      "last_status": "collision",
+      "start": [
+        0.775,
+        -2.155
+      ],
+      "goal": [
+        1.125,
+        0.645
+      ]
+    },
+    {
+      "path_id": 164,
+      "class": "v_complex",
+      "attempts": 3,
+      "last_status": "collision",
+      "start": [
+        -0.775,
+        -2.305
+      ],
+      "goal": [
+        1.325,
+        0.595
+      ]
+    },
+    {
+      "path_id": 161,
+      "class": "v_complex",
+      "attempts": 3,
+      "last_status": "collision",
+      "start": [
+        2.075,
+        -1.905
+      ],
+      "goal": [
+        0.875,
+        0.295
+      ]
+    },
+    {
+      "path_id": 141,
+      "class": "complex",
+      "attempts": 3,
+      "last_status": "collision",
+      "start": [
+        0.025,
+        -1.805
+      ],
+      "goal": [
+        1.275,
+        0.545
+      ]
+    },
+    {
+      "path_id": 168,
+      "class": "complex",
+      "attempts": 3,
+      "last_status": "collision",
+      "start": [
+        0.425,
+        -1.455
+      ],
+      "goal": [
+        1.425,
+        0.745
+      ]
+    },
+    {
+      "path_id": 165,
+      "class": "v_complex",
+      "attempts": 3,
+      "last_status": "collision",
+      "start": [
+        2.125,
+        -2.255
+      ],
+      "goal": [
+        1.575,
+        0.645
+      ]
+    },
+    {
+      "path_id": 143,
+      "class": "v_complex",
+      "attempts": 3,
+      "last_status": "collision",
+      "start": [
+        2.275,
+        -2.105
+      ],
+      "goal": [
+        1.275,
+        0.545
+      ]
+    },
+    {
+      "path_id": 97,
+      "class": "v_complex",
+      "attempts": 3,
+      "last_status": "failed",
+      "start": [
+        -0.975,
+        1.895
+      ],
+      "goal": [
+        0.425,
+        -1.405
+      ]
+    },
+    {
+      "path_id": 119,
+      "class": "v_complex",
+      "attempts": 3,
+      "last_status": "collision",
+      "start": [
+        1.275,
+        0.545
+      ],
+      "goal": [
+        2.375,
+        -1.655
+      ]
+    },
+    {
+      "path_id": 120,
+      "class": "v_complex",
+      "attempts": 3,
+      "last_status": "collision",
+      "start": [
+        2.125,
+        -2.305
+      ],
+      "goal": [
+        0.275,
+        0.745
+      ]
+    },
+    {
+      "path_id": 157,
+      "class": "complex",
+      "attempts": 3,
+      "last_status": "collision",
+      "start": [
+        0.775,
+        -1.205
+      ],
+      "goal": [
+        2.275,
+        0.445
+      ]
+    }
+  ]
+}

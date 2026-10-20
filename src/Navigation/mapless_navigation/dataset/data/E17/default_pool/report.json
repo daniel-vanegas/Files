@@ -1,0 +1,79 @@
+{
+  "scenario": "E17",
+  "map_yaml": "src/Hardware/justina_description/webots_env/environments/maps/E17_C5_03/map_E17_C5_03_prohibition.yaml",
+  "seed": 115281,
+  "attempt_budget": null,
+  "attempts_used": 4125,
+  "max_attempts_hit": false,
+  "timeout_seconds": 900.0,
+  "timeout_hit": false,
+  "stop_reason": "complete",
+  "accepted_paths": 200,
+  "target_counts": {
+    "straight": 50,
+    "semi_complex": 50,
+    "complex": 50,
+    "v_complex": 50
+  },
+  "target_total": 200,
+  "target_per_class": 50,
+  "class_counts": {
+    "straight": 50,
+    "semi_complex": 50,
+    "v_complex": 50,
+    "complex": 50
+  },
+  "class_deficits": {
+    "straight": 0,
+    "semi_complex": 0,
+    "complex": 0,
+    "v_complex": 0
+  },
+  "task_counts": {
+    "clear_travel": 50,
+    "single_obstacle_avoidance": 50,
+    "multiple_obstacle_navigation": 50,
+    "constrained_passage": 50
+  },
+  "complete": true,
+  "clearance_policy_m": 0.35,
+  "failure_counts": {
+    "complex:path_length": 771,
+    "v_complex:class_mismatch_complex": 576,
+    "semi_complex:path_length": 65,
+    "v_complex:class_mismatch_semi_complex": 651,
+    "semi_complex:class_mismatch_unclassified": 32,
+    "v_complex:class_mismatch_unclassified": 328,
+    "straight:no_endpoint_pair": 3,
+    "complex:class_mismatch_unclassified": 415,
+    "complex:direct_line_clear": 275,
+    "complex:class_mismatch_semi_complex": 649,
+    "semi_complex:direct_line_clear": 22,
+    "complex:theta_star_no_path": 55,
+    "semi_complex:class_mismatch_complex": 7,
+    "v_complex:no_promising_goal_bundle": 16,
+    "straight:duplicate_endpoints": 1,
+    "semi_complex:theta_star_no_path": 6,
+    "v_complex:duplicate_endpoints": 32,
+    "semi_complex:duplicate_endpoints": 3,
+    "v_complex:path_length": 1,
+    "complex:class_mismatch_v_complex": 3,
+    "complex:duplicate_endpoints": 14
+  },
+  "search_diagnostics": {
+    "v_goal_candidates_evaluated": 16540,
+    "v_theta_candidate_routes_evaluated": 4962,
+    "v_hotspot_start_batches": 1280,
+    "v_exploration_start_batches": 374,
+    "v_hotspot_refreshes": 87,
+    "v_hotspot_cells": 4166,
+    "v_attempts": 1654
+  },
+  "elapsed_seconds": 139.41,
+  "notes": [
+    "Offline dataset generator; no robot commands are sent.",
+    "Initial and goal yaw are sampled independently and stored in radians.",
+    "v_complex uses multi-goal local search around obstacle-supported bends from accepted complex routes when available.",
+    "Inspect per-route plots and narrow passages before downstream use."
+  ]
+}

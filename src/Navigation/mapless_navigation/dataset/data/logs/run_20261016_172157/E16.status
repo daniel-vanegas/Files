@@ -1,0 +1,8 @@
+scenario=E16
+duration_s=4604
+reason=sampler_incomplete
+samples=7267
+goals=172
+goals_target=200
+saved_classes=straight=43 semi_complex=43 complex=43 v_complex=43
+log=run_20261016_172157/E16_recording_attempt1.log

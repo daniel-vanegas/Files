@@ -1,0 +1,246 @@
+{
+  "scenario": "E09",
+  "generated_at": "2026-10-16T13:59:04",
+  "total_target": 200,
+  "total_recorded": 159,
+  "entries": [
+    {
+      "path_id": 126,
+      "class": "v_complex",
+      "attempts": 3,
+      "last_status": "failed",
+      "start": [
+        1.375,
+        -1.805
+      ],
+      "goal": [
+        -2.075,
+        -1.105
+      ]
+    },
+    {
+      "path_id": 153,
+      "class": "complex",
+      "attempts": 3,
+      "last_status": "failed",
+      "start": [
+        1.125,
+        -1.555
+      ],
+      "goal": [
+        -1.225,
+        -2.005
+      ]
+    },
+    {
+      "path_id": 109,
+      "class": "complex",
+      "attempts": 3,
+      "last_status": "failed",
+      "start": [
+        -1.075,
+        -1.355
+      ],
+      "goal": [
+        0.975,
+        -2.205
+      ]
+    },
+    {
+      "path_id": 185,
+      "class": "complex",
+      "attempts": 3,
+      "last_status": "failed",
+      "start": [
+        1.325,
+        -1.705
+      ],
+      "goal": [
+        -0.825,
+        -2.155
+      ]
+    },
+    {
+      "path_id": 171,
+      "class": "v_complex",
+      "attempts": 3,
+      "last_status": "failed",
+      "start": [
+        -1.775,
+        -1.105
+      ],
+      "goal": [
+        -1.275,
+        1.845
+      ]
+    },
+    {
+      "path_id": 124,
+      "class": "semi_complex",
+      "attempts": 3,
+      "last_status": "collision",
+      "start": [
+        3.375,
+        -0.455
+      ],
+      "goal": [
+        1.225,
+        -1.255
+      ]
+    },
+    {
+      "path_id": 9,
+      "class": "v_complex",
+      "attempts": 3,
+      "last_status": "failed",
+      "start": [
+        -1.775,
+        -0.955
+      ],
+      "goal": [
+        -0.975,
+        2.045
+      ]
+    },
+    {
+      "path_id": 11,
+      "class": "v_complex",
+      "attempts": 3,
+      "last_status": "failed",
+      "start": [
+        -2.225,
+        -0.355
+      ],
+      "goal": [
+        0.025,
+        -2.305
+      ]
+    },
+    {
+      "path_id": 142,
+      "class": "v_complex",
+      "attempts": 3,
+      "last_status": "failed",
+      "start": [
+        -0.975,
+        -0.905
+      ],
+      "goal": [
+        1.275,
+        -1.505
+      ]
+    },
+    {
+      "path_id": 190,
+      "class": "complex",
+      "attempts": 3,
+      "last_status": "failed",
+      "start": [
+        1.625,
+        -1.655
+      ],
+      "goal": [
+        -0.925,
+        -1.905
+      ]
+    },
+    {
+      "path_id": 88,
+      "class": "v_complex",
+      "attempts": 3,
+      "last_status": "failed",
+      "start": [
+        1.275,
+        -1.955
+      ],
+      "goal": [
+        -1.675,
+        -1.105
+      ]
+    },
+    {
+      "path_id": 128,
+      "class": "v_complex",
+      "attempts": 3,
+      "last_status": "failed",
+      "start": [
+        -1.425,
+        -1.205
+      ],
+      "goal": [
+        2.025,
+        -1.655
+      ]
+    },
+    {
+      "path_id": 52,
+      "class": "semi_complex",
+      "attempts": 3,
+      "last_status": "failed",
+      "start": [
+        -1.025,
+        -1.355
+      ],
+      "goal": [
+        1.125,
+        -2.205
+      ]
+    },
+    {
+      "path_id": 75,
+      "class": "v_complex",
+      "attempts": 3,
+      "last_status": "failed",
+      "start": [
+        -2.125,
+        -0.655
+      ],
+      "goal": [
+        0.825,
+        -2.255
+      ]
+    },
+    {
+      "path_id": 160,
+      "class": "v_complex",
+      "attempts": 3,
+      "last_status": "failed",
+      "start": [
+        1.775,
+        -1.505
+      ],
+      "goal": [
+        -1.275,
+        -1.605
+      ]
+    },
+    {
+      "path_id": 145,
+      "class": "v_complex",
+      "attempts": 3,
+      "last_status": "failed",
+      "start": [
+        1.825,
+        -1.655
+      ],
+      "goal": [
+        -1.225,
+        -0.905
+      ]
+    },
+    {
+      "path_id": 135,
+      "class": "v_complex",
+      "attempts": 3,
+      "last_status": "failed",
+      "start": [
+        -1.575,
+        -1.055
+      ],
+      "goal": [
+        1.525,
+        -1.655
+      ]
+    }
+  ]
+}

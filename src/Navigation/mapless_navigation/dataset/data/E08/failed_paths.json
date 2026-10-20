@@ -1,0 +1,64 @@
+{
+  "scenario": "E08",
+  "generated_at": "2026-10-16T12:43:28",
+  "total_target": 200,
+  "total_recorded": 193,
+  "entries": [
+    {
+      "path_id": 67,
+      "class": "v_complex",
+      "attempts": 3,
+      "last_status": "failed",
+      "start": [
+        2.425,
+        0.445
+      ],
+      "goal": [
+        1.325,
+        -2.755
+      ]
+    },
+    {
+      "path_id": 197,
+      "class": "complex",
+      "attempts": 3,
+      "last_status": "failed",
+      "start": [
+        -0.975,
+        -2.555
+      ],
+      "goal": [
+        1.325,
+        -2.705
+      ]
+    },
+    {
+      "path_id": 170,
+      "class": "v_complex",
+      "attempts": 3,
+      "last_status": "failed",
+      "start": [
+        2.775,
+        0.245
+      ],
+      "goal": [
+        1.325,
+        -2.605
+      ]
+    },
+    {
+      "path_id": 194,
+      "class": "complex",
+      "attempts": 3,
+      "last_status": "collision",
+      "start": [
+        2.775,
+        -0.955
+      ],
+      "goal": [
+        1.325,
+        -2.705
+      ]
+    }
+  ]
+}

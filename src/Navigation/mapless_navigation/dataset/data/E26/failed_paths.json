@@ -1,0 +1,50 @@
+{
+  "scenario": "E26",
+  "generated_at": "2026-10-17T23:06:21",
+  "total_target": 173,
+  "total_recorded": 166,
+  "entries": [
+    {
+      "path_id": 89,
+      "class": "semi_complex",
+      "attempts": 3,
+      "last_status": "collision",
+      "start": [
+        1.375,
+        -1.205
+      ],
+      "goal": [
+        -0.825,
+        -1.705
+      ]
+    },
+    {
+      "path_id": 81,
+      "class": "semi_complex",
+      "attempts": 3,
+      "last_status": "failed",
+      "start": [
+        0.325,
+        2.595
+      ],
+      "goal": [
+        2.275,
+        3.145
+      ]
+    },
+    {
+      "path_id": 36,
+      "class": "semi_complex",
+      "attempts": 3,
+      "last_status": "failed",
+      "start": [
+        0.975,
+        -0.305
+      ],
+      "goal": [
+        -1.175,
+        -1.905
+      ]
+    }
+  ]
+}

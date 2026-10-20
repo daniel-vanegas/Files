@@ -1,0 +1,8 @@
+scenario=E22
+duration_s=4448
+reason=sampler_incomplete
+samples=7994
+goals=191
+goals_target=200
+saved_classes=straight=48 semi_complex=48 complex=48 v_complex=47
+log=run_20261017_144506/E22_recording_attempt1.log

@@ -1,0 +1,8 @@
+scenario=E02
+duration_s=4518
+reason=sampler_incomplete
+samples=7802
+goals=181
+goals_target=200
+saved_classes=straight=45 semi_complex=45 complex=46 v_complex=45
+log=run_20261015_165642/E02_recording_attempt1.log

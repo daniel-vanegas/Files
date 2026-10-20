@@ -1,0 +1,557 @@
+#VRML_SIM R2025a utf8
+
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/backgrounds/protos/TexturedBackground.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/backgrounds/protos/TexturedBackgroundLight.proto"
+
+WorldInfo {
+}
+DEF MAIN_VIEW Viewpoint {
+  orientation -0.28793368251462453 -0.10726636909155839 0.9516239386099326 3.8010333889686825
+  position 10.385033599855582 7.5216172174602285 9.037724849860581
+  follow "lab_walls"
+}
+
+TexturedBackground {
+  texture "noon_building_overcast"
+}
+TexturedBackgroundLight {
+  texture "noon_building_overcast"
+}
+DEF BioRoboticsLab_Mesh Group {
+  children [
+    DEF LAB_Dynamic_Mesh Group {
+      children [
+        Solid {
+          translation 2.5 -0.25 0
+          rotation 0 0 1 3.141592653589793
+          children [
+            CadShape {
+              url [
+                "../models/BioRoboticsLab/meshes/Plastic_drawer.dae"
+              ]
+            }
+          ]
+          name "Plastic_drawer"
+          boundingObject Mesh {
+            url [
+              "../models/BioRoboticsLab/meshes/Plastic_drawer_Collider.dae"
+            ]
+          }
+        }
+        Solid {
+          translation 1.82 -0.22 0
+          rotation 0 0 1 0.02
+          children [
+            CadShape {
+              url [
+                "../models/BioRoboticsLab/meshes/ToolBox_red.dae"
+              ]
+            }
+          ]
+          name "ToolBox_red"
+          boundingObject Mesh {
+            url [
+              "../models/BioRoboticsLab/meshes/ToolBox_red.dae"
+            ]
+          }
+        }
+      ]
+    }
+    DEF Lab_Static_Mesh Group {
+      children [
+        Solid {
+          translation 3.77 2.31 0
+          children [
+            CadShape {
+              url [
+                "../models/BioRoboticsLab/meshes/Fridge_low.dae"
+              ]
+              isPickable FALSE
+            }
+          ]
+          name "Fridge"
+          boundingObject Mesh {
+            url [
+              "../models/BioRoboticsLab/meshes/Fridge_low.dae"
+            ]
+          }
+          locked TRUE
+        }
+        Solid {
+          translation -3.02 -0.59 0
+          rotation 0 0 1 1.5707996938995747
+          children [
+            CadShape {
+              url [
+                "../models/BioRoboticsLab/meshes/Wood_box.dae"
+              ]
+              isPickable FALSE
+            }
+          ]
+          name "Wood_box"
+          boundingObject Mesh {
+            url [
+              "../models/BioRoboticsLab/meshes/Wood_box.dae"
+            ]
+          }
+          locked TRUE
+        }
+        Solid {
+          translation -4.14 -0.65 0
+          children [
+            CadShape {
+              url [
+                "../models/BioRoboticsLab/meshes/Filing_cabinet.dae"
+              ]
+              isPickable FALSE
+            }
+          ]
+          name "Filing_cabinete"
+          boundingObject Mesh {
+            url [
+              "../models/BioRoboticsLab/meshes/Filing_cabinet.dae"
+            ]
+          }
+          locked TRUE
+        }
+        Solid {
+          translation -4.67 -0.65 0
+          rotation 0 0 1 1.57
+          children [
+            CadShape {
+              url [
+                "../models/BioRoboticsLab/meshes/Tropy_shelf.dae"
+              ]
+              isPickable FALSE
+            }
+          ]
+          name "tropy_shelf"
+          boundingObject Mesh {
+            url [
+              "../models/BioRoboticsLab/meshes/Tropy_shelf.dae"
+            ]
+          }
+          locked TRUE
+        }
+        Solid {
+          translation -0.63 -2.31 0
+          children [
+            CadShape {
+              url [
+                "../models/BioRoboticsLab/meshes/White_table.dae"
+              ]
+              isPickable FALSE
+            }
+          ]
+          name "White_table"
+          boundingObject Mesh {
+            url [
+              "../models/BioRoboticsLab/meshes/White_table.dae"
+            ]
+          }
+          locked TRUE
+        }
+        Solid {
+          translation -1.77 -2.37 0
+          children [
+            CadShape {
+              url [
+                "../models/BioRoboticsLab/meshes/PC_Desk.dae"
+              ]
+              isPickable FALSE
+            }
+          ]
+          name "PC_Desk"
+          boundingObject Mesh {
+            url [
+              "../models/BioRoboticsLab/meshes/PC_Desk.dae"
+            ]
+          }
+          locked TRUE
+        }
+        Solid {
+          translation -2.92 -2.26 0
+          children [
+            CadShape {
+              url [
+                "../models/BioRoboticsLab/meshes/Desk_04.dae"
+              ]
+              isPickable FALSE
+            }
+          ]
+          name "Desk_04"
+          boundingObject Mesh {
+            url [
+              "../models/BioRoboticsLab/meshes/Desk_04.dae"
+            ]
+          }
+          locked TRUE
+        }
+        Solid {
+          translation 1.27 2.25 0
+          rotation 0 0 1 3.14159
+          children [
+            CadShape {
+              url [
+                "../models/BioRoboticsLab/meshes/Desk_03.dae"
+              ]
+              isPickable FALSE
+            }
+          ]
+          name "Desk_03"
+          boundingObject Mesh {
+            url [
+              "../models/BioRoboticsLab/meshes/Desk_03.dae"
+            ]
+          }
+          locked TRUE
+        }
+        Solid {
+          translation 0.44 -2.26 0
+          children [
+            CadShape {
+              url [
+                "../models/BioRoboticsLab/meshes/Desk_02.dae"
+              ]
+              isPickable FALSE
+            }
+          ]
+          name "Desk_02"
+          boundingObject Mesh {
+            url [
+              "../models/BioRoboticsLab/meshes/Desk_02.dae"
+            ]
+          }
+          locked TRUE
+        }
+        Solid {
+          translation 3.94 -2.25 0
+          children [
+            CadShape {
+              url [
+                "../models/BioRoboticsLab/meshes/Desk_01_wide.dae"
+              ]
+              isPickable FALSE
+            }
+          ]
+          name "Desk_01_wide"
+          boundingObject Mesh {
+            url [
+              "../models/BioRoboticsLab/meshes/Desk_01_wide.dae"
+            ]
+          }
+          locked TRUE
+        }
+        Solid {
+          translation 4.63 -0.75 0
+          rotation 0 0 1 1.5707996938995747
+          children [
+            CadShape {
+              url [
+                "../models/BioRoboticsLab/meshes/Desk_01.dae"
+              ]
+              isPickable FALSE
+            }
+          ]
+          name "Desk_01"
+          boundingObject Mesh {
+            url [
+              "../models/BioRoboticsLab/meshes/Desk_01.dae"
+            ]
+          }
+          locked TRUE
+        }
+        Solid {
+          translation -3.07 2 0
+          rotation 0 0 1 1.5707996938995747
+          children [
+            CadShape {
+              url [
+                "../models/BioRoboticsLab/meshes/Table_05.dae"
+              ]
+              isPickable FALSE
+            }
+          ]
+          name "Table_05"
+          boundingObject Mesh {
+            url [
+              "../models/BioRoboticsLab/meshes/Table_05.dae"
+            ]
+          }
+          locked TRUE
+        }
+        Solid {
+          translation -1.92 2.26 0
+          children [
+            CadShape {
+              url [
+                "../models/BioRoboticsLab/meshes/Table_04.dae"
+              ]
+              isPickable FALSE
+            }
+          ]
+          name "Table_04"
+          boundingObject Mesh {
+            url [
+              "../models/BioRoboticsLab/meshes/Table_04.dae"
+            ]
+          }
+          locked TRUE
+        }
+        Solid {
+          translation -3.07 0.5 0
+          rotation 0 0 1 1.5707996938995747
+          children [
+            CadShape {
+              url [
+                "../models/BioRoboticsLab/meshes/Table_03.dae"
+              ]
+              isPickable FALSE
+            }
+          ]
+          name "Table_03_1"
+          boundingObject Mesh {
+            url [
+              "../models/BioRoboticsLab/meshes/Table_03.dae"
+            ]
+          }
+          locked TRUE
+        }
+        Solid {
+          translation -0.24 2.24 0
+          children [
+            CadShape {
+              url [
+                "../models/BioRoboticsLab/meshes/Table_03.dae"
+              ]
+              isPickable FALSE
+            }
+          ]
+          name "Table_03"
+          boundingObject Mesh {
+            url [
+              "../models/BioRoboticsLab/meshes/Table_03.dae"
+            ]
+          }
+          locked TRUE
+        }
+        Solid {
+          translation 2.7 2.31 0
+          rotation 0 0 1 3.141592653589793
+          children [
+            CadShape {
+              url [
+                "../models/BioRoboticsLab/meshes/Table_02.dae"
+              ]
+              isPickable FALSE
+            }
+          ]
+          name "Table_02"
+          boundingObject Mesh {
+            url [
+              "../models/BioRoboticsLab/meshes/Table_02.dae"
+            ]
+          }
+          locked TRUE
+        }
+        Solid {
+          translation 3.95 -2.24 0.75
+          children [
+            CadShape {
+              url [
+                "../models/BioRoboticsLab/meshes/Table_01_tight.dae"
+              ]
+              isPickable FALSE
+            }
+          ]
+          name "Table_01_1"
+          boundingObject Mesh {
+            url [
+              "../models/BioRoboticsLab/meshes/Table_01_tight.dae"
+            ]
+          }
+          locked TRUE
+        }
+        Solid {
+          translation 4.64 1.45 0
+          rotation 0 0 1 1.5707996938995747
+          children [
+            CadShape {
+              url [
+                "../models/BioRoboticsLab/meshes/Table_01.dae"
+              ]
+              isPickable FALSE
+            }
+          ]
+          name "Table_01"
+          boundingObject Mesh {
+            url [
+              "../models/BioRoboticsLab/meshes/Table_01.dae"
+            ]
+          }
+          locked TRUE
+        }
+        Solid {
+          translation 0.03 -0.16 0
+          children [
+            CadShape {
+              url [
+                "../models/BioRoboticsLab/meshes/Shelf_1_center.dae"
+              ]
+              isPickable FALSE
+            }
+          ]
+          name "Sehlf_1_center"
+          boundingObject Mesh {
+            url [
+              "../models/BioRoboticsLab/meshes/Shelf_1_center.dae"
+            ]
+          }
+          locked TRUE
+        }
+        Solid {
+          translation 1.44 -2.1 0
+          children [
+            CadShape {
+              url [
+                "../models/BioRoboticsLab/meshes/Shelf_02.dae"
+              ]
+              isPickable FALSE
+            }
+          ]
+          name "Shelf_02"
+          boundingObject Mesh {
+            url [
+              "../models/BioRoboticsLab/meshes/Shelf_02.dae"
+            ]
+          }
+          locked TRUE
+        }
+        Solid {
+          translation 2.09 -2.2 0
+          children [
+            CadShape {
+              url [
+                "../models/BioRoboticsLab/meshes/Red_locker.dae"
+              ]
+              isPickable FALSE
+            }
+          ]
+          name "Red_locker"
+          boundingObject Mesh {
+            url [
+              "../models/BioRoboticsLab/meshes/Red_locker.dae"
+            ]
+          }
+          locked TRUE
+        }
+      ]
+    }
+    Solid {
+      translation -4.98 -2.52 0.01
+      rotation 0 0 1 -1.5
+      children [
+        CadShape {
+          url [
+            "../models/BioRoboticsLab/meshes/Door.dae"
+          ]
+        }
+      ]
+      name "LabDoor"
+      boundingObject Mesh {
+        url [
+          "../models/BioRoboticsLab/meshes/Door.dae"
+        ]
+      }
+    }
+    Solid {
+      translation 0 0 -0.01
+      children [
+        Shape {
+          appearance PBRAppearance {
+            baseColor 0.752941 0.74902 0.737255
+            roughness 1
+            metalness 0
+          }
+          geometry Plane {
+            size 50 50
+          }
+          isPickable FALSE
+        }
+      ]
+      name "ground"
+      boundingObject Plane {
+        size 50 50
+      }
+      locked TRUE
+    }
+    Solid {
+      children [
+        CadShape {
+          url [
+            "../models/BioRoboticsLab/meshes/Lab_Floor.dae"
+          ]
+          isPickable FALSE
+        }
+      ]
+      name "lab_floor"
+      locked TRUE
+    }
+    Solid {
+      children [
+        CadShape {
+          url [
+            "../models/BioRoboticsLab/meshes/Lab_Mesh_B.dae"
+          ]
+          isPickable FALSE
+        }
+      ]
+      name "lab_walls"
+      boundingObject Mesh {
+        url [
+          "../models/BioRoboticsLab/meshes/Lab_Mesh_B.dae"
+        ]
+      }
+      locked TRUE
+    }
+  ]
+}
+DEF MainCameraController Robot {
+  controller "camera_controller"
+  supervisor TRUE
+  translation 0 1.5 1.6
+  rotation 0 0 1 0
+  children [
+    DEF CAMERA_PITCH Transform {
+      # Initial rotation: set to identity (no pitch) – we will adjust this later
+      rotation 0 1 0 0
+      children [
+        # Solid wrapper for camera (invisible)
+        Solid {
+          translation 0 0 0
+          children [
+            Shape {
+              appearance PBRAppearance {
+                baseColor 0 0 0
+                transparency 1
+              }
+              geometry Box { size 0.01 0.01 0.01 }
+            }
+            # Camera device – keep its rotation exactly as you had it (the one that works)
+            Camera {
+              name "CAMERA"
+              width 1280
+              height 720
+              fieldOfView 0.785398
+              translation 0 0 0
+              rotation 0 0 1 0
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+
+
+

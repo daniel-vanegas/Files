@@ -1,0 +1,12 @@
+image: map_E04_C2_06_nav.png
+resolution: 0.01
+origin:
+- -8.05
+- -5.53
+- 0.0
+negate: 0
+occupied_thresh: 0.65
+free_thresh: 0.196
+world_offset_x: 0.09000004768371639
+world_offset_y: 0.0800000000000004
+world_offset_yaw: 0.0

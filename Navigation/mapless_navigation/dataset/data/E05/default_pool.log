@@ -1,15 +1,0 @@
-scenario: E05
-map: /home/devan/GIT/mapless/src/Hardware/justina_description/webots_env/environments/maps/E05_C2_01/map_E05_C2_01_prohibition.yaml
-map size: 1610x1106 at 0.010 m/cell
-safe cells: 538909; clearance >= 0.35 m
-target quotas: straight=3, semi_complex=3, complex=2, v_complex=2 (total=10)
-limits: max_attempts=unlimited, timeout_seconds=8
-planning grid: 322x222 at 0.050 m/cell (factor 5; full-resolution safety validation retained)
-0s 1/sin_tope 0/10 straight=0/3 semi_complex=0/3 complex=0/2 v_complex=0/25s 95/sin_tope 7/10 straight=3/3 semi_complex=3/3 complex=1/2 v_complex=0/28s 154/sin_tope 7/10 straight=3/3 semi_complex=3/3 complex=1/2 v_complex=0/2
-wrote: /home/devan/GIT/mapless/src/Navigation/mapless_navigation/dataset/data/E05/default_pool
-accepted: 7 / target 10; classes={'straight': 3, 'semi_complex': 3, 'complex': 1}
-attempts=154 elapsed=8.03s
-individual route sheets:
-  /home/devan/GIT/mapless/src/Navigation/mapless_navigation/dataset/data/E05/default_pool/routes_straight.png
-  /home/devan/GIT/mapless/src/Navigation/mapless_navigation/dataset/data/E05/default_pool/routes_semi_complex.png
-  /home/devan/GIT/mapless/src/Navigation/mapless_navigation/dataset/data/E05/default_pool/routes_complex.png

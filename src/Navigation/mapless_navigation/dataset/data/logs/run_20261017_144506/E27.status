@@ -1,0 +1,8 @@
+scenario=E27
+duration_s=4532
+reason=sampler_incomplete
+samples=7888
+goals=190
+goals_target=200
+saved_classes=straight=47 semi_complex=48 complex=47 v_complex=48
+log=run_20261017_144506/E27_recording_attempt1.log

@@ -1,0 +1,8 @@
+scenario=E05
+duration_s=1399
+reason=sampler_incomplete
+samples=2165
+goals=53
+goals_target=157
+saved_classes=straight=13 semi_complex=13 complex=14 v_complex=13
+log=run_20261015_165642/E05_recording_attempt1.log

@@ -1,0 +1,8 @@
+scenario=E28
+duration_s=4687
+reason=sampler_incomplete
+samples=7223
+goals=170
+goals_target=200
+saved_classes=straight=42 semi_complex=43 complex=43 v_complex=42
+log=run_20261017_144506/E28_recording_attempt1.log

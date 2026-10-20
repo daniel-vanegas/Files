@@ -1,0 +1,36 @@
+{
+  "scenario": "E04",
+  "generated_at": "2026-10-15T22:43:39",
+  "total_target": 200,
+  "total_recorded": 192,
+  "entries": [
+    {
+      "path_id": 166,
+      "class": "v_complex",
+      "attempts": 3,
+      "last_status": "collision",
+      "start": [
+        0.525,
+        3.045
+      ],
+      "goal": [
+        -2.175,
+        2.695
+      ]
+    },
+    {
+      "path_id": 145,
+      "class": "v_complex",
+      "attempts": 3,
+      "last_status": "failed",
+      "start": [
+        -1.925,
+        -3.255
+      ],
+      "goal": [
+        1.575,
+        -3.405
+      ]
+    }
+  ]
+}

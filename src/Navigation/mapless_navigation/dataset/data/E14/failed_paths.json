@@ -1,0 +1,22 @@
+{
+  "scenario": "E14",
+  "generated_at": "2026-10-16T23:22:59",
+  "total_target": 200,
+  "total_recorded": 198,
+  "entries": [
+    {
+      "path_id": 144,
+      "class": "complex",
+      "attempts": 3,
+      "last_status": "failed",
+      "start": [
+        -0.975,
+        -1.955
+      ],
+      "goal": [
+        0.475,
+        0.345
+      ]
+    }
+  ]
+}

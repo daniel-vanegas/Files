@@ -1,0 +1,106 @@
+{
+  "scenario": "E21",
+  "generated_at": "2026-10-17T17:30:08",
+  "total_target": 200,
+  "total_recorded": 189,
+  "entries": [
+    {
+      "path_id": 166,
+      "class": "v_complex",
+      "attempts": 3,
+      "last_status": "failed",
+      "start": [
+        -2.975,
+        -0.705
+      ],
+      "goal": [
+        -2.075,
+        -3.755
+      ]
+    },
+    {
+      "path_id": 2,
+      "class": "semi_complex",
+      "attempts": 3,
+      "last_status": "collision",
+      "start": [
+        1.325,
+        -0.955
+      ],
+      "goal": [
+        0.825,
+        -3.605
+      ]
+    },
+    {
+      "path_id": 70,
+      "class": "straight",
+      "attempts": 3,
+      "last_status": "collision",
+      "start": [
+        -0.625,
+        3.095
+      ],
+      "goal": [
+        0.675,
+        0.695
+      ]
+    },
+    {
+      "path_id": 3,
+      "class": "complex",
+      "attempts": 3,
+      "last_status": "failed",
+      "start": [
+        -2.375,
+        -2.955
+      ],
+      "goal": [
+        -3.325,
+        -0.705
+      ]
+    },
+    {
+      "path_id": 121,
+      "class": "complex",
+      "attempts": 3,
+      "last_status": "failed",
+      "start": [
+        -3.075,
+        -2.905
+      ],
+      "goal": [
+        -2.875,
+        -0.605
+      ]
+    },
+    {
+      "path_id": 122,
+      "class": "complex",
+      "attempts": 3,
+      "last_status": "collision",
+      "start": [
+        2.725,
+        3.095
+      ],
+      "goal": [
+        0.225,
+        2.895
+      ]
+    },
+    {
+      "path_id": 36,
+      "class": "straight",
+      "attempts": 3,
+      "last_status": "collision",
+      "start": [
+        -3.375,
+        0.695
+      ],
+      "goal": [
+        -1.975,
+        3.095
+      ]
+    }
+  ]
+}

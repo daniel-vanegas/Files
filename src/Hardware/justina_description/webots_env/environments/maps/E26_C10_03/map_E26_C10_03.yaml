@@ -1,0 +1,12 @@
+image: map_E26_C10_03.png
+resolution: 0.01
+origin:
+- -8.05
+- -5.53
+- 0.0
+negate: 0
+occupied_thresh: 0.65
+free_thresh: 0.196
+world_offset_x: -0.059340038299559694
+world_offset_y: -0.051094188690185116
+world_offset_yaw: 0.0

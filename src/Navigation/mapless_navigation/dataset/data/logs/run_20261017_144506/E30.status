@@ -1,0 +1,8 @@
+scenario=E30
+duration_s=4452
+reason=sampler_incomplete
+samples=7812
+goals=181
+goals_target=200
+saved_classes=straight=46 semi_complex=45 complex=45 v_complex=45
+log=run_20261017_144506/E30_recording_attempt1.log
