@@ -261,9 +261,42 @@ def audit_dataset(data_root: Path) -> dict[str, Any]:
             if p.is_dir() and p.name.startswith("run_")
         )
         runs = [audit_run(p) for p in run_dirs]
+
+        # failed_paths.json describes path-pool routes that exhausted retries
+        # before being recorded; this is distinct from per-episode tries in
+        # each run's episode_tries.json.
+        failed_paths_path = scenario_dir / "failed_paths.json"
+        failed_paths = {
+            "file_present": failed_paths_path.is_file(),
+            "entries": 0,
+            "attempts_summed": 0,
+            "by_status": {},
+            "by_class": {},
+            "total_target": None,
+            "total_recorded": None,
+            "error": None,
+        }
+        if failed_paths_path.is_file():
+            try:
+                failure_doc = json.loads(failed_paths_path.read_text(encoding="utf-8"))
+                entries = failure_doc.get("entries", [])
+                by_status = Counter(str(entry.get("last_status", "unknown")) for entry in entries)
+                by_class = Counter(str(entry.get("class", "unknown")) for entry in entries)
+                failed_paths.update({
+                    "entries": len(entries),
+                    "attempts_summed": sum(max(0, _int(entry.get("attempts"), 0) or 0) for entry in entries),
+                    "by_status": dict(by_status),
+                    "by_class": dict(by_class),
+                    "total_target": _int(failure_doc.get("total_target")),
+                    "total_recorded": _int(failure_doc.get("total_recorded")),
+                })
+            except (OSError, json.JSONDecodeError, AttributeError, TypeError) as exc:
+                failed_paths["error"] = f"{type(exc).__name__}: {exc}"
+
         scenario_reports.append({
             "scenario": scenario,
             "directory_present": True,
+            "failed_paths": failed_paths,
             "runs": runs,
             "run_count": len(runs),
             "samples": sum(r.get("samples", 0) for r in runs),
@@ -289,6 +322,8 @@ def audit_dataset(data_root: Path) -> dict[str, Any]:
         "episodes": sum(s.get("episodes", 0) for s in scenario_reports),
         "missing_npz_runs": sum(s.get("missing_npz_runs", 0) for s in scenario_reports),
         "missing_lom_references": sum(s.get("missing_lom_references", 0) for s in scenario_reports),
+        "failed_path_entries_reported": sum(s.get("failed_paths", {}).get("entries", 0) for s in scenario_reports),
+        "failed_path_attempts_summed": sum(s.get("failed_paths", {}).get("attempts_summed", 0) for s in scenario_reports),
         "errors": sum(s.get("error_count", 0) for s in scenario_reports),
         "episodes_by_class": {
             c: sum(s.get("episodes_by_class", {}).get(c, 0) for s in scenario_reports)
@@ -323,7 +358,8 @@ def write_outputs(report: dict[str, Any], output_dir: Path) -> None:
             "scenario", "directory_present", "run_count", "samples", "episodes",
             "straight_episodes", "semi_complex_episodes", "complex_episodes",
             "v_complex_episodes", "unknown_episodes", "missing_lom_references",
-            "missing_npz_runs", "error_count",
+            "missing_npz_runs", "failed_paths_file_present", "failed_paths_reported",
+            "failed_path_attempts_summed", "failed_collision_paths", "error_count",
         ]
         writer = csv.DictWriter(stream, fieldnames=fields)
         writer.writeheader()
@@ -342,6 +378,10 @@ def write_outputs(report: dict[str, Any], output_dir: Path) -> None:
                 "unknown_episodes": ep.get("unknown", 0),
                 "missing_lom_references": item.get("missing_lom_references", 0),
                 "missing_npz_runs": item.get("missing_npz_runs", 0),
+                "failed_paths_file_present": item.get("failed_paths", {}).get("file_present", False),
+                "failed_paths_reported": item.get("failed_paths", {}).get("entries", 0),
+                "failed_path_attempts_summed": item.get("failed_paths", {}).get("attempts_summed", 0),
+                "failed_collision_paths": item.get("failed_paths", {}).get("by_status", {}).get("collision", 0),
                 "error_count": item.get("error_count", len(item.get("errors", []))),
             })
 
