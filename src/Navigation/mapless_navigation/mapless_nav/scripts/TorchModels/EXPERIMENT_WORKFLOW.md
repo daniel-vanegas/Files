@@ -69,9 +69,11 @@ python3 src/Navigation/mapless_navigation/mapless_nav/scripts/TorchModels/train_
 ```
 
 Both runs default to seed 42 and use a 25% validation split by complete
-episodes *within the configured TRAIN scenarios*. Test scenario files are
+episodes *within the configured TRAIN scenarios*. Test sccenario files are
 never deserialized by this runner. The test maps remain reserved for the final
-Webots generalization evaluation.
+Webots generalization evaluation. Temporal windows are constructed lazily from each episode
+using the same `build_input_frame()` preprocessing as `dataset_utils.py`. This avoids caching
+every overlapping float32 window in memory, which would multiply RAM use for Experiment B.
 
 Each run gets an independent output folder under
 `TorchModels/experiments/<experiment-id>/seed_<seed>/`, containing:
