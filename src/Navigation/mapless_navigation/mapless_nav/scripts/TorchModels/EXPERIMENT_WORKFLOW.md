@@ -55,17 +55,30 @@ ROS 1 replay. Normalization remains the current TorchModels behavior:
 `vx` is nonnegative when reverse is disabled, `vy` and `wz` are signed, and
 the occupancy grid is scaled by 1/100 and clipped to [0, 1].
 
-## 4. Run an experiment
+## 4. Prepare an isolated NPZ staging dataset
 
-Before running, check that all configured TRAIN scenarios have already
-converted NPZ files at `dataset/data/E##/run_*.npz`, and that the associated
-raw run folders contain `episode_tries.json`. The trainer intentionally fails
-rather than converting data or silently skipping a scenario if those files are
-missing. This avoids overwriting any existing dataset artifacts.
+The recorded workspace contains CSV and LOM data but may not contain converted NPZ files. Do not call `generate_npz_data.py` on the source tree until its write behavior and existing artifacts have been checked: it writes `.npz` and `.descriptor.yaml` beside each source run and can overwrite them.
+
+Use the staging converter to read existing CSV/LOM files and write converted NPZ files to a new directory outside the source dataset. It converts only the union of maps used for TRAIN in A or B; maps that are TEST-only for both experiments get empty directories and no NPZ files. For either run, the trainer loads NPZ *contents* only from that experiment’s TRAIN maps.
 
 ```bash
-python3 src/Navigation/mapless_navigation/mapless_nav/scripts/TorchModels/train_experiment.py --experiment A
-python3 src/Navigation/mapless_navigation/mapless_nav/scripts/TorchModels/train_experiment.py --experiment B
+STAGE="/tmp/mapless-npz-stage-$(date +%Y%m%d_%H%M%S)"
+python3 src/Navigation/mapless_navigation/mapless_nav/scripts/TorchModels/prepare_experiment_npz.py \\
+  --data-root src/Navigation/mapless_navigation/dataset/data \\
+  --output-root "$STAGE"
+```
+
+The script refuses to use an output directory that is inside, contains, or equals the source tree, or that already contains files. It writes `conversion_manifest.json` with source CSV/sidecar/descriptor hashes, converted NPZ hashes, sample counts and per-class episode counts. It does not regenerate paths, rebalance classes, change labels, or modify source recordings. Conversion fails if a sample would be dropped by the existing CSV/LOM decoder or if an observed episode has no class label.
+
+Review the output summary and manifest. Expected staging coverage is 19 converted TRAIN-union scenarios and 11 TEST-only scenarios without NPZ files. Stop and investigate if counts differ from the source audit or if the command exits with an error. Keep the staging root path for the training commands below.
+
+## 5. Run an experiment
+
+Run only after conversion is complete and the manifest has been reviewed. The trainer intentionally fails rather than converting data or silently skipping a configured TRAIN scenario.
+
+```bash
+python3 src/Navigation/mapless_navigation/mapless_nav/scripts/TorchModels/train_experiment.py --experiment A --data-root "$STAGE"
+python3 src/Navigation/mapless_navigation/mapless_nav/scripts/TorchModels/train_experiment.py --experiment B --data-root "$STAGE"
 ```
 
 Both runs default to seed 42 and use a 25% validation split by complete
@@ -91,11 +104,6 @@ seed or configuration, use a different seed and/or `--output-dir`. No
 TEST-map navigation evaluation is inferred from the training losses; Webots
 evaluation must be recorded as a separate phase.
 
-## 5. Safe NPZ preparation
+## 6. Safe NPZ preparation
 
-The training runner does not call the converter automatically. The current
-`generate_npz_data.py` writes NPZ files next to each raw run and can overwrite
-an existing NPZ/descriptor when rerun. Before using it, verify the target
-scenario folders contain no existing converted artifacts, or prepare a
-separate staging copy of the selected data and convert there. Never use
-`--purge-data` or `--replace` for these experiments.
+The staging converter intentionally leaves the original `generate_npz_data.py` and all recordings untouched. Never use `--purge-data` or `--replace` for these experiments.
