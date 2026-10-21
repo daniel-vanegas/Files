@@ -14,6 +14,7 @@ from experiment_config import (  # noqa: E402
     EXPECTED_SPLITS,
     SCENARIOS,
     load_config,
+    shared_test_scenarios,
     validate_config,
 )
 
@@ -47,6 +48,20 @@ class ExperimentSplitTests(unittest.TestCase):
         for exp in self.config["experiments"].values():
             self.assertTrue({"E01", "E02", "E03"}.issubset(exp["train_scenarios"]))
             self.assertTrue({"E04", "E05", "E06"}.issubset(exp["test_scenarios"]))
+
+    def test_shared_test_set_is_valid_for_paired_comparison(self):
+        expected = (
+            "E04", "E05", "E06", "E08", "E10", "E16",
+            "E19", "E20", "E23", "E24", "E29",
+        )
+        self.assertEqual(tuple(shared_test_scenarios(self.config)), expected)
+        self.assertEqual(len(expected), 11)
+        test_a = set(self.config["experiments"]["A"]["test_scenarios"])
+        test_b = set(self.config["experiments"]["B"]["test_scenarios"])
+        train_a = set(self.config["experiments"]["A"]["train_scenarios"])
+        train_b = set(self.config["experiments"]["B"]["train_scenarios"])
+        self.assertTrue(set(expected).issubset(test_a & test_b))
+        self.assertFalse(set(expected) & (train_a | train_b))
 
     def test_validation_is_episode_level(self):
         self.assertEqual(self.config["validation"]["unit"], "episode")
