@@ -46,6 +46,8 @@ to be partitioned once, and protects E01-E03 in TRAIN and E04-E06 in TEST.
 - Experiment B: TRAIN E01, E02, E03, E07, E09, E11, E13, E14, E15, E17, E18,
   E21, E22, E25, E26, E28, E30; TEST is the remaining 13 scenarios.
 
+For the scientific A-versus-B comparison, report each model on its full fixed TEST set, but also calculate a **paired common-test score** on the 11 maps unseen by both models: `E04, E05, E06, E08, E10, E16, E19, E20, E23, E24, E29`. Raw aggregate scores over 22 versus 13 different maps are not directly apples-to-apples; the common-map comparison is the matched primary comparison, while each full TEST set remains useful as its experiment-specific generalization result.
+
 The baseline uses the current `TorchModels/utils/models.py` RNN and the
 current ROS 2 preprocessing. Initial parameters are based on the historical
 ROS 1 training record (sequence length 2, hidden size 350, 4 recurrent layers,
