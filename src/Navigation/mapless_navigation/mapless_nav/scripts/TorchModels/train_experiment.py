@@ -447,6 +447,48 @@ def run(args: argparse.Namespace) -> int:
 
     train_scenarios = list(experiment["train_scenarios"])
     test_scenarios = list(experiment["test_scenarios"])
+
+    # Require the isolated, provenance-tracked staging tree. This prevents an
+    # accidental run against the raw source dataset or an untracked conversion.
+    conversion_manifest_path = data_root / "conversion_manifest.json"
+    if not conversion_manifest_path.is_file():
+        raise RuntimeError(
+            f"Missing conversion manifest in {data_root}. Prepare a new, separate NPZ "
+            "staging tree with prepare_experiment_npz.py; do not convert over the source dataset."
+        )
+    try:
+        conversion_manifest = json.loads(
+            conversion_manifest_path.read_text(encoding="utf-8")
+        )
+    except (OSError, json.JSONDecodeError) as exc:
+        raise RuntimeError(f"Cannot read staging conversion manifest: {exc}") from exc
+
+    if conversion_manifest.get("source_modified") is not False:
+        raise RuntimeError("Staging manifest does not confirm the source dataset was read-only")
+    if Path(str(conversion_manifest.get("staging_root", ""))).resolve() != data_root:
+        raise RuntimeError("Staging manifest root does not match --data-root")
+    source_root_value = conversion_manifest.get("source_root")
+    if not source_root_value:
+        raise RuntimeError("Staging manifest is missing source_root")
+    source_root = Path(source_root_value).resolve()
+    if source_root == data_root or source_root in data_root.parents or data_root in source_root.parents:
+        raise RuntimeError("Unsafe staging manifest: source and staging roots are not disjoint")
+
+    converted_scenarios = set(conversion_manifest.get("converted_scenarios", []))
+    union_of_configured_train_maps = {
+        scenario
+        for item in config["experiments"].values()
+        for scenario in item["train_scenarios"]
+    }
+    if converted_scenarios != union_of_configured_train_maps:
+        raise RuntimeError(
+            "Staging manifest must contain exactly the union of A/B TRAIN maps. "
+            f"Expected={sorted(union_of_configured_train_maps)}, "
+            f"found={sorted(converted_scenarios)}"
+        )
+    if conversion_manifest.get("test_only_scenarios_converted") != []:
+        raise RuntimeError("Staging manifest reports conversion of test-only maps")
+
     expected_scenario_dirs = sorted(set(train_scenarios + test_scenarios))
     missing_dirs = [s for s in expected_scenario_dirs if not (data_root / s).is_dir()]
     if missing_dirs:
@@ -461,6 +503,26 @@ def run(args: argparse.Namespace) -> int:
             f"Experiment {args.experiment} is blocked: no converted NPZ files for TRAIN "
             f"scenarios {missing_train_npz}. Convert the existing recordings first; "
             "this script does not generate or alter dataset files."
+        )
+
+    # Ensure staged NPZ files match the converter's manifest exactly.
+    expected_staged_npz_paths = {
+        str(Path(item["staged_npz"]).resolve())
+        for item in conversion_manifest.get("runs", [])
+        if item.get("staged_npz")
+    }
+    found_staged_npz_paths = {
+        str(Path(npz_path).resolve())
+        for scenario_files in discovered.values()
+        for npz_path in scenario_files
+    }
+    if expected_staged_npz_paths != found_staged_npz_paths:
+        missing_from_disk = sorted(expected_staged_npz_paths - found_staged_npz_paths)
+        untracked_on_disk = sorted(found_staged_npz_paths - expected_staged_npz_paths)
+        raise RuntimeError(
+            "Staged NPZ files differ from conversion manifest; "
+            f"missing_from_disk={missing_from_disk[:5]}, "
+            f"untracked_on_disk={untracked_on_disk[:5]}"
         )
 
     train_file_map = {s: discovered[s] for s in train_scenarios}
@@ -604,6 +666,14 @@ def run(args: argparse.Namespace) -> int:
         "train_sequences_by_class": train_sequence_classes,
         "validation_sequences_by_class": validation_sequence_classes,
         "split_config_path": config.get("_config_path"),
+        "conversion_manifest": {
+            "path": str(conversion_manifest_path),
+            "sha256": sha256_file(conversion_manifest_path),
+            "source_root": str(source_root),
+            "source_modified": conversion_manifest.get("source_modified"),
+            "run_count": conversion_manifest.get("run_count"),
+            "sample_count": conversion_manifest.get("sample_count"),
+        },
         "trainer_notes": (
             "Current TorchModels model/preprocessing used. Historical ROS1 artifacts are reference only. "
             "No TEST scenario NPZ samples are loaded or used for model selection."
