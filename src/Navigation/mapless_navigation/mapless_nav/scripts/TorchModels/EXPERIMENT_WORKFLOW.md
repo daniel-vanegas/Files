@@ -1,0 +1,99 @@
+# Mapless navigation training experiments (ROS 2 / Webots)
+
+This folder is the entry point for the frozen map-level experiments. The ROS 1
+material under `Ros1Data/` is reference-only; the training runner reads the
+current ROS 2 NPZ files under `dataset/data/E##/`.
+
+## 1. Read-only dataset audit
+
+From the workspace root:
+
+```bash
+cd ~/GIT/mapless
+python3 src/Navigation/mapless_navigation/mapless_nav/scripts/TorchModels/audit_dataset.py \
+  --data-root src/Navigation/mapless_navigation/dataset/data \
+  --output-dir /tmp/mapless_audit_20261021
+```
+
+The audit reads `data.csv`, `episode_tries.json`, `descriptor.yaml`, and LOM
+file references. It does not generate, delete, rename, convert, or rewrite
+recordings. It reports counts of rows, episodes, classes, retry attempts,
+collision/stuck flags, missing LOM references, descriptor disagreements, and
+whether the companion converted NPZ exists. The output folder must be new or
+empty. Results are written outside the dataset.
+
+## 2. Run tests without training or ROS 2
+
+```bash
+python3 -m unittest discover \
+  -s src/Navigation/mapless_navigation/mapless_nav/scripts/TorchModels/tests \
+  -v
+```
+
+The split/config and audit tests use Python's standard library; the training
+runner itself needs the project's installed PyTorch, NumPy, and Matplotlib
+dependencies.
+
+## 3. Fixed training splits
+
+The authoritative configuration is
+`experiment_splits_v1.json`. The module `experiment_config.py` rejects
+unexpected changes to the exact scenario membership, requires all 30 scenarios
+to be partitioned once, and protects E01-E03 in TRAIN and E04-E06 in TEST.
+
+- Experiment A: TRAIN E01, E02, E03, E12, E17, E22, E27, E30; TEST is the
+  remaining 22 scenarios.
+- Experiment B: TRAIN E01, E02, E03, E07, E09, E11, E13, E14, E15, E17, E18,
+  E21, E22, E25, E26, E28, E30; TEST is the remaining 13 scenarios.
+
+The baseline uses the current `TorchModels/utils/models.py` RNN and the
+current ROS 2 preprocessing. Initial parameters are based on the historical
+ROS 1 training record (sequence length 2, hidden size 350, 4 recurrent layers,
+Adam with LR 0.0006, batch size 3, maximum 20 epochs). This is a controlled
+ROS 2 experiment informed by the historic baseline, not a claim of bit-exact
+ROS 1 replay. Normalization remains the current TorchModels behavior:
+`vx` is nonnegative when reverse is disabled, `vy` and `wz` are signed, and
+the occupancy grid is scaled by 1/100 and clipped to [0, 1].
+
+## 4. Run an experiment
+
+Before running, check that all configured TRAIN scenarios have already
+converted NPZ files at `dataset/data/E##/run_*.npz`, and that the associated
+raw run folders contain `episode_tries.json`. The trainer intentionally fails
+rather than converting data or silently skipping a scenario if those files are
+missing. This avoids overwriting any existing dataset artifacts.
+
+```bash
+python3 src/Navigation/mapless_navigation/mapless_nav/scripts/TorchModels/train_experiment.py --experiment A
+python3 src/Navigation/mapless_navigation/mapless_nav/scripts/TorchModels/train_experiment.py --experiment B
+```
+
+Both runs default to seed 42 and use a 25% validation split by complete
+episodes *within the configured TRAIN scenarios*. Test scenario files are
+never deserialized by this runner. The test maps remain reserved for the final
+Webots generalization evaluation.
+
+Each run gets an independent output folder under
+`TorchModels/experiments/<experiment-id>/seed_<seed>/`, containing:
+
+- `experiment_manifest.json`: split, episode identities, source NPZ SHA-256
+  fingerprints, class counts, parameters, and effective sequence counts.
+- `history.json`: train/validation loss, normalized MAE/RMSE, velocity-unit
+  MAE/RMSE, and results by episode class at each epoch.
+- `best_model.pth`: best checkpoint selected solely by internal validation
+  loss.
+- `learning_curves.png` and `summary.json`.
+
+A run refuses to use a non-empty output directory. To intentionally run a new
+seed or configuration, use a different seed and/or `--output-dir`. No
+TEST-map navigation evaluation is inferred from the training losses; Webots
+evaluation must be recorded as a separate phase.
+
+## 5. Safe NPZ preparation
+
+The training runner does not call the converter automatically. The current
+`generate_npz_data.py` writes NPZ files next to each raw run and can overwrite
+an existing NPZ/descriptor when rerun. Before using it, verify the target
+scenario folders contain no existing converted artifacts, or prepare a
+separate staging copy of the selected data and convert there. Never use
+`--purge-data` or `--replace` for these experiments.
