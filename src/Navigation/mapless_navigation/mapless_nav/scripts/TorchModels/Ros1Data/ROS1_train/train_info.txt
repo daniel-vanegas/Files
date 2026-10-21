@@ -1,0 +1,16 @@
+stack_n_channels 2
+occ_grid_meters	4
+ormalize_label	True
+ormalize_data	False
+save_weights_only True
+
+batch_size 3
+learn_r	0.0006
+epochs	20
+
+Data_X.shape	(1940, 2, 82, 80)
+Data_Y.shape	(1940, 3)
+
+model.name	RNN
+optimizer	Adam
+loss	MSELoss
