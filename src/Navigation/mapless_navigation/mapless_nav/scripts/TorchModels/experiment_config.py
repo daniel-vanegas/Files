@@ -125,3 +125,17 @@ def get_experiment(config: dict[str, Any], name: str) -> dict[str, Any]:
     if key not in EXPECTED_SPLITS:
         raise ValueError(f"Unknown experiment {name!r}; choose A or B")
     return config["experiments"][key]
+
+def shared_test_scenarios(config: dict[str, Any]) -> list[str]:
+    """Return the common unseen maps for paired A-versus-B comparisons.
+
+    The full A and B test sets intentionally differ in size. Comparing their
+    raw aggregate means directly would mix the training-size effect with
+    differences in which maps were tested. Their intersection is a paired
+    comparison set unseen by both experiment models.
+    """
+    validate_config(config)
+    test_a = set(config["experiments"]["A"]["test_scenarios"])
+    test_b = set(config["experiments"]["B"]["test_scenarios"])
+    return [scenario for scenario in SCENARIOS if scenario in test_a & test_b]
+
