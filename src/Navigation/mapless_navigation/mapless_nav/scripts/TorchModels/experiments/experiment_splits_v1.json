@@ -1,13 +1,48 @@
 {
   "schema_version": 1,
   "dataset_scenarios": [
-    "E01", "E02", "E03", "E04", "E05", "E06", "E07", "E08", "E09", "E10",
-    "E11", "E12", "E13", "E14", "E15", "E16", "E17", "E18", "E19", "E20",
-    "E21", "E22", "E23", "E24", "E25", "E26", "E27", "E28", "E29", "E30"
+    "E01",
+    "E02",
+    "E03",
+    "E04",
+    "E05",
+    "E06",
+    "E07",
+    "E08",
+    "E09",
+    "E10",
+    "E11",
+    "E12",
+    "E13",
+    "E14",
+    "E15",
+    "E16",
+    "E17",
+    "E18",
+    "E19",
+    "E20",
+    "E21",
+    "E22",
+    "E23",
+    "E24",
+    "E25",
+    "E26",
+    "E27",
+    "E28",
+    "E29",
+    "E30"
   ],
   "fixed_constraints": {
-    "train": ["E01", "E02", "E03"],
-    "test": ["E04", "E05", "E06"]
+    "train": [
+      "E01",
+      "E02",
+      "E03"
+    ],
+    "test": [
+      "E04",
+      "E05",
+      "E06"
+    ]
   },
   "validation": {
     "unit": "episode",
@@ -21,28 +56,104 @@
     "batch_size": 3,
     "epochs": 20,
     "learning_rate": 0.0006,
-    "weight_decay": 0.0,
+    "weight_decay": 0,
     "hidden_size": 350,
     "num_layers": 4,
-    "dropout": 0.0,
-    "vmax": [0.5, 0.5, 1.0],
+    "vmax": [
+      0.5,
+      0.5,
+      1
+    ],
     "reverse_enable": false,
     "distance_max": null,
     "early_stopping_patience": 5,
-    "provenance": "Architecture and optimizer hyperparameters follow Ros1Data/ROS1_train/train.py and train_info.txt as a historical reference. Both new experiments use the current TorchModels ROS2 preprocessing and current ROS2 dataset; this is not claimed to be a bit-for-bit ROS1 reproduction."
+    "provenance": "Architecture and optimizer hyperparameters follow Ros1Data/ROS1_train/train.py and train_info.txt as a historical reference. Both new experiments use the current TorchModels ROS2 preprocessing and current ROS2 dataset; this is not claimed to be a bit-for-bit ROS1 reproduction.",
+    "seed": 42,
+    "normalization": {
+      "vx": "[0, 1] when reverse_enable=false; [-1, 1] when reverse_enable=true",
+      "vy": "symmetric [-1, 1] using vmax[1]",
+      "wz": "symmetric [-1, 1] using vmax[2]",
+      "occupancy_grid": "current TorchModels preprocessing: raw LOM divided by 100 and clipped to [0, 1]",
+      "provenance": "Keep current ROS2 TorchModels preprocessing. ROS1Data is comparison/reference material, not a training input."
+    },
+    "architecture_note": "The RNN implementation has its own fixed dropout layers; train.py's dropout CLI parameter is not wired into models.RNN and is omitted here."
   },
   "experiments": {
     "A": {
       "id": "mapless_train8_test22",
       "description": "Small training set and broad test set.",
-      "train_scenarios": ["E01", "E02", "E03", "E12", "E17", "E22", "E27", "E30"],
-      "test_scenarios": ["E04", "E05", "E06", "E07", "E08", "E09", "E10", "E11", "E13", "E14", "E15", "E16", "E18", "E19", "E20", "E21", "E23", "E24", "E25", "E26", "E28", "E29"]
+      "train_scenarios": [
+        "E01",
+        "E02",
+        "E03",
+        "E12",
+        "E17",
+        "E22",
+        "E27",
+        "E30"
+      ],
+      "test_scenarios": [
+        "E04",
+        "E05",
+        "E06",
+        "E07",
+        "E08",
+        "E09",
+        "E10",
+        "E11",
+        "E13",
+        "E14",
+        "E15",
+        "E16",
+        "E18",
+        "E19",
+        "E20",
+        "E21",
+        "E23",
+        "E24",
+        "E25",
+        "E26",
+        "E28",
+        "E29"
+      ]
     },
     "B": {
       "id": "mapless_train17_test13",
       "description": "Broad training set and moderate test set.",
-      "train_scenarios": ["E01", "E02", "E03", "E07", "E09", "E11", "E13", "E14", "E15", "E17", "E18", "E21", "E22", "E25", "E26", "E28", "E30"],
-      "test_scenarios": ["E04", "E05", "E06", "E08", "E10", "E12", "E16", "E19", "E20", "E23", "E24", "E27", "E29"]
+      "train_scenarios": [
+        "E01",
+        "E02",
+        "E03",
+        "E07",
+        "E09",
+        "E11",
+        "E13",
+        "E14",
+        "E15",
+        "E17",
+        "E18",
+        "E21",
+        "E22",
+        "E25",
+        "E26",
+        "E28",
+        "E30"
+      ],
+      "test_scenarios": [
+        "E04",
+        "E05",
+        "E06",
+        "E08",
+        "E10",
+        "E12",
+        "E16",
+        "E19",
+        "E20",
+        "E23",
+        "E24",
+        "E27",
+        "E29"
+      ]
     }
   }
 }
