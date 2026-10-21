@@ -82,11 +82,7 @@ python3 src/Navigation/mapless_navigation/mapless_nav/scripts/TorchModels/train_
 ```
 
 Both runs default to seed 42 and use a 25% validation split by complete
-episodes *within the configured TRAIN scenarios*. Test sccenario files are
-never deserialized by this runner. The test maps remain reserved for the final
-Webots generalization evaluation. Temporal windows are constructed lazily from each episode
-using the same `build_input_frame()` preprocessing as `dataset_utils.py`. This avoids caching
-every overlapping float32 window in memory, which would multiply RAM use for Experiment B.
+episodes *within the configured TRAIN scenarios*. Test scenario NPZ contents are never deserialized by this runner. The test maps remain reserved for the final Webots generalization evaluation. Temporal windows are constructed lazily from each episode using the same `build_input_frame()` preprocessing as `dataset_utils.py`, avoiding the memory cost of caching every overlapping float32 window.
 
 Each run gets an independent output folder under
 `TorchModels/experiments/<experiment-id>/seed_<seed>/`, containing:
@@ -104,6 +100,6 @@ seed or configuration, use a different seed and/or `--output-dir`. No
 TEST-map navigation evaluation is inferred from the training losses; Webots
 evaluation must be recorded as a separate phase.
 
-## 6. Safe NPZ preparation
+## 6. Destructive options
 
-The staging converter intentionally leaves the original `generate_npz_data.py` and all recordings untouched. Never use `--purge-data` or `--replace` for these experiments.
+Do not use `--purge-data` or `--replace` for these experiments.
