@@ -73,6 +73,27 @@ class DatasetAuditTests(unittest.TestCase):
             self.assertEqual(report["descriptor_episode_count_comparison"]["observed_episode_ids_with_samples"], 2)
             self.assertFalse(report["converted_npz_present"])
 
+    def test_failed_path_pool_is_separate_from_episode_retries(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            build_run(root)
+            (root / "E01" / "failed_paths.json").write_text(json.dumps({
+                "scenario": "E01",
+                "total_target": 10,
+                "total_recorded": 8,
+                "entries": [
+                    {"path_id": 1, "attempts": 3, "class": "semi_complex", "last_status": "collision"},
+                    {"path_id": 2, "attempts": 2, "class": "complex", "last_status": "failed"},
+                ],
+            }), encoding="utf-8")
+            report = audit_dataset(root)
+            e01 = report["scenarios"][0]
+            self.assertEqual(e01["failed_paths"]["entries"], 2)
+            self.assertEqual(e01["failed_paths"]["attempts_summed"], 5)
+            self.assertEqual(e01["failed_paths"]["by_status"]["collision"], 1)
+            self.assertEqual(report["totals"]["failed_path_entries_reported"], 2)
+            self.assertEqual(report["totals"]["failed_path_attempts_summed"], 5)
+
     def test_missing_scenarios_are_reported_without_writing_dataset(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
