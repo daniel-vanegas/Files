@@ -27,7 +27,8 @@ jobs:
           python -m py_compile \
             src/Navigation/mapless_navigation/mapless_nav/scripts/TorchModels/experiment_config.py \
             src/Navigation/mapless_navigation/mapless_nav/scripts/TorchModels/audit_dataset.py \
-            src/Navigation/mapless_navigation/mapless_nav/scripts/TorchModels/train_experiment.py
+            src/Navigation/mapless_navigation/mapless_nav/scripts/TorchModels/train_experiment.py \
+            src/Navigation/mapless_navigation/mapless_nav/scripts/TorchModels/prepare_experiment_npz.py
       - name: Run dependency-free integrity tests
         run: |
           python -m unittest discover \
