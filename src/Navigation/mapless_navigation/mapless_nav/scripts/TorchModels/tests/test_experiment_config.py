@@ -74,7 +74,7 @@ class ExperimentSplitTests(unittest.TestCase):
     def test_unspecified_train_change_is_rejected(self):
         broken = copy.deepcopy(self.config)
         broken["experiments"]["A"]["train_scenarios"][3] = "E13"
-        broken["experiments"]["A"]["test_scenarios"][6] = "E12"
+        broken["experiments"]["A"]["test_scenarios"][8] = "E12"
         with self.assertRaisesRegex(ValueError, "TRAIN differs"):
             validate_config(broken)
 
