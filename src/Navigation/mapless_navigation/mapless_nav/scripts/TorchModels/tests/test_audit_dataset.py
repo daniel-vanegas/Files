@@ -67,7 +67,10 @@ class DatasetAuditTests(unittest.TestCase):
             self.assertEqual(report["episodes_with_collision"], 1)
             self.assertEqual(report["stuck_samples"], 1)
             self.assertEqual(report["episodes_with_stuck"], 1)
-            self.assertEqual(len(report["descriptor_mismatches"]), 2)
+            self.assertEqual(len(report["descriptor_mismatches"]), 1)
+            self.assertEqual(report["descriptor_mismatches"][0]["field"], "num_samples")
+            self.assertEqual(report["descriptor_episode_count_comparison"]["declared_num_episodes"], 3)
+            self.assertEqual(report["descriptor_episode_count_comparison"]["observed_episode_ids_with_samples"], 2)
             self.assertFalse(report["converted_npz_present"])
 
     def test_missing_scenarios_are_reported_without_writing_dataset(self):
