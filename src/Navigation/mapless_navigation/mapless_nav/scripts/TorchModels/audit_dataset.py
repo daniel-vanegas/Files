@@ -332,7 +332,7 @@ def write_outputs(report: dict[str, Any], output_dir: Path) -> None:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    default_root = Path(__file__).resolve().parents[2] / "dataset" / "data"
+    default_root = Path(__file__).resolve().parents[3] / "dataset" / "data"
     parser.add_argument("--data-root", type=Path, default=default_root)
     parser.add_argument(
         "--output-dir", type=Path, default=None,
