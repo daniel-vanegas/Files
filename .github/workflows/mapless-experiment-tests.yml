@@ -1,0 +1,35 @@
+name: Mapless experiment integrity
+
+on:
+  push:
+    branches:
+      - experiments/mapless-train-splits
+    paths:
+      - ".github/workflows/mapless-experiment-tests.yml"
+      - "src/Navigation/mapless_navigation/mapless_nav/scripts/TorchModels/**"
+  pull_request:
+    paths:
+      - ".github/workflows/mapless-experiment-tests.yml"
+      - "src/Navigation/mapless_navigation/mapless_nav/scripts/TorchModels/**"
+
+jobs:
+  integrity-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Compile experiment scripts
+        run: |
+          python -m py_compile \
+            src/Navigation/mapless_navigation/mapless_nav/scripts/TorchModels/experiment_config.py \
+            src/Navigation/mapless_navigation/mapless_nav/scripts/TorchModels/audit_dataset.py \
+            src/Navigation/mapless_navigation/mapless_nav/scripts/TorchModels/train_experiment.py
+      - name: Run dependency-free integrity tests
+        run: |
+          python -m unittest discover \
+            -s src/Navigation/mapless_navigation/mapless_nav/scripts/TorchModels/tests \
+            -v
