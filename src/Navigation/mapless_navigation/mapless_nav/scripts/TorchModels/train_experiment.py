@@ -29,7 +29,7 @@ if str(SCRIPT_DIR) not in sys.path:
 
 from experiment_config import get_experiment, load_config  # noqa: E402
 from utils.dataset_utils import (  # noqa: E402
-    SequenceDataset,
+    build_input_frame,
     discover_npz_files,
     load_episodes,
     split_validation_a,
@@ -163,29 +163,68 @@ def validate_loaded_episodes(episodes: list[Any]) -> dict[str, Any]:
     }
 
 
-class ClassAwareSequences(Dataset):
-    """Decorate SequenceDataset with the episode class for stratified metrics."""
+class LazyClassAwareSequences(Dataset):
+    """Build temporal windows on demand to avoid duplicating gigabytes of frames.
 
-    def __init__(self, base: SequenceDataset, class_map: dict[tuple[str, str, int], str]):
-        self.base = base
+    SequenceDataset in dataset_utils caches every float32 frame and every
+    overlapping sequence. For the 17-map experiment that can multiply RAM use
+    several times. This implementation uses the same build_input_frame()
+    preprocessing and the same sliding-window/last-label semantics, but keeps
+    only episode samples and lightweight (episode_index, start_index) records.
+    """
+
+    def __init__(
+        self,
+        episodes: list[Any],
+        class_map: dict[tuple[str, str, int], str],
+        sequence_length: int,
+        vmax: tuple[float, float, float],
+        reverse_enable: bool,
+        distance_max: float | None,
+    ):
+        if sequence_length < 1:
+            raise ValueError("sequence_length must be >= 1")
+        self.episodes = episodes
+        self.sequence_length = sequence_length
+        self.vmax = vmax
+        self.reverse_enable = reverse_enable
+        self.distance_max = distance_max
+        self.records: list[tuple[int, int]] = []
         self.class_ids: list[int] = []
-        for meta in base.sequence_meta:
-            key = (
-                str(meta["scenario"]),
-                str(Path(meta["run_path"]).resolve()),
-                int(meta["episode_id"]),
-            )
+
+        for episode_index, episode in enumerate(episodes):
+            key = episode_key(episode)
             label = class_map.get(key)
             if label not in CLASS_NAMES:
-                raise RuntimeError(f"Sequence refers to an episode without a valid class: {key}")
-            self.class_ids.append(CLASS_NAMES.index(label))
+                raise RuntimeError(f"Episode has no valid class label: {key}")
+            if len(episode.samples) < sequence_length:
+                continue
+            class_id = CLASS_NAMES.index(label)
+            for start_index in range(len(episode.samples) - sequence_length + 1):
+                self.records.append((episode_index, start_index))
+                self.class_ids.append(class_id)
 
     def __len__(self) -> int:
-        return len(self.base)
+        return len(self.records)
 
     def __getitem__(self, index: int):
-        x, y = self.base[index]
-        return x, y, self.class_ids[index]
+        episode_index, start_index = self.records[index]
+        episode = self.episodes[episode_index]
+        end_index = start_index + self.sequence_length
+        frames = []
+        labels = []
+        for sample in episode.samples[start_index:end_index]:
+            frame, label = build_input_frame(
+                sample,
+                vmax=self.vmax,
+                reverse_enable=self.reverse_enable,
+                distance_max=self.distance_max,
+            )
+            frames.append(frame)
+            labels.append(label)
+        x = np.stack(frames, axis=0).astype(np.float32, copy=False)
+        y = np.asarray(labels[-1], dtype=np.float32)
+        return torch.from_numpy(x), torch.from_numpy(y), self.class_ids[index]
 
 
 def _metrics_from_errors(
@@ -458,22 +497,12 @@ def run(args: argparse.Namespace) -> int:
     if any(ep.scenario not in set(train_scenarios) for ep in (*train_episodes, *validation_episodes)):
         raise RuntimeError("Leakage guard: non-TRAIN map entered TRAIN or VALIDATION")
 
-    train_base = SequenceDataset(
-        train_episodes,
-        sequence_length=sequence_length,
-        vmax=vmax,
-        reverse_enable=reverse_enable,
-        distance_max=distance_max,
+    train_dataset = LazyClassAwareSequences(
+        train_episodes, class_map, sequence_length, vmax, reverse_enable, distance_max
     )
-    validation_base = SequenceDataset(
-        validation_episodes,
-        sequence_length=sequence_length,
-        vmax=vmax,
-        reverse_enable=reverse_enable,
-        distance_max=distance_max,
+    validation_dataset = LazyClassAwareSequences(
+        validation_episodes, class_map, sequence_length, vmax, reverse_enable, distance_max
     )
-    train_dataset = ClassAwareSequences(train_base, class_map)
-    validation_dataset = ClassAwareSequences(validation_base, class_map)
     if len(train_dataset) == 0 or len(validation_dataset) == 0:
         raise RuntimeError(
             "No effective temporal sequences in TRAIN or VALIDATION; "
@@ -511,6 +540,14 @@ def run(args: argparse.Namespace) -> int:
         {"path": str(p), "size_bytes": p.stat().st_size, "sha256": sha256_file(p)}
         for p in selected_npz_paths
     ]
+    sidecar_paths = sorted({
+        Path(episode.run_path).with_suffix("") / "episode_tries.json"
+        for episode in episodes
+    })
+    sidecar_manifest = [
+        {"path": str(p.resolve()), "size_bytes": p.stat().st_size, "sha256": sha256_file(p)}
+        for p in sidecar_paths
+    ]
     output_config = {
         "experiment": args.experiment,
         "experiment_id": experiment_id,
@@ -539,12 +576,23 @@ def run(args: argparse.Namespace) -> int:
         "device": str(device),
         "normalization": baseline["normalization"],
         "source_npz_files": source_file_manifest,
+        "episode_class_sidecars": sidecar_manifest,
         "train_episode_count": len(train_episodes),
         "validation_episode_count": len(validation_episodes),
+        "train_episode_keys": [
+            {"scenario": ep.scenario, "run_path": ep.run_path, "episode_id": ep.episode_id}
+            for ep in train_episodes
+        ],
+        "validation_episode_keys": [
+            {"scenario": ep.scenario, "run_path": ep.run_path, "episode_id": ep.episode_id}
+            for ep in validation_episodes
+        ],
         "decoded_episode_count": integrity["episodes"],
         "decoded_sample_count": integrity["samples"],
         "train_sequence_count": len(train_dataset),
         "validation_sequence_count": len(validation_dataset),
+        "train_sequence_count_by_class": train_sequence_classes,
+        "validation_sequence_count_by_class": validation_sequence_classes,
         "train_episodes_by_class": {
             c: sum(class_map[episode_key(ep)] == c for ep in train_episodes)
             for c in CLASS_NAMES
