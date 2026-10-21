@@ -1,0 +1,37 @@
+Escenario,Muestras declaradas,Episodios / objetivo,S / SC / C / VC,Estado
+E01,8 342,199 / 199,50 / 50 / 50 / 49,Completa*
+E02,7 802,181 / 200,45 / 45 / 46 / 45,Incompleta
+E03,7 828,184 / 200,46 / 46 / 46 / 46,Incompleta
+E04,7 997,192 / 200,48 / 48 / 48 / 48,Incompleta
+E05,2 165,53 / 157,13 / 13 / 14 / 13,Incompleta
+E06,7 691,180 / 200,45 / 45 / 45 / 45,Incompleta
+E07,7 533,177 / 200,45 / 44 / 44 / 44,Incompleta
+E08,8 154,193 / 200,48 / 49 / 48 / 48,Incompleta
+E09,6 776,159 / 200,40 / 40 / 40 / 39,Incompleta
+E10,6 400,154 / 200,38 / 39 / 39 / 38,Incompleta
+E11,7 395,177 / 200,45 / 44 / 44 / 44,Incompleta
+E12,8 350,200 / 200,50 / 50 / 50 / 50,Completa
+E13,6 097,147 / 200,37 / 37 / 37 / 36,Incompleta
+E14,8 288,198 / 200,50 / 49 / 49 / 50,Incompleta
+E15,7 460,180 / 200,45 / 45 / 45 / 45,Incompleta
+E16,7 267,172 / 200,43 / 43 / 43 / 43,Incompleta
+E17,8 230,196 / 200,49 / 49 / 49 / 49,Incompleta
+E18,6 811,164 / 200,41 / 41 / 41 / 41,Incompleta
+E19,6 075,147 / 200,37 / 37 / 37 / 36,Incompleta
+E20,7 777,179 / 200,45 / 45 / 45 / 44,Incompleta
+E21,7 829,189 / 200,47 / 48 / 47 / 47,Incompleta
+E22,7 994,191 / 200,48 / 48 / 48 / 47,Incompleta
+E23,7 167,168 / 200,42 / 42 / 42 / 42,Incompleta
+E24,4 566,108 / 176,27 / 27 / 27 / 27,Incompleta
+E25,6 968,164 / 200,41 / 41 / 41 / 41,Incompleta
+E26,6 520,166 / 173,47 / 47 / 48 / 24,Incompleta
+E27,7 888,190 / 200,47 / 48 / 47 / 48,Incompleta
+E28,7 223,170 / 200,42 / 43 / 43 / 42,Incompleta
+E29,4 241,102 / 178,26 / 26 / 25 / 25,Incompleta
+E30,7 812,181 / 200,46 / 45 / 45 / 45,Incompleta
+Clase,Episodios guardados,Proporción
+straight,1 273,"25.15 %"
+semi_complex,1 274,"25.17 %"
+complex,1 274,"25.17 %"
+v_complex,1 240,"24.50 %"
+Total,5 061,100 %
