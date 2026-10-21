@@ -203,19 +203,35 @@ def audit_run(run_dir: Path) -> dict[str, Any]:
             if ":" in line and not line.lstrip().startswith("#"):
                 k, v = line.split(":", 1)
                 descriptor[k.strip()] = v.strip()
-        descriptor_counts = {
-            "num_samples": result["samples"],
-            "num_episodes": result["episodes"],
-        }
-        for key, actual in descriptor_counts.items():
-            declared = _int(descriptor.get(key))
-            if declared is not None and declared != actual:
-                result["descriptor_mismatches"].append(
-                    {"field": key, "declared": declared, "observed": actual}
-                )
+        # num_samples is a direct row count and should match data.csv.
+        declared_samples = _int(descriptor.get("num_samples"))
+        if declared_samples is not None and declared_samples != result["samples"]:
+            result["descriptor_mismatches"].append({
+                "field": "num_samples",
+                "declared": declared_samples,
+                "observed_csv_rows": result["samples"],
+            })
 
-        result["descriptor_declared_samples"] = _int(descriptor.get("num_samples"))
-        result["descriptor_declared_episodes"] = _int(descriptor.get("num_episodes"))
+        # num_episodes can reflect recorder/sampler attempts, whereas this
+        # audit counts episode IDs that actually emitted at least one CSV row.
+        # Preserve both quantities without automatically treating that
+        # semantic difference as data corruption.
+        declared_episodes = _int(descriptor.get("num_episodes"))
+        result["descriptor_episode_count_comparison"] = {
+            "declared_num_episodes": declared_episodes,
+            "observed_episode_ids_with_samples": result["episodes"],
+            "difference_declared_minus_observed": (
+                declared_episodes - result["episodes"]
+                if declared_episodes is not None else None
+            ),
+            "interpretation_note": (
+                "May include recorded attempts without emitted samples; compare "
+                "with episode_tries.json and failed-path reports before calling it an error."
+            ),
+        }
+
+        result["descriptor_declared_samples"] = declared_samples
+        result["descriptor_declared_episodes"] = declared_episodes
         result["descriptor_collision_events"] = _int(descriptor.get("n_collision_events"))
         result["descriptor_stuck_events"] = _int(descriptor.get("n_stuck_events"))
         result["descriptor_episodes_with_collision"] = _int(descriptor.get("n_episodes_with_collision"))
