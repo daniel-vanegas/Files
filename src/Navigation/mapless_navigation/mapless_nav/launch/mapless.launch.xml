@@ -1,32 +1,29 @@
 <?xml version="1.0"?>
 <launch>
-
-  <!-- ===================== -->
-  <!--   Real Robot Topics   -->
-  <!-- ===================== -->
   <arg name="use_sim_time" default="false"/>
   <arg name="frame_id" default="base_link"/>
   <arg name="scan_topic" default="/hardware/base/scan"/>
   <arg name="cloud_topic" default="/hardware/camera/points"/>
   <arg name="cmd_vel_topic" default="/hardware/base/cmd_vel"/>
 
-  <!-- Model & Output Tuning Arguments -->
-  <arg name="model_filename" default="RNN.pth"/>
-  <arg name="enable_denormalization" default="true"/>
+  <!-- Backward-compatible alias: older launches used model_filename. -->
+  <arg name="checkpoint" default="RNN.pth"/>
+  <arg name="model_filename" default=""/>
+  <arg name="enable_motion" default="true"/>
+  <arg name="turn_help" default="true"/>
+  <arg name="sequence_length" default="0"/>
+  <arg name="max_vx" default="0.08"/>
+  <arg name="max_vy" default="0.05"/>
+  <arg name="max_wz" default="0.20"/>
   <arg name="gain_linx" default="1.0"/>
   <arg name="gain_liny" default="1.0"/>
   <arg name="gain_angz" default="1.0"/>
 
-  <!-- Grid limits (adjust to your robot's sensing range) -->
   <arg name="min_x" default="0.0"/>
   <arg name="max_x" default="4.0"/>
   <arg name="min_y" default="-2.0"/>
   <arg name="max_y" default="2.0"/>
 
-  <!-- ===================== -->
-  <!--   Occupancy Grids     -->
-  <!-- ===================== -->
-  <!-- Navigation grid (small, high‑res) -->
   <node pkg="mapless_nav" exec="local_occ_grid_node" name="local_occ_grid_nav" output="screen">
     <param name="use_sim_time" value="$(var use_sim_time)"/>
     <param name="frame_id" value="$(var frame_id)"/>
@@ -46,7 +43,6 @@
     <remap from="~/pointcloud" to="$(var cloud_topic)"/>
   </node>
 
-  <!-- Visualisation grid (large, lower‑res) -->
   <node pkg="mapless_nav" exec="local_occ_grid_node" name="local_occ_grid_rviz" output="screen">
     <param name="use_sim_time" value="$(var use_sim_time)"/>
     <param name="frame_id" value="$(var frame_id)"/>
@@ -66,22 +62,19 @@
     <remap from="~/pointcloud" to="$(var cloud_topic)"/>
   </node>
 
-  <!-- ===================== -->
-  <!--   Mapless Controller  -->
-  <!-- ===================== -->
   <node pkg="mapless_nav" exec="RNN_mapless.py" name="rnn_controller" output="screen">
     <param name="use_sim_time" value="$(var use_sim_time)"/>
-    <param name="robot_name" value="justina"/>
-    <param name="turn_help" value="true"/>
+    <param name="checkpoint" value="$(var checkpoint)"/>
     <param name="model_filename" value="$(var model_filename)"/>
-
-    <!-- Output Refinement & Denormalization Parameters -->
-    <param name="enable_denormalization" value="$(var enable_denormalization)"/>
+    <param name="enable_motion" value="$(var enable_motion)"/>
+    <param name="turn_help" value="$(var turn_help)"/>
+    <param name="sequence_length" value="$(var sequence_length)"/>
+    <param name="cmd_vel_topic" value="$(var cmd_vel_topic)"/>
+    <param name="max_vx" value="$(var max_vx)"/>
+    <param name="max_vy" value="$(var max_vy)"/>
+    <param name="max_wz" value="$(var max_wz)"/>
     <param name="gain_linx" value="$(var gain_linx)"/>
     <param name="gain_liny" value="$(var gain_liny)"/>
     <param name="gain_angz" value="$(var gain_angz)"/>
-
-    <remap from="~/cmd_vel" to="$(var cmd_vel_topic)"/>
   </node>
-
 </launch>

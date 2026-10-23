@@ -1,328 +1,193 @@
 #!/usr/bin/env python3
+"""Single configurable trainer for legacy ROS 1 and ROS 2 mapless datasets.
+
+The default architecture and hyperparameters preserve the historical ROS 1
+setup for BOTH data formats. Dataset parsing and split rules remain format-aware:
+legacy NPZ files use the original flat/non-overlapping sample pairing, while ROS 2
+recordings keep each temporal sequence inside an episode and support scenario
+holdouts for generalization experiments.
+"""
+from __future__ import annotations
 
 import argparse
-import importlib
 import json
-import os
 import random
 import sys
 import time
+from datetime import datetime
 from pathlib import Path
 
 import numpy as np
 import torch
-from torch.utils.data import DataLoader
-from utils.dataset_utils import (
+from torch.utils.data import DataLoader, TensorDataset
+
+SCRIPT_DIR = Path(__file__).resolve().parent
+if str(SCRIPT_DIR) not in sys.path:
+    sys.path.insert(0, str(SCRIPT_DIR))
+
+from dataset_utils import (
     SequenceDataset,
+    build_legacy_tensors,
     discover_npz_files,
     load_episodes,
+    load_legacy_flat_dataset,
+    load_samples_from_npz,
+    split_scenarios,
+    split_validation_a,
 )
+from models import RNN
 
 
-def set_seed(seed):
-    # Set seed for random generators
+def seed_everything(seed: int) -> None:
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
-
     if torch.cuda.is_available():
         torch.cuda.manual_seed_all(seed)
 
 
-def parse_vmax(value):
-    # Split string limits into numbers
-    values = [float(v.strip()) for v in value.split(",")]
-
-    if len(values) != 3:
-        raise argparse.ArgumentTypeError("vmax must be vx,vy,wz")
-
-    if any(v <= 0 for v in values):
-        raise argparse.ArgumentTypeError("all vmax values must be > 0")
-
-    return tuple(values)
+def parse_csv_names(value: str | None) -> list[str] | None:
+    if value is None or not value.strip():
+        return None
+    return sorted({item.strip() for item in value.split(",") if item.strip()})
 
 
-def load_model_class(model_class_name):
-    # Import model class from utils/models.py
-    this_dir = os.path.dirname(os.path.abspath(__file__))
-
-    if this_dir not in sys.path:
-        sys.path.insert(0, this_dir)
-
-    try:
-        module = importlib.import_module("utils.models")
-    except ImportError as exc:
-        raise RuntimeError(f"Could not import utils/models.py from {this_dir}.") from exc
-
-    if not hasattr(module, model_class_name):
-        raise RuntimeError(f"utils/models.py does not contain model class '{model_class_name}'.")
-
-    return getattr(module, model_class_name)
-
-
-def create_model(model_class_name, sequence_length, hidden_size, num_layers, dropout):
-    # Create model instance
-    model_class = load_model_class(model_class_name)
-
-    try:
-        model = model_class(
-            channels=sequence_length,
-            img_size=80,
-            hidden_size=hidden_size,
-            num_layers=num_layers,
-        )
-    except TypeError as exc:
-        raise RuntimeError(
-            f"Could not instantiate {model_class_name} with the expected constructor. "
-            f"The model must accept channels, img_size, hidden_size and num_layers.\n"
-            f"Error: {exc}"
-        ) from exc
-
-    return model
-
-
-def compute_loss(prediction, target):
-    # Calculate mean squared error
-    return torch.nn.functional.mse_loss(prediction, target)
-
-
-def run_epoch(model, loader, optimizer, device, training, current_epoch, total_epochs, epoch_start_time):
-    # Run one epoch (train or validation)
-    if training:
-        model.train()
-    else:
-        model.eval()
-
-    total_loss = 0.0
-    total_samples = 0
-    last_update_time = time.time()
-
-    for x, y in loader:
-        x = x.to(device, non_blocking=True)
-        y = y.to(device, non_blocking=True)
-
-        if training:
-            optimizer.zero_grad(set_to_none=True)
-
-        with torch.set_grad_enabled(training):
-            prediction = model(x)
-            if isinstance(prediction, tuple):
-                prediction = prediction[0]
-
-            loss = compute_loss(prediction, y)
-
-            if training:
-                loss.backward()
-                torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
-                optimizer.step()
-
-        batch_size = x.shape[0]
-        total_loss += loss.item() * batch_size
-        total_samples += batch_size
-
-        # Refresh console output every ~1 second during training
-        current_time = time.time()
-        if training and (current_time - last_update_time >= 1.0):
-            elapsed = current_time - epoch_start_time
-            current_loss = total_loss / total_samples
-            log_line = (
-                f"epoch {current_epoch}/{total_epochs} | "
-                f"train={current_loss:.7f} | "
-                f"val=... | "
-                f"t[s]={elapsed:.2f}"
-            )
-            sys.stdout.write(f"\r{log_line.ljust(80)}")
-            sys.stdout.flush()
-            last_update_time = current_time
-
-    if total_samples == 0:
-        return float("nan")
-
-    return total_loss / total_samples
-
-
-def save_learning_curves(history, output_path):
-    # Save loss plot image
-    if not history:
-        print("WARNING: No training history available. Skipping learning curves.")
-        return
-
-    epochs = [row["epoch"] for row in history]
-    train_losses = [row["train_loss"] for row in history]
-    validation_losses = [row["validation_loss"] for row in history]
-
-    best_index = int(np.nanargmin(validation_losses))
-    best_epoch = epochs[best_index]
-    best_val_loss = validation_losses[best_index]
-
-    import matplotlib
-
-    matplotlib.use("Agg")
-    import matplotlib.pyplot as plt
-
-    plt.figure(figsize=(10, 6))
-
-    plt.plot(epochs, train_losses, label="Train", color="tab:blue", linewidth=2)
-    plt.plot(epochs, validation_losses, label="Validation", color="tab:orange", linewidth=2)
-
-    plt.axvline(
-        best_epoch,
-        color="gray",
-        linestyle="--",
-        alpha=0.7,
-        label=f"Best epoch ({best_epoch})",
+def detect_data_format(root: Path) -> str:
+    files = sorted(root.rglob("*.npz"))
+    for path in files:
+        try:
+            samples = load_samples_from_npz(path)
+        except Exception:
+            continue
+        for sample in samples:
+            if not isinstance(sample, dict):
+                continue
+            meta = sample.get("meta")
+            if isinstance(meta, dict) and "episode_id" in meta and "timestamp" in meta:
+                return "ros2_episode"
+            features = sample.get("features")
+            if isinstance(features, dict) and "occ_grid" in features and "target" in features and "labels" in sample:
+                return "ros1_legacy"
+    raise RuntimeError(
+        f"Could not infer dataset format under {root}. Set --data-format ros1_legacy "
+        "or --data-format ros2_episode explicitly and inspect the NPZ schema."
     )
 
-    plt.scatter([best_epoch], [best_val_loss], color="tab:orange", zorder=5)
 
-    plt.annotate(
-        f"Best Val: {best_val_loss:.6f}",
-        xy=(best_epoch, best_val_loss),
-        xytext=(10, 15),
-        textcoords="offset points",
-        fontsize=9,
-        arrowprops=dict(arrowstyle="->", color="gray"),
+def resolve_defaults(args, data_format: str) -> None:
+    """Resolve one historical default set regardless of dataset source."""
+    # Original ROS 1 architecture is the common default for both ROS 1 and ROS 2
+    # data. Native ROS 2 model layouts remain configurable for explicit experiments
+    # and compatibility with checkpoints trained by the previous ROS 2 model.
+    args.sequence_length = args.sequence_length if args.sequence_length is not None else 2
+    args.hidden_size = args.hidden_size if args.hidden_size is not None else 350
+    args.num_layers = args.num_layers if args.num_layers is not None else 4
+    args.batch_size = args.batch_size if args.batch_size is not None else 3
+    args.epochs = args.epochs if args.epochs is not None else 20
+    args.learning_rate = args.learning_rate if args.learning_rate is not None else 0.0006
+    args.train_split = args.train_split if args.train_split is not None else 0.8
+    args.patience = args.patience if args.patience is not None else 5
+    args.normalize_label = args.normalize_label if args.normalize_label is not None else True
+    args.normalize_data = args.normalize_data if args.normalize_data is not None else False
+    args.label_normalization = args.label_normalization or "legacy"
+    args.vmax = tuple(args.vmax) if args.vmax else (0.5, 0.5, 1.0)
+
+
+def make_model(args):
+    return RNN(
+        channels=args.sequence_length,
+        img_size=80,
+        hidden_size=args.hidden_size,
+        num_layers=args.num_layers,
+        architecture=args.architecture,
+        dropout_1=args.dropout_1,
+        dropout_2=args.dropout_2,
     )
 
-    plt.xlabel("Epoch")
-    plt.ylabel("MSE Loss")
-    plt.title("Mapless Navigation - Learning Curves")
-    plt.legend()
-    plt.grid(True, alpha=0.3)
-    plt.tight_layout()
 
-    plt.savefig(output_path, dpi=150)
-    plt.close()
-
-    print(f"Learning curves: {output_path}")
-
-
-def format_time(seconds):
-    # Convert seconds to string HH:MM:SS.ss
-    hrs = int(seconds // 3600)
-    mins = int((seconds % 3600) // 60)
-    secs = seconds % 60
-    if hrs > 0:
-        return f"{hrs:02d}:{mins:02d}:{secs:05.2f}"
-    return f"{mins:02d}:{secs:05.2f}"
-
-
-def main():
-    parser = argparse.ArgumentParser(
-        description="Train mapless navigation model splitting episodes directly across all scenarios."
+def make_ros1_loaders(args, root: Path, seed: int):
+    samples, file_stats = load_legacy_flat_dataset(root)
+    X, Y, stats = build_legacy_tensors(
+        samples=samples,
+        stack_n_channels=args.sequence_length,
+        occ_grid_meters=args.occ_grid_meters,
+        normalize_label=args.normalize_label,
+        normalize_data=args.normalize_data,
+        label_normalization=args.label_normalization,
+    )
+    if len(X) < 2:
+        raise RuntimeError(f"Only {len(X)} legacy training examples; at least two are required.")
+    rng = np.random.default_rng(seed)
+    indices = rng.permutation(len(X))
+    split = int(len(indices) * args.train_split)
+    split = max(1, min(split, len(indices) - 1))
+    train_idx, val_idx = indices[:split], indices[split:]
+    train_set = TensorDataset(torch.from_numpy(X[train_idx]).float(), torch.from_numpy(Y[train_idx]).float())
+    val_set = TensorDataset(torch.from_numpy(X[val_idx]).float(), torch.from_numpy(Y[val_idx]).float())
+    return (
+        DataLoader(train_set, batch_size=args.batch_size, shuffle=True),
+        DataLoader(val_set, batch_size=args.batch_size, shuffle=False),
+        {
+            "dataset_format": "ros1_legacy",
+            "num_npz_files": len(file_stats),
+            "num_raw_samples": len(samples),
+            "num_train_examples": len(train_idx),
+            "num_validation_examples": len(val_idx),
+            "data_stats": stats,
+            "files": file_stats,
+            "split": "random sample-level split after non-overlapping frame stacking (legacy semantics)",
+        },
     )
 
-    parser.add_argument(
-        "--data-root",
-        default=None,
-        help="Dataset root path.",
-    )
-    parser.add_argument(
-        "--train-split",
-        type=float,
-        default=0.75,
-        help="Fraction of all episodes used for training. Default: 0.75",
-    )
-    parser.add_argument(
-        "--seed",
-        type=int,
-        default=None,
-        help="Random seed.",
-    )
-    parser.add_argument(
-        "--sequence-length",
-        "--C",
-        dest="sequence_length",
-        type=int,
-        default=4,
-        help="Sequence frame count.",
-    )
-    parser.add_argument("--batch-size", type=int, default=32)
-    parser.add_argument("--epochs", type=int, default=100)
-    parser.add_argument(
-        "--learning-rate", "--lr", dest="learning_rate", type=float, default=1e-3
-    )
-    parser.add_argument("--weight-decay", type=float, default=0.0)
-    parser.add_argument("--hidden-size", type=int, default=128)
-    parser.add_argument("--num-layers", type=int, default=1)
-    parser.add_argument("--dropout", type=float, default=0.0)
-    parser.add_argument(
-        "--model-class", default="RNN", help="Model class name from utils/models.py."
-    )
-    parser.add_argument(
-        "--vmax",
-        type=parse_vmax,
-        default=(0.5, 0.5, 1.0),
-        help="Velocity limits.",
-    )
-    parser.add_argument(
-        "--reverse-enable",
-        action="store_true",
-        help="Normalize velocity in both directions.",
-    )
-    parser.add_argument(
-        "--distance-max",
-        type=float,
-        default=None,
-        help="Max distance parameter.",
-    )
-    parser.add_argument("--output-dir", default="experiments")
 
-    args = parser.parse_args()
-
-    # Get seed from argument or generate a random one
-    if args.seed is None:
-        args.seed = random.randint(0, 100000)
-        print(f"No seed specified. Generated random seed: {args.seed}")
-    else:
-        print(f"Using specified seed: {args.seed}")
-
-    set_seed(args.seed)
-
-    script_dir = Path(os.path.dirname(os.path.abspath(__file__)))
-
-    if args.data_root is None:
-        data_root = (script_dir / "../../../dataset/data").resolve()
-    else:
-        data_root = Path(args.data_root).expanduser().resolve()
-
-    if not data_root.is_dir():
-        raise RuntimeError(f"Dataset directory does not exist: {data_root}")
-
-    output_dir = Path(args.output_dir).expanduser().resolve()
-    output_dir.mkdir(parents=True, exist_ok=True)
-
-    # Search for files
-    scenario_files = discover_npz_files(str(data_root))
+def make_ros2_loaders(args, root: Path, seed: int):
+    scenario_files = discover_npz_files(str(root))
     if not scenario_files:
-        raise RuntimeError(f"No .npz files found under {data_root}")
-
-    all_scenarios = sorted(scenario_files.keys())
+        raise RuntimeError(
+            f"No ROS 2 scenario folders found under {root}; expected data/E01/*.npz, data/E02/*.npz, ..."
+        )
+    all_scenarios = sorted(scenario_files)
     all_episodes = load_episodes(scenario_files)
-
     if not all_episodes:
-        raise RuntimeError(f"No episodes found in {data_root}")
+        raise RuntimeError("No ROS 2 episodes found in NPZ files.")
 
-    # Shuffle episodes
-    random.Random(args.seed).shuffle(all_episodes)
+    train_names = parse_csv_names(args.train_scenarios)
+    val_names = parse_csv_names(args.validation_scenarios)
+    test_names = parse_csv_names(args.test_scenarios) or []
+    known = set(all_scenarios)
+    for label, names in (("train", train_names), ("validation", val_names), ("test", test_names)):
+        if names is not None:
+            unknown = sorted(set(names) - known)
+            if unknown:
+                raise ValueError(f"Unknown {label} scenarios: {unknown}; available: {all_scenarios}")
 
-    # Split dataset
-    num_total = len(all_episodes)
-    num_train = int(num_total * args.train_split)
+    if train_names is None:
+        eligible = sorted(known - set(test_names))
+        train_names, auto_val_names = split_scenarios(eligible, args.train_split, seed)
+        # By default, scenario-level holdout is reserved for validation B.
+        if val_names is None:
+            val_names = auto_val_names
+    elif val_names is None:
+        # Explicit train maps: split episodes within known train maps for validation A.
+        val_names = []
 
-    train_episodes = all_episodes[:num_train]
-    val_episodes = all_episodes[num_train:]
+    overlap = (set(train_names) & set(val_names or [])) | (set(train_names) & set(test_names)) | (set(val_names or []) & set(test_names))
+    if overlap:
+        raise ValueError(f"Train/validation/test scenario lists overlap: {sorted(overlap)}")
 
-    print()
-    print("Dataset Split Summary (All scenarios included)")
-    print("---------------------------------------------")
-    print(f"Total scenarios found: {len(all_scenarios)} ({', '.join(all_scenarios)})")
-    print(f"Total episodes found:  {num_total}")
-    print(f"TRAIN episodes ({args.train_split*100:.0f}%):    {len(train_episodes)}")
-    print(f"VAL episodes ({(1.0 - args.train_split)*100:.0f}%):      {len(val_episodes)}")
-    print()
+    train_candidates = [e for e in all_episodes if e.scenario in set(train_names)]
+    if val_names:
+        val_episodes = [e for e in all_episodes if e.scenario in set(val_names)]
+        train_episodes = train_candidates
+        split_description = "explicit/scenario-level train-validation split; test scenarios untouched"
+    else:
+        train_episodes, val_episodes = split_validation_a(
+            train_candidates,
+            validation_a_split=args.validation_a_split,
+            seed=seed,
+        )
+        split_description = "episodes split within explicit train scenarios (Validation A); test scenarios untouched"
 
-    # Build dataset loaders
     train_dataset = SequenceDataset(
         train_episodes,
         sequence_length=args.sequence_length,
@@ -330,171 +195,310 @@ def main():
         reverse_enable=args.reverse_enable,
         distance_max=args.distance_max,
     )
-
-    validation_dataset = SequenceDataset(
+    val_dataset = SequenceDataset(
         val_episodes,
         sequence_length=args.sequence_length,
         vmax=args.vmax,
         reverse_enable=args.reverse_enable,
         distance_max=args.distance_max,
     )
-
-    print(f"TRAIN sequence count:      {len(train_dataset)}")
-    print(f"VALIDATION sequence count: {len(validation_dataset)}")
-
     if len(train_dataset) == 0:
-        raise RuntimeError("TRAIN dataset contains no sequences. Try reducing C.")
-
-    cuda_available = torch.cuda.is_available()
-    device = torch.device("cuda" if cuda_available else "cpu")
-
-    train_loader = DataLoader(
-        train_dataset,
-        batch_size=args.batch_size,
-        shuffle=True,
-        num_workers=0,
-        pin_memory=cuda_available,
+        raise RuntimeError("ROS 2 train dataset contains zero sequences; check sequence length and train scenarios.")
+    if len(val_dataset) == 0:
+        raise RuntimeError(
+            "ROS 2 validation dataset contains zero sequences. Supply --validation-scenarios or "
+            "ensure each train scenario has enough episodes for Validation A."
+        )
+    use_pin = torch.cuda.is_available()
+    return (
+        DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=0, pin_memory=use_pin),
+        DataLoader(val_dataset, batch_size=args.batch_size, shuffle=False, num_workers=0, pin_memory=use_pin),
+        {
+            "dataset_format": "ros2_episode",
+            "all_scenarios": all_scenarios,
+            "train_scenarios": sorted(set(train_names)),
+            "validation_scenarios": sorted(set(val_names or [])),
+            "test_scenarios_reserved": sorted(set(test_names)),
+            "train_episodes": len(train_episodes),
+            "validation_episodes": len(val_episodes),
+            "train_sequences": len(train_dataset),
+            "validation_sequences": len(val_dataset),
+            "split": split_description,
+        },
     )
 
-    validation_loader = DataLoader(
-        validation_dataset,
-        batch_size=args.batch_size,
-        shuffle=False,
-        num_workers=0,
-        pin_memory=cuda_available,
-    )
 
-    print()
-    if device.type == "cuda":
-        print("Device: CUDA")
-        print(f"CUDA device: {torch.cuda.get_device_name(0)}")
+def run_epoch(model, loader, optimizer, device, legacy_batch_mean=False):
+    training = optimizer is not None
+    model.train(training)
+    batch_losses = []
+    total, count = 0.0, 0
+    context = torch.enable_grad if training else torch.no_grad
+    with context():
+        for x, y in loader:
+            x, y = x.to(device), y.to(device)
+            if training:
+                optimizer.zero_grad(set_to_none=True)
+            pred = model(x)
+            if isinstance(pred, tuple):
+                pred = pred[0]
+            if pred.ndim == 1:
+                pred = pred.unsqueeze(0)
+            loss = torch.nn.functional.mse_loss(pred, y)
+            if training:
+                loss.backward()
+                if not legacy_batch_mean:
+                    torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
+                optimizer.step()
+            batch_losses.append(float(loss.item()))
+            total += float(loss.item()) * len(x)
+            count += len(x)
+    if not count:
+        return float("nan")
+    # The old ROS 1 trainer averaged per-batch scalar losses equally; retain that convention.
+    return float(np.mean(batch_losses)) if legacy_batch_mean else total / count
+
+
+def save_curve(
+    history: list[dict],
+    out: Path,
+    best_epoch: int | None = None,
+    best_val: float | None = None,
+) -> None:
+    try:
+        import matplotlib
+        matplotlib.use("Agg")
+        import matplotlib.pyplot as plt
+    except Exception as exc:
+        print(f"WARNING: matplotlib unavailable; skipped learning curve: {exc}")
+        return
+
+    epochs = [r["epoch"] for r in history]
+    train_losses = [r["train_loss"] for r in history]
+    val_losses = [r["validation_loss"] for r in history]
+
+    fig, ax = plt.subplots(figsize=(9, 5))
+    ax.plot(epochs, train_losses, label="train")
+    ax.plot(epochs, val_losses, label="validation")
+
+    # Mark the epoch whose checkpoint was saved as the best model.
+    if best_epoch is not None and best_epoch in epochs:
+        best_index = epochs.index(best_epoch)
+        marker_val = val_losses[best_index]
+        ax.axvline(
+            best_epoch,
+            linestyle="--",
+            linewidth=1.2,
+            label=f"best model: epoch {best_epoch}",
+        )
+        ax.scatter([best_epoch], [marker_val], s=55, zorder=5, label="best validation MSE")
+        if best_val is not None and np.isfinite(best_val):
+            ax.annotate(
+                f"best: epoch {best_epoch}\nval MSE={best_val:.7f}",
+                xy=(best_epoch, marker_val),
+                xytext=(8, 10),
+                textcoords="offset points",
+                fontsize=8,
+                arrowprops={"arrowstyle": "->", "linewidth": 0.8},
+            )
+
+    ax.set_xlabel("Epoch")
+    ax.set_ylabel("MSE")
+    ax.set_title("Mapless RNN training")
+    ax.legend()
+    fig.tight_layout()
+    fig.savefig(out, dpi=140)
+    plt.close(fig)
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--data-root", type=Path, default=None)
+    parser.add_argument("--data-format", choices=("auto", "ros1_legacy", "ros2_episode"), default="auto")
+    parser.add_argument("--architecture", choices=("ros1_legacy", "ros2"), default="ros1_legacy", help="Model layout; defaults to the historical ROS 1 layout for both data formats.")
+    parser.add_argument("--train-split", type=float, default=None, help="Scenario split fraction for ROS2; sample split fraction for legacy ROS1.")
+    parser.add_argument("--validation-a-split", type=float, default=0.25)
+    parser.add_argument("--train-scenarios", default=None, help="Comma-separated ROS2 scenario IDs used for training, e.g. E01,E02,E03.")
+    parser.add_argument("--validation-scenarios", default=None, help="Optional comma-separated ROS2 scenarios for validation.")
+    parser.add_argument("--test-scenarios", default=None, help="ROS2 scenarios reserved and excluded from training/validation.")
+    parser.add_argument("--seed", type=int, default=None, help="If omitted, generate a random seed; specify --seed for reproducibility.")
+    parser.add_argument("--sequence-length", "--C", dest="sequence_length", type=int, default=None)
+    parser.add_argument("--occ-grid-meters", type=int, default=4)
+    parser.add_argument("--batch-size", type=int, default=None)
+    parser.add_argument("--epochs", type=int, default=None)
+    parser.add_argument("--patience", type=int, default=None)
+    parser.add_argument("--learning-rate", "--lr", dest="learning_rate", type=float, default=None)
+    parser.add_argument("--weight-decay", type=float, default=0.0)
+    parser.add_argument("--hidden-size", type=int, default=None)
+    parser.add_argument("--num-layers", type=int, default=None)
+    parser.add_argument("--dropout-1", type=float, default=0.20, help="Dropout after first dense layer.")
+    parser.add_argument("--dropout-2", type=float, default=0.15, help="Dropout after second dense layer.")
+    parser.add_argument("--vmax", type=float, nargs=3, default=(0.5, 0.5, 1.0), metavar=("VX", "VY", "WZ"))
+    parser.add_argument("--reverse-enable", action="store_true")
+    parser.add_argument("--distance-max", type=float, default=None)
+    parser.add_argument("--normalize-label", action=argparse.BooleanOptionalAction, default=None)
+    parser.add_argument("--normalize-data", action=argparse.BooleanOptionalAction, default=None)
+    parser.add_argument("--label-normalization", choices=("legacy", "vx_wz", "none"), default=None)
+    parser.add_argument("--device", choices=("auto", "cpu", "cuda"), default="auto")
+    parser.add_argument("--output-dir", type=Path, default=None)
+    parser.add_argument("--checkpoint-name", default=None)
+    args = parser.parse_args()
+
+    script_dir = Path(__file__).resolve().parent
+    if args.data_root is not None:
+        data_root = args.data_root.expanduser().resolve()
     else:
-        print("WARNING: CUDA is not available.")
-        print("Falling back to CPU.")
+        ros2_default = (script_dir / "../../../dataset/data").resolve()
+        ros1_default = (script_dir / "Ros1Data" / "Dataset 2025-2").resolve()
 
-    # Init model and optimizer
-    model = create_model(
-        model_class_name=args.model_class,
-        sequence_length=args.sequence_length,
-        hidden_size=args.hidden_size,
-        num_layers=args.num_layers,
-        dropout=args.dropout,
-    ).to(device)
+        if args.data_format == "ros1_legacy":
+            candidates = [ros1_default, ros2_default]
+        else:
+            candidates = [ros2_default, ros1_default]
 
-    optimizer = torch.optim.Adam(
-        model.parameters(),
-        lr=args.learning_rate,
-        weight_decay=args.weight_decay,
-    )
+        existing = [candidate for candidate in candidates if candidate.is_dir()]
+        if not existing:
+            parser.error(
+                "No default dataset directory found. Pass --data-root to a ROS 1 dataset "
+                "or a ROS 2 scenario-data directory."
+            )
+        data_root = existing[0]
+    if not data_root.is_dir():
+        parser.error(f"Dataset directory does not exist: {data_root}; pass --data-root explicitly")
 
-    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-        optimizer, mode="min", factor=0.5, patience=5
-    )
+    data_format = detect_data_format(data_root) if args.data_format == "auto" else args.data_format
+    resolve_defaults(args, data_format)
+    if args.sequence_length < 1 or args.batch_size < 1 or args.epochs < 1 or args.patience < 1:
+        parser.error("sequence length, batch size, epochs and patience must be positive")
+    if args.hidden_size < 1 or args.num_layers < 1:
+        parser.error("hidden size and number of recurrent layers must be positive")
+    if args.learning_rate <= 0 or args.weight_decay < 0:
+        parser.error("learning rate must be positive and weight decay cannot be negative")
+    if not (0.0 <= args.dropout_1 < 1.0 and 0.0 <= args.dropout_2 < 1.0):
+        parser.error("dropout rates must be in [0, 1)")
+    if any(float(value) <= 0.0 for value in args.vmax):
+        parser.error("all --vmax values must be positive")
+    if not 0.0 < args.train_split < 1.0:
+        parser.error("--train-split must be between 0 and 1")
+    if not 0.0 < args.validation_a_split < 1.0:
+        parser.error("--validation-a-split must be between 0 and 1")
 
-    best_validation_loss = float("inf")
-    best_epoch = -1
+    seed = int(args.seed) if args.seed is not None else random.SystemRandom().randrange(0, 2**32)
+    print(f"Seed: {seed} ({'provided' if args.seed is not None else 'randomly generated'})")
+    seed_everything(seed)
+    seed_everything(seed)
+    if args.device == "cuda" and not torch.cuda.is_available():
+        parser.error("--device cuda was requested, but CUDA is unavailable")
+    device = torch.device("cuda:0" if args.device == "cuda" or (args.device == "auto" and torch.cuda.is_available()) else "cpu")
+
+    stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    out_dir = (args.output_dir.expanduser().resolve() if args.output_dir else (script_dir / "experiments" / f"unified_{data_format}_{stamp}").resolve())
+    out_dir.mkdir(parents=True, exist_ok=False)
+
+    if data_format == "ros1_legacy":
+        train_loader, val_loader, split_info = make_ros1_loaders(args, data_root, seed)
+        default_checkpoint = "best_model.pth"
+    else:
+        train_loader, val_loader, split_info = make_ros2_loaders(args, data_root, seed)
+        default_checkpoint = "best_model.pth"
+    checkpoint_path = out_dir / (args.checkpoint_name or default_checkpoint)
+
+    model = make_model(args).to(device)
+    optimizer = torch.optim.Adam(model.parameters(), lr=args.learning_rate, weight_decay=args.weight_decay)
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode="min", factor=0.5, patience=max(1, min(5, args.patience)))
     history = []
+    best_val = float("inf")
+    best_epoch = -1
+    stale_epochs = 0
+    config = {
+        "format_version": 2,
+        "architecture": args.architecture,
+        "data_format": data_format,
+        "sequence_length": args.sequence_length,
+        "stack_n_channels": args.sequence_length if data_format == "ros1_legacy" else None,
+        "hidden_size": args.hidden_size,
+        "num_layers": args.num_layers,
+        "vmax": list(args.vmax),
+        "reverse_enable": args.reverse_enable,
+        "distance_max": args.distance_max,
+        "normalize_data": args.normalize_data if data_format == "ros1_legacy" else None,
+        "normalize_occupancy": bool(args.normalize_data) if data_format == "ros1_legacy" else True,
+        "label_normalization": args.label_normalization if data_format == "ros1_legacy" else "vmax",
+        "normalize_label": bool(args.normalize_label) if data_format == "ros1_legacy" else True,
+        "dropout_1": args.dropout_1,
+        "dropout_2": args.dropout_2,
+        "batch_size": args.batch_size,
+        "epochs_requested": args.epochs,
+        "learning_rate_initial": args.learning_rate,
+        "weight_decay": args.weight_decay,
+        "train_split": args.train_split,
+        "patience": args.patience,
+        "seed": seed,
+        "device": str(device),
+        "data_root": data_root.name,
+        "split": split_info,
+    }
+    (out_dir / "config.json").write_text(json.dumps(config, indent=2, ensure_ascii=False))
+    print(f"Data format: {data_format} | architecture: {args.architecture}")
+    print(f"Dataset: {data_root}")
+    print(f"Train batches: {len(train_loader)} | validation batches: {len(val_loader)}")
+    print(f"Device: {device} | output: {out_dir}")
 
-    checkpoint_path = output_dir / "best_model.pth"
-
-    print()
-    print("Training")
-    print("--------")
-
-    start_total_time = time.time()
-
+    started = time.monotonic()
     try:
         for epoch in range(1, args.epochs + 1):
-            epoch_start_time = time.time()
-
-            # Train step with dynamic line update
-            train_loss = run_epoch(
-                model=model,
-                loader=train_loader,
-                optimizer=optimizer,
-                device=device,
-                training=True,
-                current_epoch=epoch,
-                total_epochs=args.epochs,
-                epoch_start_time=epoch_start_time,
-            )
-
-            # Validation step
-            validation_loss = run_epoch(
-                model=model,
-                loader=validation_loader,
-                optimizer=None,
-                device=device,
-                training=False,
-                current_epoch=epoch,
-                total_epochs=args.epochs,
-                epoch_start_time=epoch_start_time,
-            )
-
-            scheduler.step(validation_loss)
-            current_lr = optimizer.param_groups[0]["lr"]
-            epoch_time = time.time() - epoch_start_time
-
+            epoch_start = time.monotonic()
+            train_loss = run_epoch(model, train_loader, optimizer, device, legacy_batch_mean=(data_format == "ros1_legacy"))
+            val_loss = run_epoch(model, val_loader, None, device, legacy_batch_mean=(data_format == "ros1_legacy"))
+            scheduler.step(val_loss)
             row = {
                 "epoch": epoch,
                 "train_loss": train_loss,
-                "validation_loss": validation_loss,
-                "learning_rate": current_lr,
-                "epoch_time_sec": epoch_time,
+                "validation_loss": val_loss,
+                "learning_rate": optimizer.param_groups[0]["lr"],
+                "epoch_seconds": time.monotonic() - epoch_start,
             }
             history.append(row)
-
-            # Final string for completed epoch
-            log_line = (
-                f"epoch {epoch}/{args.epochs} | "
-                f"train={train_loss:.7f} | "
-                f"val={validation_loss:.7f} | "
-                f"t[s]={epoch_time:.2f}"
-            )
-            sys.stdout.write(f"\r{log_line.ljust(80)}\n")
-            sys.stdout.flush()
-
-            # Save best checkpoint
-            if np.isfinite(validation_loss) and validation_loss < best_validation_loss:
-                best_validation_loss = validation_loss
-                best_epoch = epoch
-
-                torch.save(
-                    {
-                        "model_state_dict": model.state_dict(),
-                        "optimizer_state_dict": optimizer.state_dict(),
-                        "epoch": epoch,
-                        "train_loss": train_loss,
-                        "validation_loss": validation_loss,
-                        "config": vars(args),
-                        "all_scenarios": all_scenarios,
-                    },
-                    checkpoint_path,
-                )
-
+            print(f"epoch {epoch:03d}/{args.epochs} train={train_loss:.7f} val={val_loss:.7f} lr={row['learning_rate']:.3g} t={row['epoch_seconds']:.2f}s")
+            if np.isfinite(val_loss) and val_loss < best_val:
+                previous_best = best_val
+                best_val, best_epoch, stale_epochs = val_loss, epoch, 0
+                torch.save({
+                    "model_state_dict": model.state_dict(),
+                    "optimizer_state_dict": optimizer.state_dict(),
+                    "epoch": epoch,
+                    "train_loss": train_loss,
+                    "validation_loss": val_loss,
+                    "architecture": args.architecture,
+                    "data_format": data_format,
+                    "config": config,
+                }, checkpoint_path)
+                if np.isfinite(previous_best):
+                    print(
+                        f"  -> Saving best model at epoch {epoch}: "
+                        f"validation MSE={val_loss:.7f} "
+                        f"(previous best={previous_best:.7f})"
+                    )
+                else:
+                    print(
+                        f"  -> Saving best model at epoch {epoch}: "
+                        f"validation MSE={val_loss:.7f} (initial best)"
+                    )
+            else:
+                stale_epochs += 1
+                if stale_epochs >= args.patience:
+                    print(f"Early stopping after {stale_epochs} epochs without validation improvement.")
+                    break
     except KeyboardInterrupt:
-        # Stop training on Ctrl+C without breaking script
-        print("\n[EARLY STOP] Ctrl+C detected. Stopping training...")
+        print("\nTraining interrupted; artifacts from completed epochs will be preserved.")
 
-    total_elapsed = time.time() - start_total_time
-
-    # Save output files
-    history_path = output_dir / "history.json"
-    with open(history_path, "w") as f:
-        json.dump(history, f, indent=2)
-
-    learning_curves_path = output_dir / "learning_curves.png"
-    save_learning_curves(history, learning_curves_path)
-
-    print()
-    print("Training finished.")
-    print(f"Total time: {format_time(total_elapsed)}")
-    print(f"Best epoch: {best_epoch}")
-    print(f"Best Validation Loss: {best_validation_loss:.6f}")
+    (out_dir / "history.json").write_text(json.dumps(history, indent=2))
+    save_curve(history, out_dir / "learning_curves.png", best_epoch=best_epoch, best_val=best_val)
+    print(f"Best epoch: {best_epoch}; best validation MSE: {best_val:.7f}")
     print(f"Checkpoint: {checkpoint_path}")
-    print(f"History: {history_path}")
-    print(f"Learning curves: {learning_curves_path}")
+    print(f"Elapsed: {time.monotonic() - started:.1f} s")
+    return 0 if best_epoch > 0 else 2
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

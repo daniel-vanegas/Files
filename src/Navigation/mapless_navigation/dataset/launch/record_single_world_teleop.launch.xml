@@ -55,9 +55,9 @@
     <arg name="forward_scale" default="0.4"/>
     <arg name="lateral_scale" default="0.4"/>
     <arg name="rotate_scale" default="0.35"/>
-
+    <arg name="control_always_enable" default="true"/>
+    
     <arg name="output_dir" default="src/Navigation/mapless_navigation/dataset/data"/>
-    <arg name="max_goals" default="100"/>
     <arg name="stuck_window_s" default="2.0"/>
     <arg name="stuck_eps_pos_m" default="0.02"/>
     <arg name="stuck_eps_yaw_rad" default="0.10"/>
@@ -66,6 +66,17 @@
     <arg name="stuck_min_duration_s" default="1.5"/>
     <arg name="collision_lookback_frames" default="5"/>
     <arg name="stuck_lookback_frames" default="5"/>
+
+    <!-- Path-pool mode -->
+    <arg name="use_path_pool" default="true"/>
+    <arg name="num_goals" default="100"/>
+    <arg name="class_mix" default=""/>
+    <arg name="path_max_attempts" default="3"/>
+
+    <!-- Auto-generate pool if missing -->
+    <arg name="auto_generate_pool" default="true"/>
+    <arg name="generator_seed" default="-1"/>
+    <arg name="generator_timeout_s" default="900.0"/>
 
     <arg name="camera_publish_hz" default="10.0"/>
     <arg name="camera_enable" default="true"/>
@@ -114,6 +125,7 @@
         <param name="forward_scale" value="$(var forward_scale)"/>
         <param name="lateral_scale" value="$(var lateral_scale)"/>
         <param name="rotate_scale" value="$(var rotate_scale)"/>
+        <param name="control_always_enable" value="$(var control_always_enable)"/>
         <remap from="/head/pan_cmd" to="/teleop/head/pan_cmd_raw"/>
         <remap from="/head/tilt_cmd" to="/teleop/head/tilt_cmd_raw"/>
         <remap from="/hardware/head/goal_pose" to="/teleop/head/goal_pose_raw"/>
@@ -203,11 +215,37 @@
     <node pkg="mapless_dataset" exec="teleop_dataset_recorder.py" name="teleop_dataset_recorder" output="screen">
         <param name="use_sim_time" value="true"/>
         <param name="map" value="$(var world)"/>
+        <param name="scenario" value="$(var scenario)"/>
+        <param name="output_dir" value="$(var output_dir)"/>
         <param name="seed" value="$(var seed)"/>
+        <param name="count_existing_goals" value="$(var count_existing_goals)"/>
+
+        <!-- Path-pool -->
+        <param name="use_path_pool" value="$(var use_path_pool)"/>
+        <param name="num_goals" value="$(var num_goals)"/>
+        <param name="class_mix" value="$(var class_mix)"/>
+        <param name="path_max_attempts" value="$(var path_max_attempts)"/>
+
+        <!-- Auto-generate pool -->
+        <param name="auto_generate_pool" value="$(var auto_generate_pool)"/>
+        <param name="generator_seed" value="$(var generator_seed)"/>
+        <param name="generator_timeout_s" value="$(var generator_timeout_s)"/>
+
+        <!-- Buttons -->
         <param name="record_button_index" value="$(var record_button_index)"/>
+        <param name="teleport_button_index" value="$(var teleport_button_index)"/>
+        <param name="regenerate_button_index" value="$(var regenerate_button_index)"/>
+
+        <!-- Episode rules -->
         <param name="goal_reached_radius_m" value="$(var goal_reached_radius_m)"/>
+        <param name="start_reached_radius_m" value="$(var start_reached_radius_m)"/>
         <param name="goal_timeout_s" value="$(var goal_timeout_s)"/>
         <param name="goal_pause_s" value="$(var goal_pause_s)"/>
+        <param name="idle_timeout_s" value="$(var idle_timeout_s)"/>
+        <param name="idle_eps_lin" value="$(var idle_eps_lin)"/>
+        <param name="idle_eps_ang" value="$(var idle_eps_ang)"/>
+
+        <!-- Teleport -->
         <param name="teleport_at_start" value="$(var teleport_at_start)"/>
         <param name="startup_delay_s" value="$(var startup_delay_s)"/>
         <param name="world_offset_x" value="$(var world_offset_x)"/>
@@ -216,20 +254,12 @@
         <param name="teleport_timeout_s" value="$(var teleport_timeout_s)"/>
         <param name="post_teleport_settle_s" value="$(var post_teleport_settle_s)"/>
         <param name="post_teleport_amcl_grace_s" value="$(var post_teleport_amcl_grace_s)"/>
-        <param name="scenario" value="$(var scenario)"/>
-        <param name="output_dir" value="$(var output_dir)"/>
-        <param name="count_existing_goals" value="$(var count_existing_goals)"/>
-        <param name="idle_timeout_s" value="$(var idle_timeout_s)"/>
-        <param name="idle_eps_lin" value="$(var idle_eps_lin)"/>
-        <param name="idle_eps_ang" value="$(var idle_eps_ang)"/>
-        <param name="teleport_interval_min" value="$(var teleport_interval_min)"/>
-        <param name="teleport_interval_max" value="$(var teleport_interval_max)"/>
-        <param name="teleport_button_index" value="$(var teleport_button_index)"/>  
-        <param name="start_at_robot_prob" value="$(var start_at_robot_prob)"/>
-        <param name="start_reached_radius_m" value="$(var start_reached_radius_m)"/>
-        <param name="regenerate_button_index" value="$(var regenerate_button_index)"/>
+
+        <!-- Head offsets -->
         <param name="head_pan_offset" value="$(var head_pan_offset)"/>
         <param name="head_tilt_offset" value="$(var head_tilt_offset)"/>
+
+        <!-- Room detection / random mode fallback -->
         <param name="room_radius_m" value="$(var room_radius_m)"/>
         <param name="min_room_area_m2" value="$(var min_room_area_m2)"/>
         <param name="zone_bin_m" value="$(var zone_bin_m)"/>
@@ -237,23 +267,24 @@
         <param name="recent_room_window" value="$(var recent_room_window)"/>
         <param name="min_goal_distance_m" value="$(var min_goal_distance_m)"/>
         <param name="max_goal_distance_m" value="$(var max_goal_distance_m)"/>
-        <param name="min_goal_distance_after_success_m" value="$(var min_goal_distance_after_success_m)"/>
-        <param name="max_goal_distance_after_success_m" value="$(var max_goal_distance_after_success_m)"/>
+        <param name="start_at_robot_prob" value="$(var start_at_robot_prob)"/>
     </node>
 
-    <node pkg="mapless_dataset" exec="dataset_recorder" name="dataset_recorder" output="screen">
+    <node pkg="mapless_dataset" exec="dataset_recorder" name="dataset_recorder" output="screen" on_exit="shutdown">
         <param name="use_sim_time" value="true"/>
         <param name="output_dir" value="$(var output_dir)"/>
         <param name="scenario" value="$(var scenario)"/>
         <param name="teacher" value="$(var teacher)"/>
         <param name="record_hz" value="$(var record_hz)"/>
-        <param name="max_goals" value="$(var max_goals)"/>
+        <param name="max_goals" value="$(var num_goals)"/>
         <param name="costmap_topic" value="/mapless/local_occ_grid"/>
         <param name="cmd_vel_topic" value="/hardware/base/cmd_vel"/>
         <param name="nn_goal_topic" value="/NN_goal"/>
         <param name="current_goal_topic" value="/mapless_nav/current_goal"/>
         <param name="goal_active_topic" value="/mapless_nav/goal_active"/>
         <param name="episode_id_topic" value="/mapless_nav/episode_id"/>
+        <param name="episode_tries_topic" value="/mapless_nav/episode_tries"/>
+        <param name="episode_class_topic" value="/mapless_nav/episode_class"/>
         <param name="goal_success_topic" value="/mapless_nav/goal_success"/>
         <param name="collision_topic" value="/navigation/collision"/>
         <param name="stuck_window_s" value="$(var stuck_window_s)"/>

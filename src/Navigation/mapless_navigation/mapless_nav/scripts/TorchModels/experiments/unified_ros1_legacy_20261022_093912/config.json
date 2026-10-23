@@ -1,0 +1,1365 @@
+{
+  "format_version": 2,
+  "architecture": "ros1_legacy",
+  "data_format": "ros1_legacy",
+  "sequence_length": 2,
+  "stack_n_channels": 2,
+  "hidden_size": 350,
+  "num_layers": 4,
+  "vmax": [
+    0.5,
+    0.5,
+    1.0
+  ],
+  "reverse_enable": false,
+  "distance_max": null,
+  "normalize_data": false,
+  "normalize_occupancy": false,
+  "label_normalization": "legacy",
+  "normalize_label": true,
+  "dropout_1": 0.2,
+  "dropout_2": 0.15,
+  "batch_size": 3,
+  "epochs_requested": 20,
+  "learning_rate_initial": 0.0006,
+  "weight_decay": 0.0,
+  "train_split": 0.8,
+  "patience": 5,
+  "seed": 42,
+  "device": "cuda:0",
+  "data_root": "Dataset 2025-2",
+  "split": {
+    "dataset_format": "ros1_legacy",
+    "num_npz_files": 184,
+    "num_raw_samples": 3881,
+    "num_train_examples": 1552,
+    "num_validation_examples": 388,
+    "data_stats": {
+      "num_input_samples_loaded": 3881,
+      "num_samples_used_for_pairs": 3880,
+      "num_samples_dropped_as_unpaired_tail": 1,
+      "num_training_examples_after_stacking": 1940,
+      "input_occ_grid_shape": [
+        160,
+        160
+      ],
+      "cropped_occ_grid_shape": [
+        80,
+        80
+      ],
+      "input_tensor_shape": [
+        1940,
+        2,
+        82,
+        80
+      ],
+      "label_tensor_shape": [
+        1940,
+        3
+      ],
+      "label_min_before_normalization": [
+        0.0,
+        -0.24799999594688416,
+        -1.180999994277954
+      ],
+      "label_max_before_normalization": [
+        1.062999963760376,
+        0.23999999463558197,
+        1.2000000476837158
+      ],
+      "normalization": "legacy columns 0 and 1",
+      "invalid_samples": []
+    },
+    "files": [
+      {
+        "path": "data_nav_map_2025-04-24_14-20-53.npz",
+        "relative_path": "data_nav_map_2025-04-24_14-20-53.npz",
+        "size_bytes": 1026021,
+        "sha256": "c570703492aa03f051ad88efadfbee4f7daf758e8d0d7bdff447a0c6d5996dfe",
+        "samples_loaded": 10
+      },
+      {
+        "path": "data_nav_map_2025-04-24_14-20-58.npz",
+        "relative_path": "data_nav_map_2025-04-24_14-20-58.npz",
+        "size_bytes": 410715,
+        "sha256": "3bb298214b4fd9097ae01b731e2541b7cebfd4c1ac51ffbd956affb0d95922b9",
+        "samples_loaded": 4
+      },
+      {
+        "path": "data_nav_map_2025-04-24_14-21-07.npz",
+        "relative_path": "data_nav_map_2025-04-24_14-21-07.npz",
+        "size_bytes": 1333758,
+        "sha256": "6a9d0fdcf4f8356d27b4ad84f9dc8cc449f22b25452df16edd63b4562160144d",
+        "samples_loaded": 13
+      },
+      {
+        "path": "data_nav_map_2025-04-24_14-21-11.npz",
+        "relative_path": "data_nav_map_2025-04-24_14-21-11.npz",
+        "size_bytes": 615817,
+        "sha256": "cf0c2f106e933515225b6f40069726471dfa785dcd3d5d3c3eb602df37fe0186",
+        "samples_loaded": 6
+      },
+      {
+        "path": "data_nav_map_2025-04-24_14-21-25.npz",
+        "relative_path": "data_nav_map_2025-04-24_14-21-25.npz",
+        "size_bytes": 2359868,
+        "sha256": "b17f1f13858ef66a58fd975ad4f06fd8f37c7a5e1b057d437617ab85310ba0ad",
+        "samples_loaded": 23
+      },
+      {
+        "path": "data_nav_map_2025-04-24_14-21-38.npz",
+        "relative_path": "data_nav_map_2025-04-24_14-21-38.npz",
+        "size_bytes": 2052035,
+        "sha256": "3a00b04789eeb3490e4500a2bdd90769faa829184a30445dcbe32e2c66a8fdae",
+        "samples_loaded": 20
+      },
+      {
+        "path": "data_nav_map_2025-04-24_14-21-55.npz",
+        "relative_path": "data_nav_map_2025-04-24_14-21-55.npz",
+        "size_bytes": 2975534,
+        "sha256": "4e1fdde98d404d89e1d9830194b27f483d575c778a8bbfb719d2096051984d9f",
+        "samples_loaded": 29
+      },
+      {
+        "path": "data_nav_map_2025-04-24_14-22-05.npz",
+        "relative_path": "data_nav_map_2025-04-24_14-22-05.npz",
+        "size_bytes": 1538980,
+        "sha256": "ca773f6e5f5594a98fbc97f68a300f302fe91af07354eb360007c9e888ab59ae",
+        "samples_loaded": 15
+      },
+      {
+        "path": "data_nav_map_2025-04-24_14-22-16.npz",
+        "relative_path": "data_nav_map_2025-04-24_14-22-16.npz",
+        "size_bytes": 1641591,
+        "sha256": "61cfc4abc1f1ebebd832d6725e90e895ba51bbe88124e3602ef05ec36ae47631",
+        "samples_loaded": 16
+      },
+      {
+        "path": "data_nav_map_2025-04-24_14-22-28.npz",
+        "relative_path": "data_nav_map_2025-04-24_14-22-28.npz",
+        "size_bytes": 1744202,
+        "sha256": "34f0cb55131d0fb39c9342813d00cfbb23a7b0a65dbbb74f04e730ae0eb601be",
+        "samples_loaded": 17
+      },
+      {
+        "path": "data_nav_map_2025-04-24_14-22-37.npz",
+        "relative_path": "data_nav_map_2025-04-24_14-22-37.npz",
+        "size_bytes": 1333758,
+        "sha256": "aed57bc22d385ef8a30d0ddaf484bf2319d816fe98a1cbb0294a24e535c266fd",
+        "samples_loaded": 13
+      },
+      {
+        "path": "data_nav_map_2025-04-24_14-22-50.npz",
+        "relative_path": "data_nav_map_2025-04-24_14-22-50.npz",
+        "size_bytes": 2154646,
+        "sha256": "91c476588b9a33fc249fd49ba0a694cb6abdf0f8de795e5a0691729d007cb98f",
+        "samples_loaded": 21
+      },
+      {
+        "path": "data_nav_map_2025-04-24_14-23-03.npz",
+        "relative_path": "data_nav_map_2025-04-24_14-23-03.npz",
+        "size_bytes": 2052035,
+        "sha256": "cee81f6609bbc98a042f3fb217ae009cda8ff094c38f787c505c3558f18235d8",
+        "samples_loaded": 20
+      },
+      {
+        "path": "data_nav_map_2025-04-24_14-23-10.npz",
+        "relative_path": "data_nav_map_2025-04-24_14-23-10.npz",
+        "size_bytes": 1231147,
+        "sha256": "0b93ac0f12c786e6803817ed7e9ea1b369319552837d1835694861357f20e2ed",
+        "samples_loaded": 12
+      },
+      {
+        "path": "data_nav_map_2025-04-24_14-23-28.npz",
+        "relative_path": "data_nav_map_2025-04-24_14-23-28.npz",
+        "size_bytes": 3078145,
+        "sha256": "db8c9c98bf78cec15bb54219c0ba33bbda25d1e0548d2606480a90f99db1f46d",
+        "samples_loaded": 30
+      },
+      {
+        "path": "data_nav_map_2025-04-24_14-23-36.npz",
+        "relative_path": "data_nav_map_2025-04-24_14-23-36.npz",
+        "size_bytes": 1231147,
+        "sha256": "0ff0a0997b55e4661e813ffbcfe8138c26b2904c972b84fd7d9a2dc150fb9bec",
+        "samples_loaded": 12
+      },
+      {
+        "path": "data_nav_map_2025-04-24_14-24-04.npz",
+        "relative_path": "data_nav_map_2025-04-24_14-24-04.npz",
+        "size_bytes": 820919,
+        "sha256": "ec2b03afa4e71a9775e46bb646e7de5e98db98a67ef810aa9fbee77fe5c51f0d",
+        "samples_loaded": 8
+      },
+      {
+        "path": "data_nav_map_2025-04-24_14-24-21.npz",
+        "relative_path": "data_nav_map_2025-04-24_14-24-21.npz",
+        "size_bytes": 2872923,
+        "sha256": "2f8108302f05bdd65c3db38475b73f12c3aae9314da6d5576667433c446aa36b",
+        "samples_loaded": 28
+      },
+      {
+        "path": "data_nav_map_2025-04-24_14-25-05.npz",
+        "relative_path": "data_nav_map_2025-04-24_14-25-05.npz",
+        "size_bytes": 4617310,
+        "sha256": "3eeffced9ce1422cc78726f8da0813396a52f5783a4d8d97e0dff1a8fd22c733",
+        "samples_loaded": 45
+      },
+      {
+        "path": "data_nav_map_2025-04-24_14-25-23.npz",
+        "relative_path": "data_nav_map_2025-04-24_14-25-23.npz",
+        "size_bytes": 513266,
+        "sha256": "6cd4961980ddf498bec492405af9bb18ed5b49ede4a6a0a74d17e803e8204f8e",
+        "samples_loaded": 5
+      },
+      {
+        "path": "data_nav_map_2025-04-24_14-25-38.npz",
+        "relative_path": "data_nav_map_2025-04-24_14-25-38.npz",
+        "size_bytes": 2565090,
+        "sha256": "0c0d40995aa703a69b96fbda433ee8ab03b9cfdb7c1101b4364dd2ede24c411d",
+        "samples_loaded": 25
+      },
+      {
+        "path": "data_nav_map_2025-04-24_14-25-44.npz",
+        "relative_path": "data_nav_map_2025-04-24_14-25-44.npz",
+        "size_bytes": 615817,
+        "sha256": "e35734b4a041af4e948492c6c4d1457192e8246aec6dae15522223a91d266f20",
+        "samples_loaded": 6
+      },
+      {
+        "path": "data_nav_map_2025-04-24_14-25-49.npz",
+        "relative_path": "data_nav_map_2025-04-24_14-25-49.npz",
+        "size_bytes": 410715,
+        "sha256": "38cd41a8430cf6a58487f2710d366e3cab1e7a341491f47307fdbdc4eaba1310",
+        "samples_loaded": 4
+      },
+      {
+        "path": "data_nav_map_2025-04-24_14-26-00.npz",
+        "relative_path": "data_nav_map_2025-04-24_14-26-00.npz",
+        "size_bytes": 1744202,
+        "sha256": "867f3c98c01ed455039539d18de61ec68326af0aaec3bd27df2008293bb9bdbe",
+        "samples_loaded": 17
+      },
+      {
+        "path": "data_nav_map_2025-04-24_14-26-27.npz",
+        "relative_path": "data_nav_map_2025-04-24_14-26-27.npz",
+        "size_bytes": 4309477,
+        "sha256": "9ba62e563adda57d87b08023bdeec9c3fe2ec4a1a4548bcdff742124ec81fd22",
+        "samples_loaded": 42
+      },
+      {
+        "path": "data_nav_map_2025-04-24_14-26-51.npz",
+        "relative_path": "data_nav_map_2025-04-24_14-26-51.npz",
+        "size_bytes": 1949424,
+        "sha256": "a9946868fe01039d69dac259490f0aa8fc7a2eaee4c9cc91d158f338bcc66d35",
+        "samples_loaded": 19
+      },
+      {
+        "path": "data_nav_map_2025-04-24_14-27-46.npz",
+        "relative_path": "data_nav_map_2025-04-24_14-27-46.npz",
+        "size_bytes": 3488589,
+        "sha256": "e8c9b9ccc3f04b0af9f78b817ffcbefc9710380b73574039b34884ca2f96fd83",
+        "samples_loaded": 34
+      },
+      {
+        "path": "data_nav_map_2025-04-24_14-28-06.npz",
+        "relative_path": "data_nav_map_2025-04-24_14-28-06.npz",
+        "size_bytes": 3591200,
+        "sha256": "a4316070c420567f39bafd274d887d009620c666a41a19565967ff968c715da6",
+        "samples_loaded": 35
+      },
+      {
+        "path": "data_nav_map_2025-04-24_14-28-24.npz",
+        "relative_path": "data_nav_map_2025-04-24_14-28-24.npz",
+        "size_bytes": 3283367,
+        "sha256": "c5e1c39417b9c0449253724afa26460ccdae4480c4eb3558265a646c292634e3",
+        "samples_loaded": 32
+      },
+      {
+        "path": "data_nav_map_2025-04-24_14-28-41.npz",
+        "relative_path": "data_nav_map_2025-04-24_14-28-41.npz",
+        "size_bytes": 2872923,
+        "sha256": "170c515ab1f266d32da13a3a2f1bacc29bf64c876eadabfbb8b24a2ffb50b136",
+        "samples_loaded": 28
+      },
+      {
+        "path": "data_nav_map_2025-04-24_14-28-51.npz",
+        "relative_path": "data_nav_map_2025-04-24_14-28-51.npz",
+        "size_bytes": 1436369,
+        "sha256": "05bd1f8a6b98307b9f85d93bc86a096158e15ebe15cf328371033739daede370",
+        "samples_loaded": 14
+      },
+      {
+        "path": "data_nav_map_2025-04-24_14-28-56.npz",
+        "relative_path": "data_nav_map_2025-04-24_14-28-56.npz",
+        "size_bytes": 513266,
+        "sha256": "bc773c8d5d924b0346747fccc83136530ee3c340148d1af138c009ca2079fea8",
+        "samples_loaded": 5
+      },
+      {
+        "path": "data_nav_map_2025-04-24_14-29-08.npz",
+        "relative_path": "data_nav_map_2025-04-24_14-29-08.npz",
+        "size_bytes": 1949424,
+        "sha256": "68378f4c6577f8beaf66cb301bb6d0c6f8bb867dfdb85519343b5da096cfdc8f",
+        "samples_loaded": 19
+      },
+      {
+        "path": "data_nav_map_2025-04-24_14-29-32.npz",
+        "relative_path": "data_nav_map_2025-04-24_14-29-32.npz",
+        "size_bytes": 1949424,
+        "sha256": "82aa3a68792274934d18dae4107799946b83da8b1da7b77e666aa4244a57efc8",
+        "samples_loaded": 19
+      },
+      {
+        "path": "data_nav_map_2025-04-24_14-29-50.npz",
+        "relative_path": "data_nav_map_2025-04-24_14-29-50.npz",
+        "size_bytes": 2872923,
+        "sha256": "d20d58811496f53402c2758dfc241fb6a7b4ddbb53d79c31fca3e2d69eefc591",
+        "samples_loaded": 28
+      },
+      {
+        "path": "data_nav_map_2025-04-24_14-30-08.npz",
+        "relative_path": "data_nav_map_2025-04-24_14-30-08.npz",
+        "size_bytes": 3078145,
+        "sha256": "90ef2b9441cd8acffce72456bdaca74dbe4e32f5eed6715d7a18d4cdb1f14347",
+        "samples_loaded": 30
+      },
+      {
+        "path": "data_nav_map_2025-04-24_14-30-22.npz",
+        "relative_path": "data_nav_map_2025-04-24_14-30-22.npz",
+        "size_bytes": 2257257,
+        "sha256": "dd111f6223026db32a1597f73b1844afde6a6099f97c5fa35031802378e198fe",
+        "samples_loaded": 22
+      },
+      {
+        "path": "data_nav_map_2025-04-24_14-30-34.npz",
+        "relative_path": "data_nav_map_2025-04-24_14-30-34.npz",
+        "size_bytes": 1846813,
+        "sha256": "052fce4a45800d8e25e49c34ac181435f528e04ed14c998051e0187729dd20b9",
+        "samples_loaded": 18
+      },
+      {
+        "path": "data_nav_map_2025-04-24_14-30-46.npz",
+        "relative_path": "data_nav_map_2025-04-24_14-30-46.npz",
+        "size_bytes": 1949424,
+        "sha256": "70d996e81ae765e7bc60782bd1e2f986dd9d7a0ee2054e55b28052aed5120d62",
+        "samples_loaded": 19
+      },
+      {
+        "path": "data_nav_map_2025-04-24_14-30-57.npz",
+        "relative_path": "data_nav_map_2025-04-24_14-30-57.npz",
+        "size_bytes": 1744202,
+        "sha256": "67f3efcda13f5f37239d5510dd15047534631ddb686787ec944d8d330ddb97ad",
+        "samples_loaded": 17
+      },
+      {
+        "path": "data_nav_map_2025-04-24_14-31-24.npz",
+        "relative_path": "data_nav_map_2025-04-24_14-31-24.npz",
+        "size_bytes": 2462479,
+        "sha256": "dc402816cf6d52c440a4fc198dde0c9b0949c8680be974454be4db6adb5268ae",
+        "samples_loaded": 24
+      },
+      {
+        "path": "data_nav_map_2025-04-24_14-31-33.npz",
+        "relative_path": "data_nav_map_2025-04-24_14-31-33.npz",
+        "size_bytes": 1231147,
+        "sha256": "02bd3a16947c2a1baa858ad39d027dc8f3bc1845019036559eb2d36ab4f86e20",
+        "samples_loaded": 12
+      },
+      {
+        "path": "data_nav_map_2025-04-24_14-31-39.npz",
+        "relative_path": "data_nav_map_2025-04-24_14-31-39.npz",
+        "size_bytes": 615817,
+        "sha256": "4f1433936670bc35cdb0d8c5df5e932d98fd2d6d0431af27550b44849783b90d",
+        "samples_loaded": 6
+      },
+      {
+        "path": "data_nav_map_2025-04-24_14-31-48.npz",
+        "relative_path": "data_nav_map_2025-04-24_14-31-48.npz",
+        "size_bytes": 1333758,
+        "sha256": "94c5e75ddf028886b712ca20a14d887fbe8eda77c3212f87cf11dbc948365b65",
+        "samples_loaded": 13
+      },
+      {
+        "path": "data_nav_map_2025-04-24_14-32-02.npz",
+        "relative_path": "data_nav_map_2025-04-24_14-32-02.npz",
+        "size_bytes": 2359868,
+        "sha256": "7242b53db2c1ebfadad44d00a9f8c76d0b6490adb41f6055baeb8d25d9b81757",
+        "samples_loaded": 23
+      },
+      {
+        "path": "data_nav_map_2025-04-24_14-32-19.npz",
+        "relative_path": "data_nav_map_2025-04-24_14-32-19.npz",
+        "size_bytes": 2872923,
+        "sha256": "35519ad905a28284cb0be5c03286641b78e6ffdd817219793ac231215776b0a6",
+        "samples_loaded": 28
+      },
+      {
+        "path": "data_nav_map_2025-04-24_14-32-34.npz",
+        "relative_path": "data_nav_map_2025-04-24_14-32-34.npz",
+        "size_bytes": 2565090,
+        "sha256": "2bbcea0cbd3be4c34781c389dfab29af8822538febc86bf65ad4235377396640",
+        "samples_loaded": 25
+      },
+      {
+        "path": "data_nav_map_2025-04-24_14-32-50.npz",
+        "relative_path": "data_nav_map_2025-04-24_14-32-50.npz",
+        "size_bytes": 2565090,
+        "sha256": "1d4b96f7d5ecfed2fe73907767ec50cdd692a3f78508b6c7d5065b10d8e40159",
+        "samples_loaded": 25
+      },
+      {
+        "path": "data_nav_map_2025-04-24_14-32-57.npz",
+        "relative_path": "data_nav_map_2025-04-24_14-32-57.npz",
+        "size_bytes": 718368,
+        "sha256": "780270409af79a9463b7b4860d64b39f0671acc1ac920ca7256018c333b4a133",
+        "samples_loaded": 7
+      },
+      {
+        "path": "data_nav_map_2025-04-24_14-33-19.npz",
+        "relative_path": "data_nav_map_2025-04-24_14-33-19.npz",
+        "size_bytes": 1436369,
+        "sha256": "794e145e0c2b2be850cd0b580194f403a497018460153e8b6e7c919a73d02be8",
+        "samples_loaded": 14
+      },
+      {
+        "path": "data_nav_map_2025-04-24_14-33-24.npz",
+        "relative_path": "data_nav_map_2025-04-24_14-33-24.npz",
+        "size_bytes": 615817,
+        "sha256": "ba45bb3fc3753ac0df4aea49e8bf2a4953b5031c6f15d20713b7c5b72ceb3573",
+        "samples_loaded": 6
+      },
+      {
+        "path": "data_nav_map_2025-04-24_14-33-31.npz",
+        "relative_path": "data_nav_map_2025-04-24_14-33-31.npz",
+        "size_bytes": 923470,
+        "sha256": "b5458673e8ed75ab8c14f95b5da111bdb4aabba5e59f2f1512235af803c5766a",
+        "samples_loaded": 9
+      },
+      {
+        "path": "data_nav_map_2025-04-24_14-34-13.npz",
+        "relative_path": "data_nav_map_2025-04-24_14-34-13.npz",
+        "size_bytes": 1026021,
+        "sha256": "bcf8c9a2b180e20e0abed9c419b7cd67f66de411e99674bdd74455d3689d47e9",
+        "samples_loaded": 10
+      },
+      {
+        "path": "data_nav_map_2025-04-24_14-34-23.npz",
+        "relative_path": "data_nav_map_2025-04-24_14-34-23.npz",
+        "size_bytes": 1538980,
+        "sha256": "dba745d504b4fb0851fbde1a0d828dc38f2971d6d3920a818cabadd1964713be",
+        "samples_loaded": 15
+      },
+      {
+        "path": "data_nav_map_2025-04-24_14-34-31.npz",
+        "relative_path": "data_nav_map_2025-04-24_14-34-31.npz",
+        "size_bytes": 1026021,
+        "sha256": "a64dcc7978f213c04ad20b3518a5cc6f15746b61a06092a6c82eba3e9e85cda6",
+        "samples_loaded": 10
+      },
+      {
+        "path": "data_nav_map_2025-04-24_14-34-40.npz",
+        "relative_path": "data_nav_map_2025-04-24_14-34-40.npz",
+        "size_bytes": 1231147,
+        "sha256": "9b1d4b6a051194dc9e15b4d6762c3e26d09f6659bc1f82054c0799c8daf46323",
+        "samples_loaded": 12
+      },
+      {
+        "path": "data_nav_map_2025-04-24_14-34-55.npz",
+        "relative_path": "data_nav_map_2025-04-24_14-34-55.npz",
+        "size_bytes": 2462479,
+        "sha256": "7b3428059120034211a418981cbe4823b36fd2b97970536aa39f0c3149a12036",
+        "samples_loaded": 24
+      },
+      {
+        "path": "data_nav_map_2025-04-24_14-35-14.npz",
+        "relative_path": "data_nav_map_2025-04-24_14-35-14.npz",
+        "size_bytes": 3283367,
+        "sha256": "0444c1b9bec93342e482ee9bbc91cd6ec2dc306653e08052a40371248ccd102d",
+        "samples_loaded": 32
+      },
+      {
+        "path": "data_nav_map_2025-04-24_14-35-31.npz",
+        "relative_path": "data_nav_map_2025-04-24_14-35-31.npz",
+        "size_bytes": 2872923,
+        "sha256": "782594778d22eaa4d180e7dff43c8800a51a9022bea8d06aded7f386c4a48e55",
+        "samples_loaded": 28
+      },
+      {
+        "path": "data_nav_map_2025-04-24_14-35-52.npz",
+        "relative_path": "data_nav_map_2025-04-24_14-35-52.npz",
+        "size_bytes": 3693811,
+        "sha256": "54544191c047abf7dc082e07697293258812872c00c34df66f737f1e259f1462",
+        "samples_loaded": 36
+      },
+      {
+        "path": "data_nav_map_2025-04-24_14-36-11.npz",
+        "relative_path": "data_nav_map_2025-04-24_14-36-11.npz",
+        "size_bytes": 3385978,
+        "sha256": "f1c7241b14f4409cf04bde10c8a35d770672686c509a148427a3f527c18de0ee",
+        "samples_loaded": 33
+      },
+      {
+        "path": "data_nav_map_2025-04-24_14-36-26.npz",
+        "relative_path": "data_nav_map_2025-04-24_14-36-26.npz",
+        "size_bytes": 2565090,
+        "sha256": "c5069d3982b5cc8a2fe1e4bd274359fc42a583e540e4ff7a6c2a2ea3a32a2b5f",
+        "samples_loaded": 25
+      },
+      {
+        "path": "data_nav_map_2025-04-24_14-36-39.npz",
+        "relative_path": "data_nav_map_2025-04-24_14-36-39.npz",
+        "size_bytes": 2154646,
+        "sha256": "64a624c4ebbffc258539c1981da30fefb7f66fe08c0872ca7e9ff3282e8fc6a7",
+        "samples_loaded": 21
+      },
+      {
+        "path": "data_nav_map_2025-04-24_14-36-51.npz",
+        "relative_path": "data_nav_map_2025-04-24_14-36-51.npz",
+        "size_bytes": 1949424,
+        "sha256": "30a65b0a5816c22e503eb63c5e63a01d8dabdb75c9643437a6e923d390e2fd85",
+        "samples_loaded": 19
+      },
+      {
+        "path": "data_nav_map_2025-04-24_14-37-01.npz",
+        "relative_path": "data_nav_map_2025-04-24_14-37-01.npz",
+        "size_bytes": 1436369,
+        "sha256": "133d1840dcf209ebb624b4bcc5fe2796b7cd0649835ca40851856f82f87e1974",
+        "samples_loaded": 14
+      },
+      {
+        "path": "data_nav_map_2025-04-24_14-37-17.npz",
+        "relative_path": "data_nav_map_2025-04-24_14-37-17.npz",
+        "size_bytes": 205613,
+        "sha256": "8f4b934a54bc45bf5e4bf0d39aac92cc889dd7fb8b747c8614557b0ea2315c72",
+        "samples_loaded": 2
+      },
+      {
+        "path": "data_nav_map_2025-04-24_14-37-27.npz",
+        "relative_path": "data_nav_map_2025-04-24_14-37-27.npz",
+        "size_bytes": 1538980,
+        "sha256": "d699ada19b81c01b3e644733b921d6072f782bb0d90bd4b45449f832374a5999",
+        "samples_loaded": 15
+      },
+      {
+        "path": "data_nav_map_2025-04-26_10-37-58.npz",
+        "relative_path": "data_nav_map_2025-04-26_10-37-58.npz",
+        "size_bytes": 718368,
+        "sha256": "3309a131a111f36bd95b2dfb40d021b764ebac213c733e045645801e67cb9522",
+        "samples_loaded": 7
+      },
+      {
+        "path": "data_nav_map_2025-04-26_10-55-07.npz",
+        "relative_path": "data_nav_map_2025-04-26_10-55-07.npz",
+        "size_bytes": 1744202,
+        "sha256": "56f87cf700a1f13016a242420ca175a9ce44a5362b33e3aeefca415950e77f1f",
+        "samples_loaded": 17
+      },
+      {
+        "path": "data_nav_map_2025-04-26_10-55-14.npz",
+        "relative_path": "data_nav_map_2025-04-26_10-55-14.npz",
+        "size_bytes": 923470,
+        "sha256": "7c7493d3367fcf90c0bb9a84a44ceb12c111e1db38f1255840131dccda08699a",
+        "samples_loaded": 9
+      },
+      {
+        "path": "data_nav_map_2025-04-26_10-55-40.npz",
+        "relative_path": "data_nav_map_2025-04-26_10-55-40.npz",
+        "size_bytes": 2770312,
+        "sha256": "9f926e28828ad1152777a86f5eb624af29f30971c510a5c06c30920d4c38f870",
+        "samples_loaded": 27
+      },
+      {
+        "path": "data_nav_map_2025-04-26_10-55-48.npz",
+        "relative_path": "data_nav_map_2025-04-26_10-55-48.npz",
+        "size_bytes": 1026021,
+        "sha256": "82d33de75132bd00cadfc381de4a81301839ce6e49965e747dc0bfd8ef822676",
+        "samples_loaded": 10
+      },
+      {
+        "path": "data_nav_map_2025-04-26_10-55-59.npz",
+        "relative_path": "data_nav_map_2025-04-26_10-55-59.npz",
+        "size_bytes": 1641591,
+        "sha256": "3e876948facac26dddf884fcc1762d32a7879bbfc49a7d3d043df8fddaea4a9a",
+        "samples_loaded": 16
+      },
+      {
+        "path": "data_nav_map_2025-04-26_10-56-07.npz",
+        "relative_path": "data_nav_map_2025-04-26_10-56-07.npz",
+        "size_bytes": 1026021,
+        "sha256": "8e8699ff279420c3642cd7ba42e990c87e6e6bd96b6161f5ff894d5cda6b6e17",
+        "samples_loaded": 10
+      },
+      {
+        "path": "data_nav_map_2025-04-26_10-56-25.npz",
+        "relative_path": "data_nav_map_2025-04-26_10-56-25.npz",
+        "size_bytes": 615817,
+        "sha256": "a1379dfdf4828a0aa77f0233abe2afe9f03f7ae5b5e17e182aa622b06e8fb5d8",
+        "samples_loaded": 6
+      },
+      {
+        "path": "data_nav_map_2025-04-26_10-56-55.npz",
+        "relative_path": "data_nav_map_2025-04-26_10-56-55.npz",
+        "size_bytes": 3180756,
+        "sha256": "d5ce0e06e4ea41d06501ceac16b4602b4cae6b7cf5ceceeab310859ca5fb280d",
+        "samples_loaded": 31
+      },
+      {
+        "path": "data_nav_map_2025-04-26_10-57-15.npz",
+        "relative_path": "data_nav_map_2025-04-26_10-57-15.npz",
+        "size_bytes": 820919,
+        "sha256": "a5dac0a9e2e8b668fd2829eb375de9821184d838f0814518cfe0f59c24aed056",
+        "samples_loaded": 8
+      },
+      {
+        "path": "data_nav_map_2025-04-26_10-57-31.npz",
+        "relative_path": "data_nav_map_2025-04-26_10-57-31.npz",
+        "size_bytes": 2667701,
+        "sha256": "b65caec3140150b3571c10b062ef05c4a59ba7ec8f8da4329fcc951cd04076be",
+        "samples_loaded": 26
+      },
+      {
+        "path": "data_nav_map_2025-04-26_10-57-42.npz",
+        "relative_path": "data_nav_map_2025-04-26_10-57-42.npz",
+        "size_bytes": 1744202,
+        "sha256": "22017f7e9deb1ea9e5a675acbc2d94dbfacb3be7d78a586fc8e107fa43564d7d",
+        "samples_loaded": 17
+      },
+      {
+        "path": "data_nav_map_2025-04-26_10-57-56.npz",
+        "relative_path": "data_nav_map_2025-04-26_10-57-56.npz",
+        "size_bytes": 2359868,
+        "sha256": "1191499297494892db6dfda99139d7595e01a9e18cf5f283897473859968aece",
+        "samples_loaded": 23
+      },
+      {
+        "path": "data_nav_map_2025-04-26_10-58-53.npz",
+        "relative_path": "data_nav_map_2025-04-26_10-58-53.npz",
+        "size_bytes": 1744202,
+        "sha256": "73292fc79f5061f17eb9f1fb1368ac9dd77b26faf5ab0108e71720d8ad71a611",
+        "samples_loaded": 17
+      },
+      {
+        "path": "data_nav_map_2025-04-26_10-59-00.npz",
+        "relative_path": "data_nav_map_2025-04-26_10-59-00.npz",
+        "size_bytes": 1026021,
+        "sha256": "7f6d845b2fbc56f81e69fc454b580f57922ae57c83279114d22fe46053b951e7",
+        "samples_loaded": 10
+      },
+      {
+        "path": "data_nav_map_2025-04-26_10-59-14.npz",
+        "relative_path": "data_nav_map_2025-04-26_10-59-14.npz",
+        "size_bytes": 1949424,
+        "sha256": "e0c951318d0cfdf01c3907fa38929be0f4a3839757786947ad3463bf68c62291",
+        "samples_loaded": 19
+      },
+      {
+        "path": "data_nav_map_2025-04-26_10-59-23.npz",
+        "relative_path": "data_nav_map_2025-04-26_10-59-23.npz",
+        "size_bytes": 1231147,
+        "sha256": "ec0186a9768098bacd0fc4707552cc677a509f630dbaf6b4966ff38ae019902d",
+        "samples_loaded": 12
+      },
+      {
+        "path": "data_nav_map_2025-04-26_11-00-25.npz",
+        "relative_path": "data_nav_map_2025-04-26_11-00-25.npz",
+        "size_bytes": 1026021,
+        "sha256": "4e5e65b46b114549a3e9049aad0778a41ace272c04b239dbfedf2565d703fa5d",
+        "samples_loaded": 10
+      },
+      {
+        "path": "data_nav_map_2025-04-26_11-00-34.npz",
+        "relative_path": "data_nav_map_2025-04-26_11-00-34.npz",
+        "size_bytes": 1128572,
+        "sha256": "10da09788f3df69538e31af65f174131e9297a8131d6573c5099fe62c49e8c05",
+        "samples_loaded": 11
+      },
+      {
+        "path": "data_nav_map_2025-04-26_11-00-39.npz",
+        "relative_path": "data_nav_map_2025-04-26_11-00-39.npz",
+        "size_bytes": 410715,
+        "sha256": "e50e2211f74dd2b7c5888d375ac72095e3d7387021a2b68efa6d4a160d622a54",
+        "samples_loaded": 4
+      },
+      {
+        "path": "data_nav_map_2025-04-26_11-00-52.npz",
+        "relative_path": "data_nav_map_2025-04-26_11-00-52.npz",
+        "size_bytes": 2154646,
+        "sha256": "c99ad88a714ad6001f6b206c8dcdaaa215beebcbff52a1393aeebe05c0cb1358",
+        "samples_loaded": 21
+      },
+      {
+        "path": "data_nav_map_2025-04-26_11-01-13.npz",
+        "relative_path": "data_nav_map_2025-04-26_11-01-13.npz",
+        "size_bytes": 3488589,
+        "sha256": "0761aa27749e707cc6d0c5739a0f2a5c4e21128411b480e7ce226b005d4babfc",
+        "samples_loaded": 34
+      },
+      {
+        "path": "data_nav_map_2025-04-26_11-01-29.npz",
+        "relative_path": "data_nav_map_2025-04-26_11-01-29.npz",
+        "size_bytes": 2667701,
+        "sha256": "5814f19a650103a5f79f022fa2a97f03e1d9ccdeace1d94abe5c79e58d942e62",
+        "samples_loaded": 26
+      },
+      {
+        "path": "data_nav_map_2025-04-26_11-01-40.npz",
+        "relative_path": "data_nav_map_2025-04-26_11-01-40.npz",
+        "size_bytes": 1641591,
+        "sha256": "23c65cf3ef030e6dda253488bc38dce7b957737fcaa552ccca02275c475152a9",
+        "samples_loaded": 16
+      },
+      {
+        "path": "data_nav_map_2025-04-26_11-01-58.npz",
+        "relative_path": "data_nav_map_2025-04-26_11-01-58.npz",
+        "size_bytes": 2872923,
+        "sha256": "2671c1614121087bb172eca5197c401ee3a5a0be4a937092c9bb035b1b275731",
+        "samples_loaded": 28
+      },
+      {
+        "path": "data_nav_map_2025-04-26_11-02-12.npz",
+        "relative_path": "data_nav_map_2025-04-26_11-02-12.npz",
+        "size_bytes": 2257257,
+        "sha256": "f235e9cae4d94b46b32cc95e51237184688ff47f380dc66f492dc90877a3816e",
+        "samples_loaded": 22
+      },
+      {
+        "path": "data_nav_map_2025-04-26_11-02-19.npz",
+        "relative_path": "data_nav_map_2025-04-26_11-02-19.npz",
+        "size_bytes": 718368,
+        "sha256": "6b99ff0227ae387f569122ca7dfecb0326e16498f1908a34eb85bd96e9ec6c94",
+        "samples_loaded": 7
+      },
+      {
+        "path": "data_nav_map_2025-04-26_11-02-47.npz",
+        "relative_path": "data_nav_map_2025-04-26_11-02-47.npz",
+        "size_bytes": 2667701,
+        "sha256": "93d7e4f83a0e612f2336bbe555e341f991354cad508040548ae09230748dee12",
+        "samples_loaded": 26
+      },
+      {
+        "path": "data_nav_map_2025-04-26_11-03-37.npz",
+        "relative_path": "data_nav_map_2025-04-26_11-03-37.npz",
+        "size_bytes": 1026021,
+        "sha256": "9567c9813bd2bd3701e95e09c980c33bb9069b500cf021af792ab16cef097e0f",
+        "samples_loaded": 10
+      },
+      {
+        "path": "data_nav_map_2025-04-26_11-03-45.npz",
+        "relative_path": "data_nav_map_2025-04-26_11-03-45.npz",
+        "size_bytes": 1026021,
+        "sha256": "37c997356677732002ebf04dc32ed16a7642faf2cd03da915f5b35e1c7174ee8",
+        "samples_loaded": 10
+      },
+      {
+        "path": "data_nav_map_2025-04-26_11-04-03.npz",
+        "relative_path": "data_nav_map_2025-04-26_11-04-03.npz",
+        "size_bytes": 3078145,
+        "sha256": "6f179e8ad0486d32db150c3fd97d94d6c88991bbb54f26fee570998891e855b4",
+        "samples_loaded": 30
+      },
+      {
+        "path": "data_nav_map_2025-04-26_11-04-22.npz",
+        "relative_path": "data_nav_map_2025-04-26_11-04-22.npz",
+        "size_bytes": 3283367,
+        "sha256": "94114a975f7cc30b63e202ef45dd6e66a1602cf5efdbe7a378f8d99be9580b2e",
+        "samples_loaded": 32
+      },
+      {
+        "path": "data_nav_map_2025-04-26_11-05-34.npz",
+        "relative_path": "data_nav_map_2025-04-26_11-05-34.npz",
+        "size_bytes": 1026021,
+        "sha256": "91c10927ae4ceaf31309ec4593b4902c620eb2c85eb0cde26a264a1a891e79f8",
+        "samples_loaded": 10
+      },
+      {
+        "path": "data_nav_map_2025-04-26_11-05-53.npz",
+        "relative_path": "data_nav_map_2025-04-26_11-05-53.npz",
+        "size_bytes": 3591200,
+        "sha256": "2517063bae29f698818323db06d3b4566f8b10b7874c0890d2d1bb1b7b019f4a",
+        "samples_loaded": 35
+      },
+      {
+        "path": "data_nav_map_2025-04-26_11-06-06.npz",
+        "relative_path": "data_nav_map_2025-04-26_11-06-06.npz",
+        "size_bytes": 2052035,
+        "sha256": "67fafefe4e5a1231a83f2d90d4c4f20ec05781de69bae39be8f995901a747353",
+        "samples_loaded": 20
+      },
+      {
+        "path": "data_nav_map_2025-04-26_11-06-23.npz",
+        "relative_path": "data_nav_map_2025-04-26_11-06-23.npz",
+        "size_bytes": 2872923,
+        "sha256": "c2562fd8ed95b4d3e0182a0718430793eb6e828d21cd1708686789c867446585",
+        "samples_loaded": 28
+      },
+      {
+        "path": "data_nav_map_2025-04-26_11-06-43.npz",
+        "relative_path": "data_nav_map_2025-04-26_11-06-43.npz",
+        "size_bytes": 3385978,
+        "sha256": "000fb9a8e32031e058523415386fd0bbf3b94f202b6183451f7aee6c2d35448e",
+        "samples_loaded": 33
+      },
+      {
+        "path": "data_nav_map_2025-04-26_11-06-54.npz",
+        "relative_path": "data_nav_map_2025-04-26_11-06-54.npz",
+        "size_bytes": 1744202,
+        "sha256": "9d6821d63dc68e15319050682df9cdc043c6dac112419fa4199f9997e965ec11",
+        "samples_loaded": 17
+      },
+      {
+        "path": "data_nav_map_2025-04-26_11-07-07.npz",
+        "relative_path": "data_nav_map_2025-04-26_11-07-07.npz",
+        "size_bytes": 2052035,
+        "sha256": "85306d984145b92a8c341c4054ef734bc97585d33993863182f0056a39e6aa9b",
+        "samples_loaded": 20
+      },
+      {
+        "path": "data_nav_map_2025-04-26_11-07-40.npz",
+        "relative_path": "data_nav_map_2025-04-26_11-07-40.npz",
+        "size_bytes": 2052035,
+        "sha256": "42885863d045a471533962a48621e581da4fc1cfd215031a520b2fb11a95ac57",
+        "samples_loaded": 20
+      },
+      {
+        "path": "data_nav_map_2025-04-26_11-08-01.npz",
+        "relative_path": "data_nav_map_2025-04-26_11-08-01.npz",
+        "size_bytes": 3385978,
+        "sha256": "4e39962b241797da75dfe63ed7b828e7ddeaf093ad2b9d612ae63defb634113a",
+        "samples_loaded": 33
+      },
+      {
+        "path": "data_nav_map_2025-04-26_11-08-20.npz",
+        "relative_path": "data_nav_map_2025-04-26_11-08-20.npz",
+        "size_bytes": 3488589,
+        "sha256": "bfeb617993bf001d4a092fdb66fbf1b3323aa2ea9654140ea247f20920bd87f9",
+        "samples_loaded": 34
+      },
+      {
+        "path": "data_nav_map_2025-04-26_11-08-30.npz",
+        "relative_path": "data_nav_map_2025-04-26_11-08-30.npz",
+        "size_bytes": 1436369,
+        "sha256": "c6e3bacdf23cc1a0a1cc434bdd3f2f9e79addd6c94d2ce6db3f0f2b085848b28",
+        "samples_loaded": 14
+      },
+      {
+        "path": "data_nav_map_2025-04-26_11-08-35.npz",
+        "relative_path": "data_nav_map_2025-04-26_11-08-35.npz",
+        "size_bytes": 513266,
+        "sha256": "7993f8e2a3a3405b69236c2bf081399c0051d346db15aca4215992bc6b4d15f8",
+        "samples_loaded": 5
+      },
+      {
+        "path": "data_nav_map_2025-04-26_11-09-06.npz",
+        "relative_path": "data_nav_map_2025-04-26_11-09-06.npz",
+        "size_bytes": 1641591,
+        "sha256": "769af51561750a44f8d3e008db16913e7554b17a4ccec06b6cc947f4f8153e1e",
+        "samples_loaded": 16
+      },
+      {
+        "path": "data_nav_map_2025-04-26_11-09-19.npz",
+        "relative_path": "data_nav_map_2025-04-26_11-09-19.npz",
+        "size_bytes": 1846813,
+        "sha256": "bfe024192ea45be3b6799e6bd857b0d0de97609e96996773087f157d217a21dc",
+        "samples_loaded": 18
+      },
+      {
+        "path": "data_nav_map_2025-04-26_11-09-35.npz",
+        "relative_path": "data_nav_map_2025-04-26_11-09-35.npz",
+        "size_bytes": 2565090,
+        "sha256": "cf9604b35ed7f003a7adc796a7bbc89c2ef31863405e9bebf65f1c2fde58478c",
+        "samples_loaded": 25
+      },
+      {
+        "path": "data_nav_map_2025-04-26_11-10-07.npz",
+        "relative_path": "data_nav_map_2025-04-26_11-10-07.npz",
+        "size_bytes": 2154646,
+        "sha256": "1d488af0f2f2ac1103eeef5534c952797065db3a219a8cbd9b118fdf8764b875",
+        "samples_loaded": 21
+      },
+      {
+        "path": "data_nav_map_2025-04-26_11-10-15.npz",
+        "relative_path": "data_nav_map_2025-04-26_11-10-15.npz",
+        "size_bytes": 1026021,
+        "sha256": "f72843fa234049d3d492d48e465f295b58cfc77479e2954ebb5f42e371c13436",
+        "samples_loaded": 10
+      },
+      {
+        "path": "data_nav_map_2025-04-26_11-11-02.npz",
+        "relative_path": "data_nav_map_2025-04-26_11-11-02.npz",
+        "size_bytes": 3796422,
+        "sha256": "6e607827433d6388d736e2a06408b2f8b78e944285bfcf2d67d2c3195f30d26a",
+        "samples_loaded": 37
+      },
+      {
+        "path": "data_nav_map_2025-04-26_11-11-06.npz",
+        "relative_path": "data_nav_map_2025-04-26_11-11-06.npz",
+        "size_bytes": 205613,
+        "sha256": "fe92bc3daf8c746236e3a6898e7b8003a1f325697e058d53b78fdf888266528d",
+        "samples_loaded": 2
+      },
+      {
+        "path": "data_nav_map_2025-04-26_11-11-24.npz",
+        "relative_path": "data_nav_map_2025-04-26_11-11-24.npz",
+        "size_bytes": 2770312,
+        "sha256": "76ece8d16df0c3d4571208ec946ad7b19978240925240ca526cc5ba3fe224f2b",
+        "samples_loaded": 27
+      },
+      {
+        "path": "data_nav_map_2025-04-26_11-11-30.npz",
+        "relative_path": "data_nav_map_2025-04-26_11-11-30.npz",
+        "size_bytes": 615817,
+        "sha256": "1ebe9b7ebc06041e47e5146fafe8aabef80986afc9b7228939431ac69dcd5d47",
+        "samples_loaded": 6
+      },
+      {
+        "path": "data_nav_map_2025-04-26_11-11-42.npz",
+        "relative_path": "data_nav_map_2025-04-26_11-11-42.npz",
+        "size_bytes": 1949424,
+        "sha256": "ca1d2e23a77fc674790815bc65a80273b73f419a3023e011a82eba4520fb16fc",
+        "samples_loaded": 19
+      },
+      {
+        "path": "data_nav_map_2025-04-26_11-11-56.npz",
+        "relative_path": "data_nav_map_2025-04-26_11-11-56.npz",
+        "size_bytes": 2257257,
+        "sha256": "ade438ac7d465dc26293e3f37f466673db3cc13b34c94c5d9fd5c09d15f04f75",
+        "samples_loaded": 22
+      },
+      {
+        "path": "data_nav_map_2025-04-26_11-12-27.npz",
+        "relative_path": "data_nav_map_2025-04-26_11-12-27.npz",
+        "size_bytes": 3180756,
+        "sha256": "00cf7a85fde9a0f45ec7b486a36f2c231cdcec80f3cbeaed693ef1ca40cc3d03",
+        "samples_loaded": 31
+      },
+      {
+        "path": "data_nav_map_2025-04-26_11-12-55.npz",
+        "relative_path": "data_nav_map_2025-04-26_11-12-55.npz",
+        "size_bytes": 4719921,
+        "sha256": "6dcea35942fb83a2c3ba640560db3306d7e3f2ee516f136db7a030f06f69aec3",
+        "samples_loaded": 46
+      },
+      {
+        "path": "data_nav_map_2025-04-26_11-13-12.npz",
+        "relative_path": "data_nav_map_2025-04-26_11-13-12.npz",
+        "size_bytes": 2872923,
+        "sha256": "8bbbbce386eef72f341995706ea2d9e8f6ae464a4c91080f40cc5b65115a2f0e",
+        "samples_loaded": 28
+      },
+      {
+        "path": "data_nav_map_2025-04-26_11-13-18.npz",
+        "relative_path": "data_nav_map_2025-04-26_11-13-18.npz",
+        "size_bytes": 718368,
+        "sha256": "1ddf18ae5a5eb9a1841a75982374bc013d1e3de10e4c9b4d6c4ecb73b6066ab7",
+        "samples_loaded": 7
+      },
+      {
+        "path": "data_nav_map_2025-04-26_11-13-33.npz",
+        "relative_path": "data_nav_map_2025-04-26_11-13-33.npz",
+        "size_bytes": 2462479,
+        "sha256": "0df565f8b31ab99813dcd6b607219034acdaee72802e2b901e86294d1db0c74f",
+        "samples_loaded": 24
+      },
+      {
+        "path": "data_nav_map_2025-04-26_11-13-47.npz",
+        "relative_path": "data_nav_map_2025-04-26_11-13-47.npz",
+        "size_bytes": 2154646,
+        "sha256": "be8845bbabae26cf92dba378754def54784ab042081c71178789e24eec99e667",
+        "samples_loaded": 21
+      },
+      {
+        "path": "data_nav_map_2025-04-26_11-14-35.npz",
+        "relative_path": "data_nav_map_2025-04-26_11-14-35.npz",
+        "size_bytes": 4104255,
+        "sha256": "c27175128445d164b4b30a37a5fee2810579ac4b6ffa0c97289c739fbdd7867e",
+        "samples_loaded": 40
+      },
+      {
+        "path": "data_nav_map_2025-04-26_11-15-26.npz",
+        "relative_path": "data_nav_map_2025-04-26_11-15-26.npz",
+        "size_bytes": 2975534,
+        "sha256": "8b991b21b5214c30c007ab3a5af9e0e98e0295077089c1a72350da837ebef733",
+        "samples_loaded": 29
+      },
+      {
+        "path": "data_nav_map_2025-04-26_11-15-56.npz",
+        "relative_path": "data_nav_map_2025-04-26_11-15-56.npz",
+        "size_bytes": 2257257,
+        "sha256": "3ef88fcea60d14b29ed58d391fc7cef2ad3581ab465ec8616b91963edeae8930",
+        "samples_loaded": 22
+      },
+      {
+        "path": "data_nav_map_2025-04-26_11-16-08.npz",
+        "relative_path": "data_nav_map_2025-04-26_11-16-08.npz",
+        "size_bytes": 1949424,
+        "sha256": "3a78d034ea1328b4348ecb6a6887ee0071aaab7cae3c3e495bbd0e0e7d15c5a2",
+        "samples_loaded": 19
+      },
+      {
+        "path": "data_nav_map_2025-04-26_12-27-38.npz",
+        "relative_path": "data_nav_map_2025-04-26_12-27-38.npz",
+        "size_bytes": 2052035,
+        "sha256": "aae63ef01223e385889eca4e84cdf35226534eaf02faf4feb446f8bc29996e49",
+        "samples_loaded": 20
+      },
+      {
+        "path": "data_nav_map_2025-04-26_12-28-18.npz",
+        "relative_path": "data_nav_map_2025-04-26_12-28-18.npz",
+        "size_bytes": 2975534,
+        "sha256": "b2042c3d062c9d368e3dd036bc9a3075d9624ecedf3d7b4e15af6e2cd814c495",
+        "samples_loaded": 29
+      },
+      {
+        "path": "data_nav_map_2025-04-26_12-28-32.npz",
+        "relative_path": "data_nav_map_2025-04-26_12-28-32.npz",
+        "size_bytes": 2359868,
+        "sha256": "eddf60ba8b8fb1513ac8d9b3198c1716d96643556f0963563997d35b8ff3a59d",
+        "samples_loaded": 23
+      },
+      {
+        "path": "data_nav_map_2025-04-26_12-28-48.npz",
+        "relative_path": "data_nav_map_2025-04-26_12-28-48.npz",
+        "size_bytes": 2770312,
+        "sha256": "d1e7f208267febb23417031e0a89b25681f807219c05b2e77a9a56fb173fee83",
+        "samples_loaded": 27
+      },
+      {
+        "path": "data_nav_map_2025-04-26_12-28-54.npz",
+        "relative_path": "data_nav_map_2025-04-26_12-28-54.npz",
+        "size_bytes": 820919,
+        "sha256": "620756fcbc3343effbd6bc8c1dfe5dabfbf8938ead690931b5bbe4bd3ff0a13c",
+        "samples_loaded": 8
+      },
+      {
+        "path": "data_nav_map_2025-04-26_12-29-16.npz",
+        "relative_path": "data_nav_map_2025-04-26_12-29-16.npz",
+        "size_bytes": 3899033,
+        "sha256": "be455bd59572b22b1265ea46864ade60496d2c8e540cb4e87560509d46e99341",
+        "samples_loaded": 38
+      },
+      {
+        "path": "data_nav_map_2025-04-26_12-29-40.npz",
+        "relative_path": "data_nav_map_2025-04-26_12-29-40.npz",
+        "size_bytes": 4206866,
+        "sha256": "9ef606966661d1c93186121499d13d86861b54b12b25de8a6a9edadca29a13a6",
+        "samples_loaded": 41
+      },
+      {
+        "path": "data_nav_map_2025-04-26_12-29-49.npz",
+        "relative_path": "data_nav_map_2025-04-26_12-29-49.npz",
+        "size_bytes": 1333758,
+        "sha256": "bdc18079f26a80a70d88b805f8145405899bbccd04ec0dec83ba6a8266c0f397",
+        "samples_loaded": 13
+      },
+      {
+        "path": "data_nav_map_2025-04-26_12-30-00.npz",
+        "relative_path": "data_nav_map_2025-04-26_12-30-00.npz",
+        "size_bytes": 1641591,
+        "sha256": "c09c8c42da35bf6fdfa7e1e9ba3d18d63be06bc010874fdd1a959623fc961d03",
+        "samples_loaded": 16
+      },
+      {
+        "path": "data_nav_map_2025-04-26_12-30-10.npz",
+        "relative_path": "data_nav_map_2025-04-26_12-30-10.npz",
+        "size_bytes": 1436369,
+        "sha256": "d6d9e672b7055b188d1599d9becdfba559681dbfd761f9c1f9559e3996e20e54",
+        "samples_loaded": 14
+      },
+      {
+        "path": "data_nav_map_2025-04-26_12-30-46.npz",
+        "relative_path": "data_nav_map_2025-04-26_12-30-46.npz",
+        "size_bytes": 4514699,
+        "sha256": "a51954e0050c10571805179e3d3d0a6c9015dc8906c0b4f42ca3365a411c58c6",
+        "samples_loaded": 44
+      },
+      {
+        "path": "data_nav_map_2025-04-26_12-30-52.npz",
+        "relative_path": "data_nav_map_2025-04-26_12-30-52.npz",
+        "size_bytes": 615817,
+        "sha256": "0845444ecee4b95ec560a277fc323dc1683cca6440a7c9a0889fd143511908c3",
+        "samples_loaded": 6
+      },
+      {
+        "path": "data_nav_map_2025-04-26_12-31-08.npz",
+        "relative_path": "data_nav_map_2025-04-26_12-31-08.npz",
+        "size_bytes": 2462479,
+        "sha256": "c50ba36fc15f4d62809bb44d387d74f3c8c9af0267afcc2f51146a9c0a80802a",
+        "samples_loaded": 24
+      },
+      {
+        "path": "data_nav_map_2025-04-26_12-31-24.npz",
+        "relative_path": "data_nav_map_2025-04-26_12-31-24.npz",
+        "size_bytes": 2872923,
+        "sha256": "9b35fd22d60bf5695c16cb6a855bf97b5e233f2e9ac98b6e5fbbc66549c9df80",
+        "samples_loaded": 28
+      },
+      {
+        "path": "data_nav_map_2025-04-26_12-31-32.npz",
+        "relative_path": "data_nav_map_2025-04-26_12-31-32.npz",
+        "size_bytes": 1231147,
+        "sha256": "ac99ffc039880c1ee338ae5d861adffd8b89d980cd110dc8d9b6a4bd3df58559",
+        "samples_loaded": 12
+      },
+      {
+        "path": "data_nav_map_2025-04-26_12-31-41.npz",
+        "relative_path": "data_nav_map_2025-04-26_12-31-41.npz",
+        "size_bytes": 1333758,
+        "sha256": "2ce92ecd90279b3d36bc2cae26242f1e776c3bbc7f4a6084cd31b22acd0dd43b",
+        "samples_loaded": 13
+      },
+      {
+        "path": "data_nav_map_2025-04-26_12-31-54.npz",
+        "relative_path": "data_nav_map_2025-04-26_12-31-54.npz",
+        "size_bytes": 2154646,
+        "sha256": "a19b769369830a5b905806d8deafce3f3942d247bb6bc739d86d56725ca37b11",
+        "samples_loaded": 21
+      },
+      {
+        "path": "data_nav_map_2025-04-26_12-32-19.npz",
+        "relative_path": "data_nav_map_2025-04-26_12-32-19.npz",
+        "size_bytes": 4514699,
+        "sha256": "d9eb4b208e9586a6f2a14af249709bf4de3bbaea53ec8cde43b6de6628d38dce",
+        "samples_loaded": 44
+      },
+      {
+        "path": "data_nav_map_2025-04-26_12-32-58.npz",
+        "relative_path": "data_nav_map_2025-04-26_12-32-58.npz",
+        "size_bytes": 308164,
+        "sha256": "ce55b5562f7c0d6b293bd87b96749ad77d4f5ebf232f758d91660a42931e3d50",
+        "samples_loaded": 3
+      },
+      {
+        "path": "data_nav_map_2025-04-26_12-33-04.npz",
+        "relative_path": "data_nav_map_2025-04-26_12-33-04.npz",
+        "size_bytes": 615817,
+        "sha256": "8c0a4869c77ec572390f3c696e3beb704fb5ee8d3b57127f25495ee7e6bbb309",
+        "samples_loaded": 6
+      },
+      {
+        "path": "data_nav_map_2025-04-26_12-33-09.npz",
+        "relative_path": "data_nav_map_2025-04-26_12-33-09.npz",
+        "size_bytes": 410715,
+        "sha256": "5c493c366bf77712854002d2707a1dcbe9a747f234d2c7576d9d4f0546e39eee",
+        "samples_loaded": 4
+      },
+      {
+        "path": "data_nav_map_2025-04-26_12-33-16.npz",
+        "relative_path": "data_nav_map_2025-04-26_12-33-16.npz",
+        "size_bytes": 923470,
+        "sha256": "5368027bfe5cfee0dc71f27e763a13da71fb907b940abea90cea5ef9f1e5f796",
+        "samples_loaded": 9
+      },
+      {
+        "path": "data_nav_map_2025-04-26_12-33-22.npz",
+        "relative_path": "data_nav_map_2025-04-26_12-33-22.npz",
+        "size_bytes": 718368,
+        "sha256": "eb888c407ca67346919b59fdfdfb25a9be915f21efdc069eebdeeb33be12696e",
+        "samples_loaded": 7
+      },
+      {
+        "path": "data_nav_map_2025-04-26_12-33-39.npz",
+        "relative_path": "data_nav_map_2025-04-26_12-33-39.npz",
+        "size_bytes": 2667701,
+        "sha256": "1f642daecc3770abbab8591fa1433781d296e04f4f555eaa0a94e0154ef790a2",
+        "samples_loaded": 26
+      },
+      {
+        "path": "data_nav_map_2025-04-26_12-34-01.npz",
+        "relative_path": "data_nav_map_2025-04-26_12-34-01.npz",
+        "size_bytes": 3385978,
+        "sha256": "43d14f12b9ad97300d88fe6103acbca66612b6be95f96721d4a995220594c7ac",
+        "samples_loaded": 33
+      },
+      {
+        "path": "data_nav_map_2025-04-26_12-34-22.npz",
+        "relative_path": "data_nav_map_2025-04-26_12-34-22.npz",
+        "size_bytes": 3488589,
+        "sha256": "6a9c958c32b89958e24abafe671ccdeacb3330f16021d8e8ecabde02c9133857",
+        "samples_loaded": 34
+      },
+      {
+        "path": "data_nav_map_2025-04-26_12-34-32.npz",
+        "relative_path": "data_nav_map_2025-04-26_12-34-32.npz",
+        "size_bytes": 1538980,
+        "sha256": "f7c5d9799cf00cadaa045f0ad11dafb40ec845c2cf409e9be0a11afcba6ed2bb",
+        "samples_loaded": 15
+      },
+      {
+        "path": "data_nav_map_2025-04-26_12-35-33.npz",
+        "relative_path": "data_nav_map_2025-04-26_12-35-33.npz",
+        "size_bytes": 3693811,
+        "sha256": "cffea27c24717cf8e8a2d94ba4ddb82f4b857b9aff5477a940bd201213a747ea",
+        "samples_loaded": 36
+      },
+      {
+        "path": "data_nav_map_2025-04-26_12-35-43.npz",
+        "relative_path": "data_nav_map_2025-04-26_12-35-43.npz",
+        "size_bytes": 1538980,
+        "sha256": "314038575729994d823ead9b96f2ad6be2b5d50fff24b954059abbb6d9824e9f",
+        "samples_loaded": 15
+      },
+      {
+        "path": "data_nav_map_2025-04-26_12-36-08.npz",
+        "relative_path": "data_nav_map_2025-04-26_12-36-08.npz",
+        "size_bytes": 4617310,
+        "sha256": "d8596e918d2a927e73d27184deeb75e95286443997c18e4fc3d4f2cf9d3818c0",
+        "samples_loaded": 45
+      },
+      {
+        "path": "data_nav_map_2025-04-26_12-37-07.npz",
+        "relative_path": "data_nav_map_2025-04-26_12-37-07.npz",
+        "size_bytes": 1026021,
+        "sha256": "125b3c90d5d783675f84a98e6ef19da79898aa41faa8cdcec426d05d45e8d55c",
+        "samples_loaded": 10
+      },
+      {
+        "path": "data_nav_map_2025-04-26_12-37-19.npz",
+        "relative_path": "data_nav_map_2025-04-26_12-37-19.npz",
+        "size_bytes": 1949424,
+        "sha256": "1ef25c345fa364e0ad93f9f2ac0a9941422b994469eecc5b6d3f2bd64aefdb14",
+        "samples_loaded": 19
+      },
+      {
+        "path": "data_nav_map_2025-04-26_12-37-36.npz",
+        "relative_path": "data_nav_map_2025-04-26_12-37-36.npz",
+        "size_bytes": 2667701,
+        "sha256": "83f99ae022459a54d5aa44600466599e20ff4f93a93476117be28481c119afa9",
+        "samples_loaded": 26
+      },
+      {
+        "path": "data_nav_map_2025-04-26_12-38-36.npz",
+        "relative_path": "data_nav_map_2025-04-26_12-38-36.npz",
+        "size_bytes": 5643420,
+        "sha256": "c0d3c8c10b22cfe6b615090a732a30b6a47fd2c6d60b8d74a8d4ad491119d509",
+        "samples_loaded": 55
+      },
+      {
+        "path": "data_nav_map_2025-04-26_12-38-55.npz",
+        "relative_path": "data_nav_map_2025-04-26_12-38-55.npz",
+        "size_bytes": 820919,
+        "sha256": "2ef2442d9630eb697caf3f3d549339b98bea77f12c8417283bcde15e7918b6b1",
+        "samples_loaded": 8
+      },
+      {
+        "path": "data_nav_map_2025-04-26_12-39-14.npz",
+        "relative_path": "data_nav_map_2025-04-26_12-39-14.npz",
+        "size_bytes": 3693811,
+        "sha256": "9d8f23d7c2d5c52963101d51184b7260b439659781b432b72a441090414a9285",
+        "samples_loaded": 36
+      },
+      {
+        "path": "data_nav_map_2025-04-26_12-39-34.npz",
+        "relative_path": "data_nav_map_2025-04-26_12-39-34.npz",
+        "size_bytes": 3488589,
+        "sha256": "6feeb2e926a9cc9db310ec9b2b3ce9008459356f5ac4d1d36e5f5bcacf8ece19",
+        "samples_loaded": 34
+      },
+      {
+        "path": "data_nav_map_2025-04-26_12-40-05.npz",
+        "relative_path": "data_nav_map_2025-04-26_12-40-05.npz",
+        "size_bytes": 5643420,
+        "sha256": "7f81285fdf37b3a281a8fe05a16b79a03bdf92c895fe4ff3d87b560b5e0e6528",
+        "samples_loaded": 55
+      },
+      {
+        "path": "data_nav_map_2025-04-26_12-40-19.npz",
+        "relative_path": "data_nav_map_2025-04-26_12-40-19.npz",
+        "size_bytes": 2667701,
+        "sha256": "7d4725b8d18459de04163c443e80885c3d6959f6c237f2d0b7d212f8a6821ffa",
+        "samples_loaded": 26
+      },
+      {
+        "path": "data_nav_map_2025-04-26_12-40-50.npz",
+        "relative_path": "data_nav_map_2025-04-26_12-40-50.npz",
+        "size_bytes": 3078145,
+        "sha256": "b69cbbc2c907b44c0889a33511cd8fb0403a8ff5cafe687721ecaf5d560f758c",
+        "samples_loaded": 30
+      },
+      {
+        "path": "data_nav_map_2025-04-26_12-41-31.npz",
+        "relative_path": "data_nav_map_2025-04-26_12-41-31.npz",
+        "size_bytes": 2872923,
+        "sha256": "caf76d4dd0144d122999cac03329b9363939ffe4a934b8b06fb355ae2fac846a",
+        "samples_loaded": 28
+      },
+      {
+        "path": "data_nav_map_2025-04-26_12-41-45.npz",
+        "relative_path": "data_nav_map_2025-04-26_12-41-45.npz",
+        "size_bytes": 262,
+        "sha256": "d9db3cce021a9b15b55029fc771cb3aacd75fe3b83194ea9aec48875ca5783c2",
+        "samples_loaded": 0
+      },
+      {
+        "path": "data_nav_map_2025-04-26_12-42-23.npz",
+        "relative_path": "data_nav_map_2025-04-26_12-42-23.npz",
+        "size_bytes": 2052035,
+        "sha256": "b45cfc30b195986aff516a60ae01e0984b51ef09c0243c4c46df9b958d7cdd17",
+        "samples_loaded": 20
+      },
+      {
+        "path": "data_nav_map_2025-04-26_12-42-41.npz",
+        "relative_path": "data_nav_map_2025-04-26_12-42-41.npz",
+        "size_bytes": 3078145,
+        "sha256": "c9cb9cee32eeacfbeffe613a3ce7029f757e5b24efe2f76227ab10e996323f5b",
+        "samples_loaded": 30
+      },
+      {
+        "path": "data_nav_map_2025-04-26_12-43-04.npz",
+        "relative_path": "data_nav_map_2025-04-26_12-43-04.npz",
+        "size_bytes": 3488589,
+        "sha256": "16b62a0ba4dd9d17c35adf0be69aff6418b67aec72a468cf2ea84af1e64df212",
+        "samples_loaded": 34
+      },
+      {
+        "path": "data_nav_map_2025-04-26_12-43-38.npz",
+        "relative_path": "data_nav_map_2025-04-26_12-43-38.npz",
+        "size_bytes": 2052035,
+        "sha256": "6a97ac6be7b07b831d535169a38562c2f525ba8f701e8fb33b4e1845ddbf2a36",
+        "samples_loaded": 20
+      },
+      {
+        "path": "data_nav_map_2025-04-26_12-43-46.npz",
+        "relative_path": "data_nav_map_2025-04-26_12-43-46.npz",
+        "size_bytes": 1949424,
+        "sha256": "1ba97ee29d31b9dc3eb7975f258ef0c2338e589ad7e88a946be163acf7dce532",
+        "samples_loaded": 19
+      },
+      {
+        "path": "data_nav_map_2025-04-26_12-45-36.npz",
+        "relative_path": "data_nav_map_2025-04-26_12-45-36.npz",
+        "size_bytes": 2975534,
+        "sha256": "f356491b3a6123052da59a7b4e77ab6767b691fde7ccc7ba188ced6a4bad6154",
+        "samples_loaded": 29
+      },
+      {
+        "path": "data_nav_map_2025-04-26_12-45-47.npz",
+        "relative_path": "data_nav_map_2025-04-26_12-45-47.npz",
+        "size_bytes": 2359868,
+        "sha256": "daa1866a6d8d85de4dd1230af2e3f61edcddbe8184a90e037945e5f3c00eb15f",
+        "samples_loaded": 23
+      },
+      {
+        "path": "data_nav_map_2025-04-26_12-46-53.npz",
+        "relative_path": "data_nav_map_2025-04-26_12-46-53.npz",
+        "size_bytes": 3385978,
+        "sha256": "95f8bc22fb4eb9ff0aa28123fb975d681c55de8902360511cecf96d5c1212327",
+        "samples_loaded": 33
+      },
+      {
+        "path": "data_nav_map_2025-04-26_12-47-15.npz",
+        "relative_path": "data_nav_map_2025-04-26_12-47-15.npz",
+        "size_bytes": 5335587,
+        "sha256": "0b18b1d1310e490b32b3f0d38224ca857cf1aceebb9c9ac6e9bbcdc472d8441d",
+        "samples_loaded": 52
+      },
+      {
+        "path": "data_nav_map_2025-04-26_12-47-51.npz",
+        "relative_path": "data_nav_map_2025-04-26_12-47-51.npz",
+        "size_bytes": 8311306,
+        "sha256": "b124fdb54f774b64de209407bc3f3dc52338cbeaf70da0b7d406f1a4da75e00f",
+        "samples_loaded": 81
+      }
+    ],
+    "split": "random sample-level split after non-overlapping frame stacking (legacy semantics)"
+  }
+}
