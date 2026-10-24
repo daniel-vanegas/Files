@@ -137,6 +137,11 @@ Unlike the CNN, the RNN model operates with $N = 80$ and $C = 2$, producing an i
 \includegraphics[width=0.3\columnwidth]{images/RNN_cell.pdf}
 \caption{An RNN cell implemented in our recurrent block.}\label{fig:RNN_cell}
 \end{figure}
+% TODO: evaluar explicación
+%\caption{\textcolor{red}{An RNN cell implemented in our recurrent
+%block. The input $x$ is the concatenated feature and target vector
+%in the first recurrent layer, or the preceding layer's output
+%in subsequent layers. The variable $h$ denotes the hidden state.}}
 
 \begin{figure}[htbp]
 \centering
@@ -218,7 +223,9 @@ $\mathbf{tgt}^{(i,c)} = (d^{(i,c)}, \theta^{(i,c)}) \in \mathbb{R}^{2}$: sequenc
 $\mathbf{v}^{(i,c)} = (v_x^{(i,c)}, v_y^{(i,c)}, \omega^{(i,c)}) \in \mathbb{R}^{3}$: sequence of $C$ command vectors for sample $i$, where $v_x$ and $v_y$ are the linear velocities along the robot's $x$ and $y$ axes, respectively, and $\omega$ is the angular velocity around the robot's vertical axis.\\
 $N$: LOM pixel size.
 
-We tested multiple hyperparameter combinations and selected those that stabilized training and produced consistent results. For our CNN, we selected a batch size of 8, meaning that each training batch consists of 8 samples, with each sample corresponding to a 4-channel ($C = 4$) LOM array of consecutive frames. For the RNN model, we use a batch size of 3, with each sample corresponding to a 2-channel ($C= 2$) LOM array. The LOM is a binary N$\times$N pixel matrix encoding a squared area in front of the robot. A 4 m$^2$ area works well in different scenarios. Using a larger area may reduce training stability, while a smaller area reduces the capability to detect obstacles and thus increases the collision risk. The size of N in pixels is 80 and is defined by the resolution of the local occupancy projection calculated as follows: $N = m \times Res$.
+We tested multiple hyperparameter combinations and selected those that stabilized training and produced consistent results. For our CNN, we selected a batch size of 8, meaning that each training batch consists of 8 samples, with each sample corresponding to a 4-channel ($C = 4$) LOM array of consecutive frames. For the RNN model, we use a batch size of 3, with each sample corresponding to a 2-channel ($C= 2$) LOM array. The LOM is a binary N$\times$N pixel matrix encoding a squared area in front of the robot. \textcolor{red}{A $4\times4$ m region works well in different scenarios.} Using a larger area may reduce training stability, while a smaller area reduces the capability to detect obstacles and thus increases the collision risk. The size of N in pixels is 80 and is defined by the resolution of the local occupancy projection calculated as follows: \textcolor{red}{$N=m\,\mathrm{Res}$, where $m$ is the side length in meters and
+$\mathrm{Res}$ is the resolution expressed in cells per meter.
+With $m=4$ m and $\mathrm{Res}=20$ cells/m, $N=80$.}
 
 The underlying control loop of the PNS, which includes the potential fields for obstacle avoidance, operates at 30 Hz. While the robot navigates to each new target, the input signals (LOM and target vector, described in Subsection~\ref{subsec:inputs}) and their corresponding labels $\mathbf{v} = (v_x, v_y, \omega)$ are recorded at 5 Hz. This sampling rate ensures that consecutive samples are sufficiently different, preventing redundant samples that would add little information to the learning process. It also captures the net effect of the potential fields rather than momentary fluctuations, ensuring the dataset reflects meaningful navigation behavior instead of high‑frequency noise. The data are stored in a Python dictionary as an .npz file while at least one component of data\_Y exceeds 0.1; otherwise, the sample is discarded (i.e., when the robot remains stationary).
 

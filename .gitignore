@@ -36,3 +36,34 @@ log/
 # VSCode
 .vscode/
 **/.vscode/
+
+# JetBrains (PyCharm, etc.)
+.idea/
+**/.idea/
+
+# ==============================
+# OS / Misc
+# ==============================
+# macOS
+.DS_Store
+
+# Linux / temp files
+*~
+*.swp
+*.swo
+
+# ==============================
+# Submodules
+# ==============================
+# Keep submodule commits tracked, ignore their build/ or generated content
+**/build/
+**/install/
+**/log/
+**/__pycache__/
+**/__pycache__
+
+# ==============================
+# Dataset (data + logs)
+# ==============================
+src/Navigation/mapless_navigation/dataset/data/
+src/Navigation/mapless_navigation/mapless_nav/scripts/TorchModels/Ros1Data/
