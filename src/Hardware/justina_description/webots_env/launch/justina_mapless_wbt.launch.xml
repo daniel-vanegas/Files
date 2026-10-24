@@ -14,8 +14,15 @@
   <arg name="initial_pose_yaw" default="0.0" description="Initial yaw angle (radians)"/>
 
   <!-- Model & Output Tuning Arguments -->
-  <arg name="model_filename" default="RNN.pth"/>
-  <arg name="enable_denormalization" default="true"/>
+  <!-- Unified model loader supports both legacy ROS 1 and native ROS 2 checkpoints. -->
+  <arg name="checkpoint" default="RNN.pth"/>
+  <arg name="model_filename" default=""/>
+  <arg name="enable_motion" default="true"/>
+  <arg name="turn_help" default="true"/>
+  <arg name="sequence_length" default="0"/>
+  <arg name="max_vx" default="0.08"/>
+  <arg name="max_vy" default="0.05"/>
+  <arg name="max_wz" default="0.20"/>
   <arg name="gain_linx" default="1.0"/>
   <arg name="gain_liny" default="1.0"/>
   <arg name="gain_angz" default="1.0"/>
@@ -103,18 +110,21 @@
     <param name="use_cloud" value="true"/>
   </node>
 
-  <!-- ========== RNN Controller ========== -->
+  <!-- ========== Unified RNN Controller (ROS 1/ROS 2 checkpoint auto-detection) ========== -->
   <node pkg="mapless_nav" exec="RNN_mapless.py" name="rnn_controller" output="screen">
-    <param name="use_sim_time" value="true" />
-    <param name="robot_name" value="justina" />
-    <param name="turn_help" value="true" />
+    <param name="use_sim_time" value="true"/>
+    <param name="checkpoint" value="$(var checkpoint)"/>
     <param name="model_filename" value="$(var model_filename)"/>
-
-    <!-- Output Refinement & Denormalization Parameters -->
-    <param name="enable_denormalization" value="$(var enable_denormalization)"/>
+    <param name="enable_motion" value="$(var enable_motion)"/>
+    <param name="turn_help" value="$(var turn_help)"/>
+    <param name="sequence_length" value="$(var sequence_length)"/>
+    <param name="max_vx" value="$(var max_vx)"/>
+    <param name="max_vy" value="$(var max_vy)"/>
+    <param name="max_wz" value="$(var max_wz)"/>
     <param name="gain_linx" value="$(var gain_linx)"/>
     <param name="gain_liny" value="$(var gain_liny)"/>
     <param name="gain_angz" value="$(var gain_angz)"/>
+    <param name="cmd_vel_topic" value="/hardware/base/cmd_vel"/>
   </node>
 
   <node pkg="mapless_nav" exec="get_goal_point" name="get_goal_point" output="screen">

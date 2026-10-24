@@ -1,0 +1,201 @@
+\relax 
+\providecommand*\new@tpo@label[2]{}
+\providecommand\hyper@newdestlabel[2]{}
+\providecommand\HyField@AuxAddToFields[1]{}
+\providecommand\HyField@AuxAddToCoFields[2]{}
+\bibstyle{Definitions/mdpi}
+\citation{placed2023surveyactivesimultaneouslocalization,10.11648/j.frontiers.20240403.13,Valencia2018,gao2017path,7784311}
+\citation{duberg2024dufomapefficientdynamicawareness,10.1109/TRO.2016.2624754}
+\citation{Navigation_2D_LIDAR,Acomp_study_robot_nav}
+\citation{ir.2024.17,10.1109/TRO.2016.2624754}
+\newmarginnote{note.1.1}{{1}{10945661sp}}
+\@writefile{toc}{\contentsline {section}{\numberline {1}Introduction}{1}{section.1}\protected@file@percent }
+\citation{pmlr-v229-liang23a}
+\citation{Mapless-Survey}
+\citation{wang-2024}
+\citation{SnapNav}
+\citation{CrowdMove,Target-driven,Automatic-Curr-L}
+\citation{10.1007/978-3-031-63596-0_22}
+\citation{Machkour2023}
+\citation{Lu2025}
+\citation{LI2021368}
+\@writefile{toc}{\contentsline {section}{\numberline {2}Related Work}{2}{section.2}\protected@file@percent }
+\newlabel{sec:rel_work}{{2}{2}{Related Work}{section.2}{}}
+\newlabel{sec:rel_work@cref}{{[section][2][]2}{[1][2][]2}}
+\citation{10776999}
+\citation{s24175667}
+\citation{gao2025hierarchicalreinforcementlearningsafe}
+\citation{zhao2024imaginenavpromptingvisionlanguagemodels}
+\citation{9811537,Costa-de-Jesus2025}
+\@writefile{toc}{\contentsline {section}{\numberline {3}Navigation System}{3}{section.3}\protected@file@percent }
+\newlabel{sec:OurSystem}{{3}{3}{Navigation System}{section.3}{}}
+\newlabel{sec:OurSystem@cref}{{[section][3][]3}{[1][3][]3}}
+\citation{krizhevsky2012imagenet}
+\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces Local environment signals: Local Obstacle Perception Matrix (bottom left) and relative position vector of the target (bottom right).}}{4}{figure.caption.1}\protected@file@percent }
+\providecommand*\caption@xref[2]{\@setref\relax\@undefined{#1}}
+\newlabel{fig:input_signal}{{1}{4}{Local environment signals: Local Obstacle Perception Matrix (bottom left) and relative position vector of the target (bottom right)}{figure.caption.1}{}}
+\newlabel{fig:input_signal@cref}{{[figure][1][]1}{[1][3][]4}}
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces General navigation behavior system scheme.}}{4}{figure.caption.2}\protected@file@percent }
+\newlabel{fig:gen_sch}{{2}{4}{General navigation behavior system scheme}{figure.caption.2}{}}
+\newlabel{fig:gen_sch@cref}{{[figure][2][]2}{[1][4][]4}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.1}The Binary Local Obstacle Matrix (LOM)}{4}{subsection.3.1}\protected@file@percent }
+\newlabel{subsec:inputs}{{3.1}{4}{The Binary Local Obstacle Matrix (LOM)}{subsection.3.1}{}}
+\newlabel{subsec:inputs@cref}{{[subsection][1][3]3.1}{[1][4][]4}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.2}Proposed CNN Architecture}{4}{subsection.3.2}\protected@file@percent }
+\newlabel{subsec:cnn_arq}{{3.2}{4}{Proposed CNN Architecture}{subsection.3.2}{}}
+\newlabel{subsec:cnn_arq@cref}{{[subsection][2][3]3.2}{[1][4][]4}}
+\citation{brenner2023rgbdt}
+\citation{elman1990finding}
+\citation{Danilorecurrent2001}
+\newlabel{eq:repeated_target}{{1}{5}{Proposed CNN Architecture}{equation.3.1}{}}
+\newlabel{eq:repeated_target@cref}{{[equation][1][]1}{[1][5][]5}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.3}Proposed RNN Architecture}{5}{subsection.3.3}\protected@file@percent }
+\newlabel{subsec:rnn_arq}{{3.3}{5}{Proposed RNN Architecture}{subsection.3.3}{}}
+\newlabel{subsec:rnn_arq@cref}{{[subsection][3][3]3.3}{[1][5][]5}}
+\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces CNN architecture with $C$ sequential frames and targets; target vector is replicated $N$ times and concatenated with extracted features.}}{6}{figure.caption.3}\protected@file@percent }
+\newlabel{fig:CNN_arch}{{3}{6}{CNN architecture with $C$ sequential frames and targets; target vector is replicated $N$ times and concatenated with extracted features}{figure.caption.3}{}}
+\newlabel{fig:CNN_arch@cref}{{[figure][3][]3}{[1][5][]6}}
+\@writefile{toc}{\contentsline {section}{\numberline {4}Training of Neural Network Architectures}{6}{section.4}\protected@file@percent }
+\newlabel{sec:training}{{4}{6}{Training of Neural Network Architectures}{section.4}{}}
+\newlabel{sec:training@cref}{{[section][4][]4}{[1][6][]6}}
+\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces An RNN cell implemented in our recurrent block.}}{7}{figure.caption.4}\protected@file@percent }
+\newlabel{fig:RNN_cell}{{4}{7}{An RNN cell implemented in our recurrent block}{figure.caption.4}{}}
+\newlabel{fig:RNN_cell@cref}{{[figure][4][]4}{[1][6][]7}}
+\@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces RNN architecture. The recurrent block receives $C$ input vectors, each obtained by concatenating a feature vector with its corresponding repeated target vector $(d, \theta )$.}}{7}{figure.caption.5}\protected@file@percent }
+\newlabel{fig:RNN_arch}{{5}{7}{RNN architecture. The recurrent block receives $C$ input vectors, each obtained by concatenating a feature vector with its corresponding repeated target vector $(d, \theta )$}{figure.caption.5}{}}
+\newlabel{fig:RNN_arch@cref}{{[figure][5][]5}{[1][6][]7}}
+\citation{contreras2025b}
+\@writefile{lot}{\contentsline {table}{\numberline {1}{\ignorespaces Hyperparameters for CNN and RNN training.}}{8}{table.caption.6}\protected@file@percent }
+\newlabel{tab:hyperparams}{{1}{8}{Hyperparameters for CNN and RNN training}{table.caption.6}{}}
+\newlabel{tab:hyperparams@cref}{{[table][1][]1}{[1][8][]8}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.1}The Pumas Navigation System (PNS)}{8}{subsection.4.1}\protected@file@percent }
+\newlabel{subsec:pumas_nav}{{4.1}{8}{The Pumas Navigation System (PNS)}{subsection.4.1}{}}
+\newlabel{subsec:pumas_nav@cref}{{[subsection][1][4]4.1}{[1][8][]8}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.2}Random Map Generator}{8}{subsection.4.2}\protected@file@percent }
+\newlabel{subsec:random_map}{{4.2}{8}{Random Map Generator}{subsection.4.2}{}}
+\newlabel{subsec:random_map@cref}{{[subsection][2][4]4.2}{[1][8][]8}}
+\citation{DBLP:journals/corr/abs-2101-10382}
+\@writefile{lof}{\contentsline {figure}{\numberline {6}{\ignorespaces Randomly generated environments.}}{9}{figure.caption.7}\protected@file@percent }
+\newlabel{fig:maps}{{6}{9}{Randomly generated environments}{figure.caption.7}{}}
+\newlabel{fig:maps@cref}{{[figure][6][]6}{[1][9][]9}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.3}Dataset Collection}{9}{subsection.4.3}\protected@file@percent }
+\newlabel{subsec:Dataset}{{4.3}{9}{Dataset Collection}{subsection.4.3}{}}
+\newlabel{subsec:Dataset@cref}{{[subsection][3][4]4.3}{[1][9][]9}}
+\newlabel{train_labels}{{2}{10}{Dataset Collection}{equation.4.2}{}}
+\newlabel{train_labels@cref}{{[equation][2][]2}{[1][10][]10}}
+\@writefile{toc}{\contentsline {section}{\numberline {5}Environment Similarity Metric}{10}{section.5}\protected@file@percent }
+\newlabel{sec:metric_definition}{{5}{10}{Environment Similarity Metric}{section.5}{}}
+\newlabel{sec:metric_definition@cref}{{[section][5][]5}{[1][10][]10}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.1}Definition of the Metric}{10}{subsection.5.1}\protected@file@percent }
+\newlabel{subsec:metric_def}{{5.1}{10}{Definition of the Metric}{subsection.5.1}{}}
+\newlabel{subsec:metric_def@cref}{{[subsection][1][5]5.1}{[1][10][]10}}
+\@writefile{lof}{\contentsline {figure}{\numberline {7}{\ignorespaces Automated data collection process using the PNS.}}{11}{figure.caption.8}\protected@file@percent }
+\newlabel{fig:data_collect}{{7}{11}{Automated data collection process using the PNS}{figure.caption.8}{}}
+\newlabel{fig:data_collect@cref}{{[figure][7][]7}{[1][10][]11}}
+\newlabel{eq:sinkhorn}{{4}{11}{Definition of the Metric}{equation.5.4}{}}
+\newlabel{eq:sinkhorn@cref}{{[equation][4][]4}{[1][11][]11}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.2}Validation of the Metric}{12}{subsection.5.2}\protected@file@percent }
+\newlabel{sec:metric_validation}{{5.2}{12}{Validation of the Metric}{subsection.5.2}{}}
+\newlabel{sec:metric_validation@cref}{{[subsection][2][5]5.2}{[1][12][]12}}
+\@writefile{lot}{\contentsline {table}{\numberline {2}{\ignorespaces Statistical summary of the 435 pairwise Wasserstein distances across 30 environments. \(N\) denotes the sampling density (points per environment).}}{12}{table.caption.9}\protected@file@percent }
+\newlabel{tab:metric_validation_stats}{{2}{12}{Statistical summary of the 435 pairwise Wasserstein distances across 30 environments. \(N\) denotes the sampling density (points per environment)}{table.caption.9}{}}
+\newlabel{tab:metric_validation_stats@cref}{{[table][2][]2}{[1][12][]12}}
+\newlabel{tab:most_distinct}{{5.2}{12}{Validation of the Metric}{table.caption.11}{}}
+\newlabel{tab:most_distinct@cref}{{[subsection][2][5]5.2}{[1][12][]12}}
+\newlabel{tab:most_similar}{{5.2}{12}{Validation of the Metric}{table.caption.12}{}}
+\newlabel{tab:most_similar@cref}{{[subsection][2][5]5.2}{[1][12][]12}}
+\@writefile{lot}{\contentsline {table}{\numberline {3}{\ignorespaces Controlled scale validation. E05 and E07 share identical visual layouts but differ in physical scale. Distances are reported as mean \(\pm \) standard deviation. \(N\) denotes the sampling density.}}{13}{table.caption.10}\protected@file@percent }
+\newlabel{tab:scale_control}{{3}{13}{Controlled scale validation. E05 and E07 share identical visual layouts but differ in physical scale. Distances are reported as mean \(\pm \) standard deviation. \(N\) denotes the sampling density}{table.caption.10}{}}
+\newlabel{tab:scale_control@cref}{{[table][3][]3}{[1][12][]13}}
+\@writefile{lot}{\contentsline {table}{\numberline {4}{\ignorespaces Top-10 most structurally distinct environment pairs.}}{13}{table.caption.11}\protected@file@percent }
+\newlabel{tab:most_distinct}{{4}{13}{Top-10 most structurally distinct environment pairs}{table.caption.11}{}}
+\newlabel{tab:most_distinct@cref}{{[table][4][]4}{[1][12][]13}}
+\@writefile{lot}{\contentsline {table}{\numberline {5}{\ignorespaces Top-10 most structurally similar environment pairs.}}{13}{table.caption.12}\protected@file@percent }
+\newlabel{tab:most_similar}{{5}{13}{Top-10 most structurally similar environment pairs}{table.caption.12}{}}
+\newlabel{tab:most_similar@cref}{{[table][5][]5}{[1][12][]13}}
+\@writefile{toc}{\contentsline {section}{\numberline {6}Experimental Setup}{14}{section.6}\protected@file@percent }
+\newlabel{sec:Experiments}{{6}{14}{Experimental Setup}{section.6}{}}
+\newlabel{sec:Experiments@cref}{{[section][6][]6}{[1][14][]14}}
+\@writefile{lot}{\contentsline {table}{\numberline {6}{\ignorespaces Usage of environments for training (or configuring/tuning) and testing. An \texttt  {x} indicates that the environment was used for that purpose. For the neural network models (CNN and RNN), environments E1–E3 are \textit  {known} (used for training), while E4–E6 are \textit  {unknown} (not seen during training).}}{14}{table.caption.13}\protected@file@percent }
+\newlabel{tab:map_tasks}{{6}{14}{Usage of environments for training (or configuring/tuning) and testing. An \texttt {x} indicates that the environment was used for that purpose. For the neural network models (CNN and RNN), environments E1–E3 are \textit {known} (used for training), while E4–E6 are \textit {unknown} (not seen during training)}{table.caption.13}{}}
+\newlabel{tab:map_tasks@cref}{{[table][6][]6}{[1][14][]14}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.1}Test of the Pumas Navigation System (PNS) in Known and Unknown Environments}{14}{subsection.6.1}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {7}{\ignorespaces PNS tested in known (E1) and unknown (E4) environments.}}{14}{table.caption.14}\protected@file@percent }
+\newlabel{tab:nav_system}{{7}{14}{PNS tested in known (E1) and unknown (E4) environments}{table.caption.14}{}}
+\newlabel{tab:nav_system@cref}{{[table][7][]7}{[1][14][]14}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.2}Mapless Navigation Techniques Comparison}{14}{subsection.6.2}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {8}{\ignorespaces General navigation scheme describing the behavior of FSM and PF approaches.}}{15}{figure.caption.15}\protected@file@percent }
+\newlabel{fig:fsm-pf_sch}{{8}{15}{General navigation scheme describing the behavior of FSM and PF approaches}{figure.caption.15}{}}
+\newlabel{fig:fsm-pf_sch@cref}{{[figure][8][]8}{[1][15][]15}}
+\@writefile{lof}{\contentsline {figure}{\numberline {9}{\ignorespaces Perception zones used by the FSM for obstacle detection: left (L), front (F), and right (R). The red-marked areas indicate the regions evaluated to determine free space and select evasion directions.}}{15}{figure.caption.16}\protected@file@percent }
+\newlabel{fig:fsm_obstacle}{{9}{15}{Perception zones used by the FSM for obstacle detection: left (L), front (F), and right (R). The red-marked areas indicate the regions evaluated to determine free space and select evasion directions}{figure.caption.16}{}}
+\newlabel{fig:fsm_obstacle@cref}{{[figure][9][]9}{[1][15][]15}}
+\@writefile{loa}{\contentsline {algorithm}{\numberline {1}{\ignorespaces Pseudocode for the Finite State Machine (FSM) Baseline}}{16}{algorithm.1}\protected@file@percent }
+\newlabel{alg:fsm_reactive}{{1}{16}{Pseudocode for the Finite State Machine (FSM) Baseline}{algorithm.1}{}}
+\newlabel{alg:fsm_reactive@cref}{{[algorithm][1][]1}{[1][15][]16}}
+\@writefile{loa}{\contentsline {algorithm}{\numberline {2}{\ignorespaces Pseudocode for the Potential Fields (PF) Baseline}}{17}{algorithm.2}\protected@file@percent }
+\newlabel{alg:pf_reactive}{{2}{17}{Pseudocode for the Potential Fields (PF) Baseline}{algorithm.2}{}}
+\newlabel{alg:pf_reactive@cref}{{[algorithm][2][]2}{[1][17][]17}}
+\@writefile{lof}{\contentsline {figure}{\numberline {10}{\ignorespaces Successful target reach percentage (Left) and average time to reach a goal (Right). Environments with previous knowledge (training, parameters adjustment): FSM (E4), PF (E2), CNN and RNN (E1, E2, E3).}}{18}{figure.caption.17}\protected@file@percent }
+\newlabel{fig:res1_tg-time}{{10}{18}{Successful target reach percentage (Left) and average time to reach a goal (Right). Environments with previous knowledge (training, parameters adjustment): FSM (E4), PF (E2), CNN and RNN (E1, E2, E3)}{figure.caption.17}{}}
+\newlabel{fig:res1_tg-time@cref}{{[figure][10][]10}{[1][18][]18}}
+\@writefile{toc}{\contentsline {section}{\numberline {7}Results}{18}{section.7}\protected@file@percent }
+\newlabel{sec:Results}{{7}{18}{Results}{section.7}{}}
+\newlabel{sec:Results@cref}{{[section][7][]7}{[1][18][]18}}
+\@writefile{lof}{\contentsline {figure}{\numberline {11}{\ignorespaces Collisions occurrences (Left) and failures (Right), considering not arriving on time or getting stuck by collision.}}{19}{figure.caption.18}\protected@file@percent }
+\newlabel{fig:res2_col-stuck}{{11}{19}{Collisions occurrences (Left) and failures (Right), considering not arriving on time or getting stuck by collision}{figure.caption.18}{}}
+\newlabel{fig:res2_col-stuck@cref}{{[figure][11][]11}{[1][18][]19}}
+\@writefile{lof}{\contentsline {figure}{\numberline {12}{\ignorespaces State machine (FSM) heat map behavior. Parameter Selection E4.}}{20}{figure.caption.19}\protected@file@percent }
+\newlabel{fig:SM_complx}{{12}{20}{State machine (FSM) heat map behavior. Parameter Selection E4}{figure.caption.19}{}}
+\newlabel{fig:SM_complx@cref}{{[figure][12][]12}{[1][20][]20}}
+\@writefile{lof}{\contentsline {figure}{\numberline {13}{\ignorespaces Potential fields (PF) heat map behavior. Constant Tuning E2.}}{20}{figure.caption.20}\protected@file@percent }
+\newlabel{fig:PF_complx}{{13}{20}{Potential fields (PF) heat map behavior. Constant Tuning E2}{figure.caption.20}{}}
+\newlabel{fig:PF_complx@cref}{{[figure][13][]13}{[1][20][]20}}
+\@writefile{lof}{\contentsline {figure}{\numberline {14}{\ignorespaces Convolutional neural network (CNN) heat map behavior. Training E1, E2, and E3.}}{21}{figure.caption.21}\protected@file@percent }
+\newlabel{fig:CNN_complx}{{14}{21}{Convolutional neural network (CNN) heat map behavior. Training E1, E2, and E3}{figure.caption.21}{}}
+\newlabel{fig:CNN_complx@cref}{{[figure][14][]14}{[1][20][]21}}
+\@writefile{lof}{\contentsline {figure}{\numberline {15}{\ignorespaces Recurrent neural network (RNN) heat map behavior. Training E1, E2, and E3.}}{21}{figure.caption.22}\protected@file@percent }
+\newlabel{fig:RNN_complx}{{15}{21}{Recurrent neural network (RNN) heat map behavior. Training E1, E2, and E3}{figure.caption.22}{}}
+\newlabel{fig:RNN_complx@cref}{{[figure][15][]15}{[1][20][]21}}
+\@writefile{toc}{\contentsline {section}{\numberline {8}Conclusions}{22}{section.8}\protected@file@percent }
+\newlabel{sec:Conclusion}{{8}{22}{Conclusions}{section.8}{}}
+\newlabel{sec:Conclusion@cref}{{[section][8][]8}{[1][22][]22}}
+\bibdata{sn-bibliography}
+\bibcite{placed2023surveyactivesimultaneouslocalization}{{1}{2023}{{Placed et~al.}}{{Placed, Strader, Carrillo, Atanasov, Indelman, Carlone, and Castellanos}}}
+\bibcite{10.11648/j.frontiers.20240403.13}{{2}{2024}{{Tola et~al.}}{{Tola, Mi, and Che}}}
+\bibcite{Valencia2018}{{3}{2018}{{Valencia and Andrade-Cetto}}{{}}}
+\bibcite{gao2017path}{{4}{2017}{{Gao et~al.}}{{Gao, Xu, Hu, Liu, and Liu}}}
+\bibcite{7784311}{{5}{2016}{{Dubé et~al.}}{{Dubé, Gawel, Cadena, Siegwart, Freda, and Gianni}}}
+\bibcite{duberg2024dufomapefficientdynamicawareness}{{6}{2024}{{Duberg et~al.}}{{Duberg, Zhang, Jia, and Jensfelt}}}
+\bibcite{10.1109/TRO.2016.2624754}{{7}{2016}{{Cadena et~al.}}{{Cadena, Carlone, Carrillo, Latif, Scaramuzza, Neira, Reid, and Leonard}}}
+\bibcite{Navigation_2D_LIDAR}{{8}{2020}{{Yan and Ma}}{{}}}
+\bibcite{Acomp_study_robot_nav}{{9}{2019}{{Gul et~al.}}{{Gul, Rahiman, and Alhady}}}
+\bibcite{ir.2024.17}{{10}{2024}{{Liu et~al.}}{{Liu, Dong, Hou, Liu, Shu, Xu, and Lv}}}
+\bibcite{pmlr-v229-liang23a}{{11}{2023}{{Liang et~al.}}{{Liang, Wang, Cao, Chiun, Zhang, and Sartoretti}}}
+\bibcite{Mapless-Survey}{{12}{2013}{{Guzel}}{{}}}
+\bibcite{wang-2024}{{13}{2024}{{Wang et~al.}}{{Wang, Wang, and Qian}}}
+\bibcite{SnapNav}{{14}{2020}{{Xie et~al.}}{{Xie, Markham, and Trigoni}}}
+\bibcite{CrowdMove}{{15}{2018}{{Fan et~al.}}{{Fan, Cheng, Pan, Manocha, and Yang}}}
+\bibcite{Target-driven}{{16}{2016}{{Zhu et~al.}}{{Zhu, Mottaghi, Kolve, Lim, Gupta, Fei{-}Fei, and Farhadi}}}
+\bibcite{Automatic-Curr-L}{{17}{2022}{{Xue et~al.}}{{Xue, Hein, Bakr, Schildbach, Abel, and Rueckert}}}
+\@writefile{toc}{\contentsline {section}{\numberline {9}}{23}{section.9}\protected@file@percent }
+\bibcite{10.1007/978-3-031-63596-0_22}{{18}{2024}{{Pushp et~al.}}{{Pushp, Chen, Luo, Gregory, and Liu}}}
+\bibcite{Machkour2023}{{19}{2023}{{Machkour et~al.}}{{Machkour, Ortiz-Arroyo, and Durdevic}}}
+\bibcite{Lu2025}{{20}{2025}{{Lu et~al.}}{{Lu, Cen, Alkhoury~Maroun, and Webb}}}
+\bibcite{LI2021368}{{21}{2021}{{Li et~al.}}{{Li, Guo, Luo, and Zhang}}}
+\bibcite{10776999}{{22}{2025}{{Hu et~al.}}{{Hu, Wang, Xie, Zheng, Shi, Rudas, and Cheng}}}
+\bibcite{s24175667}{{23}{2024}{{Zhang et~al.}}{{Zhang, Tang, Li, and Zha}}}
+\bibcite{gao2025hierarchicalreinforcementlearningsafe}{{24}{2025}{{Gao et~al.}}{{Gao, Pang, Liu, and Li}}}
+\bibcite{zhao2024imaginenavpromptingvisionlanguagemodels}{{25}{2024}{{Zhao et~al.}}{{Zhao, Cai, Tang, and Wang}}}
+\bibcite{9811537}{{26}{2022}{{Bektaş and Bozma}}{{}}}
+\bibcite{Costa-de-Jesus2025}{{27}{2025}{{Costa~de Jesus et~al.}}{{Costa~de Jesus, Kich, Kolling, Grando, da~Silva~Guerra, and Drews-Jr}}}
+\bibcite{krizhevsky2012imagenet}{{28}{2012}{{Krizhevsky et~al.}}{{Krizhevsky, Sutskever, and Hinton}}}
+\bibcite{brenner2023rgbdt}{{29}{2023}{{Brenner et~al.}}{{Brenner, Reyes, Susnjak, and Barczak}}}
+\bibcite{elman1990finding}{{30}{1990}{{Elman}}{{}}}
+\bibcite{Danilorecurrent2001}{{31}{2001}{{Mandic and Chambers}}{{}}}
+\bibcite{contreras2025b}{{32}{2025}{{Contreras et~al.}}{{Contreras, Negrete, Yoshikai, Hirose, and Okada}}}
+\bibcite{DBLP:journals/corr/abs-2101-10382}{{33}{2021}{{Soviany et~al.}}{{Soviany, Ionescu, Rota, and Sebe}}}
+\newlabel{LastPage}{{8}{24}{Conclusions}{page.24}{}}
+\gdef\lastpage@lastpage{24}
+\gdef\lastpage@lastpageHy{24}
+\gdef \@abspage@last{24}

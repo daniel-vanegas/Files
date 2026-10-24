@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <asset>
+    <contributor>
+      <author>Blender User</author>
+      <authoring_tool>Blender 3.6.23 commit date:2025-06-16, commit time:11:52, hash:e467db79ca8c</authoring_tool>
+    </contributor>
+    <created>2026-09-10T11:29:56</created>
+    <modified>2026-09-10T11:29:56</modified>
+    <unit name="meter" meter="1"/>
+    <up_axis>Z_UP</up_axis>
+  </asset>
+  <library_effects/>
+  <library_images/>
+  <library_geometries>
+    <geometry id="White_Table_FP-mesh" name="White_Table_FP">
+      <mesh>
+        <source id="White_Table_FP-mesh-positions">
+          <float_array id="White_Table_FP-mesh-positions-array" count="120">0.5188084 0.1936492 0 0.5287815 -0.1262175 0 -0.551218 0.1936492 0 0.5287815 0.1537824 0 0.5246583 0.1795268 0 0.5246585 0.2077717 0 0.5387814 -0.1461122 0 0.5487815 0.1537824 0 0.5387814 0.1936492 0 0.5487815 -0.1262175 0 0.5387814 0.1736771 0 0.5587545 -0.1660843 0 0.5587545 0.1936492 0 0.5529045 -0.1802067 0 0.5529045 0.2077717 0 0.5301484 -0.1824806 0 0.5529045 -0.1519618 0 0.5529045 0.1795268 0 0.5387814 0.2136214 0 0.5387814 -0.1860564 0 0.5301484 -0.1496879 0 -0.5711911 -0.1660843 0 -0.5711911 0.1936492 0 -0.5653411 -0.1802067 0 -0.5653411 0.2077717 0 -0.5612181 0.1537824 0 -0.551218 -0.1860564 0 -0.5653411 -0.1519618 0 -0.5612181 -0.1262175 0 -0.5653411 0.1795268 0 -0.551218 -0.1461122 0 -0.5412181 -0.1262175 0 -0.551218 0.1736771 0 -0.5412181 0.1537824 0 -0.531245 0.1936492 0 -0.5370951 0.2077717 0 -0.537095 0.1795268 0 -0.5425848 -0.1824806 0 -0.551218 0.2136214 0 -0.5425849 -0.149688 0</float_array>
+          <technique_common>
+            <accessor source="#White_Table_FP-mesh-positions-array" count="40" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="White_Table_FP-mesh-normals">
+          <float_array id="White_Table_FP-mesh-normals-array" count="3">0 0 1</float_array>
+          <technique_common>
+            <accessor source="#White_Table_FP-mesh-normals-array" count="1" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="White_Table_FP-mesh-map">
+          <float_array id="White_Table_FP-mesh-map-array" count="192">0.7155126 0.5774597 0.7098633 0.5718107 0.7155126 0.5694709 0.7155126 0.5774597 0.7211619 0.5718107 0.7235018 0.5774597 0.7155126 0.5774597 0.7211619 0.5831087 0.7155125 0.5854486 0.7120594 0.4401248 0.282966 0.4270077 0.7098634 0.4279173 0.7098634 0.5831087 0.7155126 0.5774597 0.7155125 0.5854486 0.7195126 0.449513 0.7115126 0.561513 0.7126854 0.449513 0.2738636 0.5831087 0.2795128 0.5774597 0.2795128 0.5854486 0.2755128 0.561513 0.2835128 0.449513 0.2835127 0.561513 0.2715235 0.4335662 0.2738636 0.4279173 0.2851619 0.4279173 0.7235018 0.4335663 0.7211618 0.4392153 0.7075234 0.4335663 0.2795128 0.5774597 0.285162 0.5718107 0.287502 0.5774597 0.2795128 0.5774597 0.2851619 0.5831087 0.2795128 0.5854486 0.2795128 0.5774597 0.2738636 0.5718107 0.2795128 0.5694708 0.7155126 0.5774597 0.7075234 0.5774597 0.7098633 0.5718107 0.7155126 0.5774597 0.7155126 0.5694709 0.7211619 0.5718107 0.7155126 0.5774597 0.7235018 0.5774597 0.7211619 0.5831087 0.7120594 0.4401248 0.287502 0.4335662 0.282966 0.4270077 0.7098634 0.5831087 0.7075234 0.5774597 0.7155126 0.5774597 0.7195126 0.449513 0.7183399 0.561513 0.7115126 0.561513 0.2738636 0.5831087 0.2715235 0.5774596 0.2795128 0.5774597 0.2755128 0.561513 0.2755128 0.449513 0.2835128 0.449513 0.2738636 0.4279173 0.2795128 0.4255774 0.2851619 0.4279173 0.2851619 0.4279173 0.2795128 0.4401248 0.2715235 0.4335662 0.2795128 0.4401248 0.2795128 0.4415551 0.2738636 0.4392153 0.2715235 0.4335662 0.2795128 0.4401248 0.2738636 0.4392153 0.7211618 0.4392153 0.7149299 0.4413138 0.7075234 0.4335663 0.7075234 0.4335663 0.7155125 0.4270077 0.7235018 0.4335663 0.7155125 0.4270077 0.7155126 0.4255775 0.7211617 0.4279173 0.7235018 0.4335663 0.7155125 0.4270077 0.7211617 0.4279173 0.2795128 0.5774597 0.2795128 0.5694708 0.285162 0.5718107 0.2795128 0.5774597 0.287502 0.5774597 0.2851619 0.5831087 0.2795128 0.5774597 0.2715235 0.5774596 0.2738636 0.5718107</float_array>
+          <technique_common>
+            <accessor source="#White_Table_FP-mesh-map-array" count="96" stride="2">
+              <param name="S" type="float"/>
+              <param name="T" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <vertices id="White_Table_FP-mesh-vertices">
+          <input semantic="POSITION" source="#White_Table_FP-mesh-positions"/>
+        </vertices>
+        <triangles count="32">
+          <input semantic="VERTEX" source="#White_Table_FP-mesh-vertices" offset="0"/>
+          <input semantic="NORMAL" source="#White_Table_FP-mesh-normals" offset="1"/>
+          <input semantic="TEXCOORD" source="#White_Table_FP-mesh-map" offset="2" set="0"/>
+          <p>8 0 0 4 0 1 10 0 2 8 0 3 17 0 4 12 0 5 8 0 6 14 0 7 18 0 8 20 0 9 37 0 10 15 0 11 5 0 12 8 0 13 18 0 14 9 0 15 3 0 16 1 0 17 24 0 18 2 0 19 38 0 20 25 0 21 31 0 22 33 0 23 21 0 24 23 0 25 37 0 26 11 0 27 16 0 28 20 0 29 2 0 30 36 0 31 34 0 32 2 0 33 35 0 34 38 0 35 2 0 36 29 0 37 32 0 38 8 0 39 0 0 40 4 0 41 8 0 42 10 0 43 17 0 44 8 0 45 12 0 46 14 0 47 20 0 48 39 0 49 37 0 50 5 0 51 0 0 52 8 0 53 9 0 54 7 0 55 3 0 56 24 0 57 22 0 58 2 0 59 25 0 60 28 0 61 31 0 62 23 0 63 26 0 64 37 0 65 37 0 66 39 0 67 21 0 68 39 0 69 30 0 70 27 0 71 21 0 72 39 0 73 27 0 74 16 0 75 6 0 76 20 0 77 20 0 78 15 0 79 11 0 80 15 0 81 19 0 82 13 0 83 11 0 84 15 0 85 13 0 86 2 0 87 32 0 88 36 0 89 2 0 90 34 0 91 35 0 92 2 0 93 22 0 94 29 0 95</p>
+        </triangles>
+      </mesh>
+    </geometry>
+  </library_geometries>
+  <library_visual_scenes>
+    <visual_scene id="Scene" name="Scene">
+      <node id="White_Table_FP" name="White_Table_FP" type="NODE">
+        <matrix sid="transform">1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1</matrix>
+        <instance_geometry url="#White_Table_FP-mesh" name="White_Table_FP"/>
+      </node>
+    </visual_scene>
+  </library_visual_scenes>
+  <scene>
+    <instance_visual_scene url="#Scene"/>
+  </scene>
+</COLLADA>

@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <asset>
+    <contributor>
+      <author>Blender User</author>
+      <authoring_tool>Blender 3.6.23 commit date:2025-06-16, commit time:11:52, hash:e467db79ca8c</authoring_tool>
+    </contributor>
+    <created>2026-09-07T12:02:05</created>
+    <modified>2026-09-07T12:02:05</modified>
+    <unit name="meter" meter="1"/>
+    <up_axis>Z_UP</up_axis>
+  </asset>
+  <library_effects>
+    <effect id="Material-effect">
+      <profile_COMMON>
+        <technique sid="common">
+          <lambert>
+            <emission>
+              <color sid="emission">0 0 0 1</color>
+            </emission>
+            <diffuse>
+              <color sid="diffuse">0.8 0.8 0.8 1</color>
+            </diffuse>
+            <index_of_refraction>
+              <float sid="ior">1.45</float>
+            </index_of_refraction>
+          </lambert>
+        </technique>
+      </profile_COMMON>
+    </effect>
+  </library_effects>
+  <library_images/>
+  <library_materials>
+    <material id="Material-material" name="Material">
+      <instance_effect url="#Material-effect"/>
+    </material>
+  </library_materials>
+  <library_geometries>
+    <geometry id="kitchen_chair_BB-mesh" name="kitchen_chair_BB">
+      <mesh>
+        <source id="kitchen_chair_BB-mesh-positions">
+          <float_array id="kitchen_chair_BB-mesh-positions-array" count="72">-0.275779 -0.2014151 0 -0.3053522 -0.1789115 0 -0.29427 -0.1939653 0 -0.3053522 -0.1789115 0.8491726 -0.275779 -0.2014151 0.8491726 -0.29427 -0.1939653 0.8491726 -0.3053522 0.1789115 0 -0.275779 0.2014151 0 -0.29427 0.1939654 0 -0.275779 0.2014151 0.8491726 -0.3053522 0.1789115 0.8491726 -0.29427 0.1939654 0.8491726 0.2253977 -0.2354487 0 0.1957827 -0.2650636 0 0.2156066 -0.2556065 0 0.1957827 -0.2650636 0.8491726 0.2253977 -0.2354487 0.8491726 0.2156066 -0.2556065 0.8491726 0.1957827 0.2650637 0 0.2253977 0.2354487 0 0.2156066 0.2556067 0 0.2253977 0.2354487 0.8491726 0.1957827 0.2650637 0.8491726 0.2156066 0.2556067 0.8491726</float_array>
+          <technique_common>
+            <accessor source="#kitchen_chair_BB-mesh-positions-array" count="24" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="kitchen_chair_BB-mesh-normals">
+          <float_array id="kitchen_chair_BB-mesh-normals-array" count="81">-0.1337609 -0.9910137 0 1 0 0 -2.95235e-7 0 1 -1 0 0 -0.1337611 0.9910137 0 -0.3736979 -0.9275505 0 -0.8053128 -0.5928503 0 -0.373694 0.9275521 0 -0.8053145 0.5928481 0 0.8995068 0.4369067 0 0.4305655 0.9025593 0 0.4305711 -0.9025567 0 0.8995051 -0.4369104 0 0 0 -1 0 0 1 6.06695e-6 0 1 -2.3503e-7 0 1 9.51287e-6 0 1 -3.52041e-6 0 1 4.75653e-6 0 1 0 0 1 -0.3736973 -0.9275508 0 -0.8053146 -0.5928479 0 -0.3736934 0.9275523 0 -0.8053162 0.5928456 0 0.4305667 0.9025588 0 0.4305699 -0.9025572 0</float_array>
+          <technique_common>
+            <accessor source="#kitchen_chair_BB-mesh-normals-array" count="27" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="kitchen_chair_BB-mesh-map">
+          <float_array id="kitchen_chair_BB-mesh-map-array" count="264">0.625 0.7587295 0.375 0.9912704 0.375 0.7587295 0.625 0.5087398 0.375 0.7412602 0.375 0.5087398 0.8662705 0.75 0.625 0.7412602 0.8662704 0.5 0.625 0.008739769 0.375 0.2412602 0.375 0.008739769 0.625 0.2587295 0.375 0.4912704 0.375 0.2587295 0.625 0.9912705 0.375 1 0.375 0.9912704 0.625 0 0.375 0.008739769 0.375 0 0.375 0.2587295 0.625 0.25 0.625 0.2587295 0.375 0.25 0.625 0.2412602 0.625 0.25 0.375 0.5087398 0.625 0.5 0.625 0.5087398 0.375 0.5 0.625 0.4912705 0.625 0.5 0.375 0.7587295 0.625 0.75 0.625 0.7587295 0.375 0.75 0.625 0.7412602 0.625 0.75 0.1337295 0.75 0.1275568 0.7474402 0.125 0.7412602 0.625 0.7587295 0.625 0.9912705 0.375 0.9912704 0.625 0.5087398 0.625 0.7412602 0.375 0.7412602 0.625 0.7412602 0.625 0.5087398 0.8662704 0.5 0.625 0.5087398 0.6275569 0.5025599 0.6337295 0.5 0.8662704 0.5 0.625 0.5087398 0.6337295 0.5 0.8662704 0.5 0.8724431 0.5025598 0.875 0.5087398 0.875 0.5087398 0.875 0.7412602 0.8662705 0.75 0.875 0.7412602 0.8724433 0.7474402 0.8662705 0.75 0.8662705 0.75 0.6337296 0.75 0.625 0.7412602 0.6337296 0.75 0.6275568 0.7474402 0.625 0.7412602 0.8662704 0.5 0.875 0.5087398 0.8662705 0.75 0.625 0.008739769 0.625 0.2412602 0.375 0.2412602 0.625 0.2587295 0.625 0.4912705 0.375 0.4912704 0.625 0.9912705 0.625 1 0.375 1 0.625 0 0.625 0.008739769 0.375 0.008739769 0.375 0.2587295 0.375 0.25 0.625 0.25 0.375 0.25 0.375 0.2412602 0.625 0.2412602 0.375 0.5087398 0.375 0.5 0.625 0.5 0.375 0.5 0.375 0.4912704 0.625 0.4912705 0.375 0.7587295 0.375 0.75 0.625 0.75 0.375 0.75 0.375 0.7412602 0.625 0.7412602 0.125 0.7412602 0.125 0.5087398 0.1337295 0.5 0.125 0.5087398 0.1275568 0.5025599 0.1337295 0.5 0.1337295 0.5 0.3662705 0.5 0.375 0.5087398 0.125 0.7412602 0.1337295 0.5 0.1337295 0.75 0.3662705 0.5 0.3724431 0.5025599 0.375 0.5087398 0.375 0.5087398 0.375 0.7412602 0.1337295 0.75 0.375 0.7412602 0.3724431 0.7474402 0.3662704 0.75 0.3662704 0.75 0.1337295 0.75 0.375 0.7412602 0.375 0.5087398 0.1337295 0.75 0.1337295 0.5</float_array>
+          <technique_common>
+            <accessor source="#kitchen_chair_BB-mesh-map-array" count="132" stride="2">
+              <param name="S" type="float"/>
+              <param name="T" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <vertices id="kitchen_chair_BB-mesh-vertices">
+          <input semantic="POSITION" source="#kitchen_chair_BB-mesh-positions"/>
+        </vertices>
+        <triangles material="Material-material" count="44">
+          <input semantic="VERTEX" source="#kitchen_chair_BB-mesh-vertices" offset="0"/>
+          <input semantic="NORMAL" source="#kitchen_chair_BB-mesh-normals" offset="1"/>
+          <input semantic="TEXCOORD" source="#kitchen_chair_BB-mesh-map" offset="2" set="0"/>
+          <p>15 0 0 0 0 1 13 0 2 21 1 3 12 1 4 19 1 5 4 2 6 16 2 7 9 2 8 3 3 9 6 3 10 1 3 11 9 4 12 18 4 13 7 4 14 4 5 15 2 5 16 0 5 17 5 6 18 1 6 19 2 6 20 7 7 21 11 7 22 9 7 23 8 8 24 10 8 25 11 8 26 19 9 27 23 9 28 21 9 29 20 10 30 22 10 31 23 10 32 13 11 33 17 11 34 15 11 35 14 12 36 16 12 37 17 12 38 0 13 39 2 13 40 1 13 41 15 0 42 4 0 43 0 0 44 21 1 45 16 1 46 12 1 47 16 14 48 21 14 49 9 14 50 21 15 51 23 15 52 22 15 53 9 16 54 21 16 55 22 16 56 9 17 57 11 17 58 10 17 59 10 18 60 3 18 61 4 18 62 3 19 63 5 19 64 4 19 65 4 20 66 15 20 67 16 20 68 15 20 69 17 20 70 16 20 71 9 20 72 10 20 73 4 20 74 3 3 75 10 3 76 6 3 77 9 4 78 22 4 79 18 4 80 4 21 81 5 21 82 2 21 83 5 22 84 3 22 85 1 22 86 7 23 87 8 23 88 11 23 89 8 24 90 6 24 91 10 24 92 19 9 93 20 9 94 23 9 95 20 25 96 18 25 97 22 25 98 13 26 99 14 26 100 17 26 101 14 12 102 12 12 103 16 12 104 1 13 105 6 13 106 7 13 107 6 13 108 8 13 109 7 13 110 7 13 111 18 13 112 19 13 113 1 13 114 7 13 115 0 13 116 18 13 117 20 13 118 19 13 119 19 13 120 12 13 121 0 13 122 12 13 123 14 13 124 13 13 125 13 13 126 0 13 127 12 13 128 19 13 129 0 13 130 7 13 131</p>
+        </triangles>
+      </mesh>
+    </geometry>
+  </library_geometries>
+  <library_visual_scenes>
+    <visual_scene id="Scene" name="Scene">
+      <node id="kitchen_chair_BB" name="kitchen_chair_BB" type="NODE">
+        <matrix sid="transform">1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1</matrix>
+        <instance_geometry url="#kitchen_chair_BB-mesh" name="kitchen_chair_BB">
+          <bind_material>
+            <technique_common>
+              <instance_material symbol="Material-material" target="#Material-material"/>
+            </technique_common>
+          </bind_material>
+        </instance_geometry>
+      </node>
+    </visual_scene>
+  </library_visual_scenes>
+  <scene>
+    <instance_visual_scene url="#Scene"/>
+  </scene>
+</COLLADA>

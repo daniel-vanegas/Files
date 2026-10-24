@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <asset>
+    <contributor>
+      <author>Blender User</author>
+      <authoring_tool>Blender 3.6.23 commit date:2025-06-16, commit time:11:52, hash:e467db79ca8c</authoring_tool>
+    </contributor>
+    <created>2026-09-10T11:29:36</created>
+    <modified>2026-09-10T11:29:36</modified>
+    <unit name="meter" meter="1"/>
+    <up_axis>Z_UP</up_axis>
+  </asset>
+  <library_effects/>
+  <library_images/>
+  <library_geometries>
+    <geometry id="Tropy_shelf_FP-mesh" name="Tropy_shelf_FP">
+      <mesh>
+        <source id="Tropy_shelf_FP-mesh-positions">
+          <float_array id="Tropy_shelf_FP-mesh-positions-array" count="12">-0.4475 0.1949999 0 0.4475 0.1949999 0 -0.4475 -0.1949999 0 0.4475 -0.1949999 0</float_array>
+          <technique_common>
+            <accessor source="#Tropy_shelf_FP-mesh-positions-array" count="4" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="Tropy_shelf_FP-mesh-normals">
+          <float_array id="Tropy_shelf_FP-mesh-normals-array" count="3">0 0 1</float_array>
+          <technique_common>
+            <accessor source="#Tropy_shelf_FP-mesh-normals-array" count="1" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="Tropy_shelf_FP-mesh-map">
+          <float_array id="Tropy_shelf_FP-mesh-map-array" count="12">0 1 1 0 0 0 0 1 1 1 1 0</float_array>
+          <technique_common>
+            <accessor source="#Tropy_shelf_FP-mesh-map-array" count="6" stride="2">
+              <param name="S" type="float"/>
+              <param name="T" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <vertices id="Tropy_shelf_FP-mesh-vertices">
+          <input semantic="POSITION" source="#Tropy_shelf_FP-mesh-positions"/>
+        </vertices>
+        <triangles count="2">
+          <input semantic="VERTEX" source="#Tropy_shelf_FP-mesh-vertices" offset="0"/>
+          <input semantic="NORMAL" source="#Tropy_shelf_FP-mesh-normals" offset="1"/>
+          <input semantic="TEXCOORD" source="#Tropy_shelf_FP-mesh-map" offset="2" set="0"/>
+          <p>2 0 0 1 0 1 0 0 2 2 0 3 3 0 4 1 0 5</p>
+        </triangles>
+      </mesh>
+    </geometry>
+  </library_geometries>
+  <library_visual_scenes>
+    <visual_scene id="Scene" name="Scene">
+      <node id="Tropy_shelf_FP" name="Tropy_shelf_FP" type="NODE">
+        <matrix sid="transform">1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1</matrix>
+        <instance_geometry url="#Tropy_shelf_FP-mesh" name="Tropy_shelf_FP"/>
+      </node>
+    </visual_scene>
+  </library_visual_scenes>
+  <scene>
+    <instance_visual_scene url="#Scene"/>
+  </scene>
+</COLLADA>

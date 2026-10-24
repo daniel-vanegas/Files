@@ -32,7 +32,7 @@ ament_target_dependencies(dataset_recorder
   debugger
   ament_index_cpp
 )
-target_include_directories(dataset_recorder PRIVATE 
+target_include_directories(dataset_recorder PRIVATE
   ${OpenCV_INCLUDE_DIRS}
   ${debugger_INCLUDE_DIRS}
 )
@@ -44,12 +44,14 @@ install(TARGETS dataset_recorder DESTINATION lib/${PROJECT_NAME})
 install(PROGRAMS
   scripts/random_goal_sampler.py
   scripts/generate_npz_data.py
+  scripts/generate_path_pool.py
   scripts/Nav2_map_relay.py
   scripts/prohibition_map_publisher.py
   scripts/teleop_dataset_recorder.py
   scripts/dataset_obstacles_control.py
   scripts/make_dataset_split.py
   scripts/path_generator.py
+  scripts/data_analiysis.py
   DESTINATION lib/${PROJECT_NAME}
 )
 

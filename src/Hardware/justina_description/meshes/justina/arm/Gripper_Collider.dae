@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <asset>
+    <contributor>
+      <author>Blender User</author>
+      <authoring_tool>Blender 3.6.23 commit date:2025-06-16, commit time:11:52, hash:e467db79ca8c</authoring_tool>
+    </contributor>
+    <created>2026-06-01T21:35:03</created>
+    <modified>2026-06-01T21:35:03</modified>
+    <unit name="meter" meter="1"/>
+    <up_axis>Z_UP</up_axis>
+  </asset>
+  <library_effects/>
+  <library_images/>
+  <library_geometries>
+    <geometry id="Gripper_Collider-mesh" name="Gripper_Collider">
+      <mesh>
+        <source id="Gripper_Collider-mesh-positions">
+          <float_array id="Gripper_Collider-mesh-positions-array" count="57">0 0 0 -0.04817187 0.003999948 -0.008472025 -0.04817187 -0.004000008 -0.008472025 -0.06132745 -0.004000008 0.003984689 -0.06132745 0.003999948 0.003984689 -0.006322562 -0.004000008 0.004469275 -0.006322562 0.003999948 0.004469275 -0.07404941 -0.009000003 -0.1076 -0.08126354 -0.009000003 -0.1014665 -0.01494288 -0.02663499 -0.03994011 -0.07404941 0.008999943 -0.1076 -0.01470649 0.01692497 -0.03965842 -0.08126354 0.008999943 -0.1014665 -0.05754572 -0.00999999 -0.08424109 -0.05981445 -0.00999999 -0.07374578 -0.05981445 0.00999999 -0.07374578 -0.05754572 0.00999999 -0.08424109 -0.06132745 -0.009000003 0.003984689 -0.06132745 0.008999943 0.003984689</float_array>
+          <technique_common>
+            <accessor source="#Gripper_Collider-mesh-positions-array" count="19" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="Gripper_Collider-mesh-normals">
+          <float_array id="Gripper_Collider-mesh-normals-array" count="84">0 -1 0 0 1 0 -0.008809506 0 0.9999612 0.1732124 0 -0.9848846 0.5772254 0 0.816585 -0.3030903 -0.950707 -0.06551784 0.8167188 0 -0.5770359 -0.1307773 0.9910086 -0.02826952 0.7210657 0 -0.6928668 -0.6477411 0 -0.7618606 -0.02272456 0.9993844 -0.02672839 -0.0227248 -0.9993844 -0.02672851 -0.7908909 0 0.6119573 -0.9998106 0 -0.01946163 -0.1588264 0.9872599 0.00960946 -0.3510522 -0.9363414 0.005212664 0.6858769 -0.008428037 0.7276688 0.1613051 -0.8377883 -0.521624 0.1613047 0.8377891 -0.5216227 -0.008809506 0 0.9999612 0.8167191 0 -0.5770356 0.7208935 5.69975e-4 -0.6930457 -0.6477392 0 -0.7618621 -0.03641599 0.9993058 -0.007871866 -0.03641617 -0.9993058 -0.007871866 -0.7908911 0 0.6119571 -0.9998106 0 -0.01946163 0.6834074 0 0.7300372</float_array>
+          <technique_common>
+            <accessor source="#Gripper_Collider-mesh-normals-array" count="28" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="Gripper_Collider-mesh-map-0">
+          <float_array id="Gripper_Collider-mesh-map-0-array" count="168">0.5004863 0.25 0.5004863 0.25 0.5004863 0.25 0.5004863 0.5 0.5004863 0.5 0.5004863 0.5 0.5004863 0.25 0.5004863 0.5 0.5004863 0.25 0.5004863 0.5 0.5004863 0.5 0.5004863 0.25 0.5004863 0.25 0.5004863 0.25 0.5004863 0.5 0.5004864 0 0.625 0.25 0.5004863 0.25 0.5004864 0.75 0.375 1 0.375 0.75 0.5004863 0.5 0.625 0.75 0.5004864 0.75 0.625 0.75 0.5004864 1 0.5004864 0.75 0.125 0.5 0.375 0.75 0.125 0.75 0.375 0.5 0.5004864 0.75 0.375 0.75 0.5004864 0 0.375 0.25 0.375 0 0.125 0.5 0.5004863 0.5 0.375 0.5 0.5004863 0.25 0.5004863 0.5 0.5004863 0.5 0.5004863 0.5 0.5004863 0.5 0.625 0.5 0.5004863 0.25 0.625 0.25 0.5004863 0.25 0.625 0.5 0.5004863 0.25 0.625 0.25 0.5004863 0.25 0.5004863 0.25 0.5004863 0.25 0.5004863 0.5 0.5004863 0.5 0.5004863 0.5 0.5004863 0.25 0.5004863 0.5 0.5004863 0.5 0.5004864 0.75 0.5004864 1 0.375 1 0.625 0.75 0.625 1 0.5004864 1 0.125 0.5 0.375 0.5 0.375 0.75 0.375 0.5 0.5004863 0.5 0.5004864 0.75 0.5004864 0 0.5004863 0.25 0.375 0.25 0.125 0.5 0.5004863 0.25 0.5004863 0.5 0.5004863 0.25 0.5004863 0.25 0.5004863 0.5 0.625 0.5 0.5004863 0.5 0.5004863 0.25</float_array>
+          <technique_common>
+            <accessor source="#Gripper_Collider-mesh-map-0-array" count="84" stride="2">
+              <param name="S" type="float"/>
+              <param name="T" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <vertices id="Gripper_Collider-mesh-vertices">
+          <input semantic="POSITION" source="#Gripper_Collider-mesh-positions"/>
+        </vertices>
+        <triangles count="28">
+          <input semantic="VERTEX" source="#Gripper_Collider-mesh-vertices" offset="0"/>
+          <input semantic="NORMAL" source="#Gripper_Collider-mesh-normals" offset="1"/>
+          <input semantic="TEXCOORD" source="#Gripper_Collider-mesh-map-0" offset="2" set="0"/>
+          <p>2 0 0 5 0 1 3 0 2 6 1 3 1 1 4 4 1 5 5 2 6 4 2 7 3 2 8 1 3 9 0 3 10 2 3 11 5 4 12 0 4 13 6 4 14 13 5 15 9 5 16 14 5 17 16 6 18 7 6 19 10 6 20 15 7 21 11 7 22 16 7 23 11 8 24 13 8 25 16 8 26 8 9 27 10 9 28 7 9 29 12 10 30 16 10 31 10 10 32 13 11 33 8 11 34 7 11 35 8 12 36 15 12 37 12 12 38 14 13 39 18 13 40 15 13 41 15 14 42 18 14 43 11 14 44 14 15 45 9 15 46 17 15 47 11 16 48 17 16 49 9 16 50 2 17 51 0 17 52 5 17 53 6 18 54 0 18 55 1 18 56 5 19 57 6 19 58 4 19 59 16 20 60 13 20 61 7 20 62 11 21 63 9 21 64 13 21 65 8 22 66 12 22 67 10 22 68 12 23 69 15 23 70 16 23 71 13 24 72 14 24 73 8 24 74 8 25 75 14 25 76 15 25 77 14 26 78 17 26 79 18 26 80 11 27 81 18 27 82 17 27 83</p>
+        </triangles>
+      </mesh>
+    </geometry>
+  </library_geometries>
+  <library_visual_scenes>
+    <visual_scene id="Scene" name="Scene">
+      <node id="Gripper_Collider" name="Gripper_Collider" type="NODE">
+        <matrix sid="transform">1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1</matrix>
+        <instance_geometry url="#Gripper_Collider-mesh" name="Gripper_Collider"/>
+      </node>
+    </visual_scene>
+  </library_visual_scenes>
+  <scene>
+    <instance_visual_scene url="#Scene"/>
+  </scene>
+</COLLADA>

@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <asset>
+    <contributor>
+      <author>Blender User</author>
+      <authoring_tool>Blender 3.6.23 commit date:2025-06-16, commit time:11:52, hash:e467db79ca8c</authoring_tool>
+    </contributor>
+    <created>2026-09-10T11:26:31</created>
+    <modified>2026-09-10T11:26:31</modified>
+    <unit name="meter" meter="1"/>
+    <up_axis>Z_UP</up_axis>
+  </asset>
+  <library_effects/>
+  <library_images/>
+  <library_geometries>
+    <geometry id="kitchen_chair_FP-mesh" name="kitchen_chair_FP">
+      <mesh>
+        <source id="kitchen_chair_FP-mesh-positions">
+          <float_array id="kitchen_chair_FP-mesh-positions-array" count="108">-0.199726 -0.2045972 0 -0.1893922 -0.2003169 0 0.1851118 -0.2386968 0 -0.1851119 -0.1899831 0 0.1893922 -0.228363 0 0.1893922 -0.2490305 0 0.1997259 -0.2533109 0 0.1997259 -0.2240828 0 0.2143401 -0.2386968 0 0.2100597 -0.2490305 0 0.2100597 -0.228363 0 -0.2143401 -0.1899831 0 -0.2143401 0.1899831 0 -0.2100597 -0.2003169 0 -0.2100597 -0.1796494 0 -0.2100597 0.1796494 0 -0.2100597 0.2003169 0 -0.199726 -0.175369 0 -0.1893922 -0.1796494 0 -0.199726 0.1753691 0 -0.199726 0.2045972 0 0.1851118 0.2386969 0 -0.1851119 0.1899831 0 0.1893922 0.2283632 0 -0.1893922 0.1796494 0 -0.1893922 0.2003169 0 0.1893922 0.2490307 0 0.1997259 0.2240828 0 0.1997259 0.253311 0 0.2143401 0.2386969 0 0.2100597 0.2283632 0 0.2100597 0.2490307 0 0.1997259 0.2386969 0 0.1997259 -0.2386968 0 -0.199726 0.1899832 0 -0.199726 -0.1899831 0</float_array>
+          <technique_common>
+            <accessor source="#kitchen_chair_FP-mesh-positions-array" count="36" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="kitchen_chair_FP-mesh-normals">
+          <float_array id="kitchen_chair_FP-mesh-normals-array" count="3">0 0 1</float_array>
+          <technique_common>
+            <accessor source="#kitchen_chair_FP-mesh-normals-array" count="1" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="kitchen_chair_FP-mesh-map">
+          <float_array id="kitchen_chair_FP-mesh-map-array" count="192">0.400137 0.4050084 0.4053039 0.4101753 0.400137 0.4123154 0.5998629 0.3806515 0.6050298 0.3858185 0.599863 0.3879587 0.3949701 0.6001585 0.400137 0.5949916 0.400137 0.6022987 0.6050298 0.6245154 0.5998629 0.6193485 0.60717 0.6193484 0.5998629 0.6193485 0.5946961 0.6141816 0.5998629 0.6120414 0.5998629 0.6193485 0.5946961 0.6245154 0.5925559 0.6193485 0.5998629 0.6193485 0.6050299 0.6141816 0.60717 0.6193484 0.5998629 0.3806515 0.6050298 0.3754847 0.6071701 0.3806515 0.5998629 0.3806515 0.5946962 0.3858184 0.5925559 0.3806515 0.5998629 0.3806515 0.5946961 0.3754847 0.5998629 0.3733445 0.400137 0.5949916 0.4053039 0.6001585 0.400137 0.6022987 0.400137 0.5949916 0.4053039 0.5898247 0.4074441 0.5949917 0.400137 0.5949916 0.3949702 0.5898247 0.400137 0.5876845 0.400137 0.4050084 0.4053039 0.3998416 0.4074441 0.4050084 0.400137 0.4050084 0.3949702 0.4101753 0.39283 0.4050084 0.400137 0.4050084 0.3949701 0.3998415 0.400137 0.3977014 0.400137 0.4050084 0.4074441 0.4050084 0.4053039 0.4101753 0.5998629 0.3806515 0.6071701 0.3806515 0.6050298 0.3858185 0.3949701 0.6001585 0.39283 0.5949916 0.400137 0.5949916 0.6050298 0.6245154 0.599863 0.6266556 0.5998629 0.6193485 0.5998629 0.6193485 0.5925559 0.6193485 0.5946961 0.6141816 0.5998629 0.6193485 0.599863 0.6266556 0.5946961 0.6245154 0.5998629 0.6193485 0.5998629 0.6120414 0.6050299 0.6141816 0.5998629 0.3806515 0.5998629 0.3733445 0.6050298 0.3754847 0.5998629 0.3806515 0.599863 0.3879587 0.5946962 0.3858184 0.5998629 0.3806515 0.5925559 0.3806515 0.5946961 0.3754847 0.400137 0.5949916 0.4074441 0.5949917 0.4053039 0.6001585 0.400137 0.5949916 0.400137 0.5876845 0.4053039 0.5898247 0.400137 0.5949916 0.39283 0.5949916 0.3949702 0.5898247 0.400137 0.4050084 0.400137 0.3977014 0.4053039 0.3998416 0.400137 0.4050084 0.400137 0.4123154 0.3949702 0.4101753 0.400137 0.4050084 0.39283 0.4050084 0.3949701 0.3998415</float_array>
+          <technique_common>
+            <accessor source="#kitchen_chair_FP-mesh-map-array" count="96" stride="2">
+              <param name="S" type="float"/>
+              <param name="T" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <vertices id="kitchen_chair_FP-mesh-vertices">
+          <input semantic="POSITION" source="#kitchen_chair_FP-mesh-positions"/>
+        </vertices>
+        <triangles count="32">
+          <input semantic="VERTEX" source="#kitchen_chair_FP-mesh-vertices" offset="0"/>
+          <input semantic="NORMAL" source="#kitchen_chair_FP-mesh-normals" offset="1"/>
+          <input semantic="TEXCOORD" source="#kitchen_chair_FP-mesh-map" offset="2" set="0"/>
+          <p>35 0 0 18 0 1 17 0 2 33 0 3 10 0 4 7 0 5 16 0 6 34 0 7 20 0 8 31 0 9 32 0 10 29 0 11 32 0 12 23 0 13 27 0 14 32 0 15 26 0 16 21 0 17 32 0 18 30 0 19 29 0 20 33 0 21 9 0 22 8 0 23 33 0 24 4 0 25 2 0 26 33 0 27 5 0 28 6 0 29 34 0 30 25 0 31 20 0 32 34 0 33 24 0 34 22 0 35 34 0 36 15 0 37 19 0 38 35 0 39 1 0 40 3 0 41 35 0 42 14 0 43 11 0 44 35 0 45 13 0 46 0 0 47 35 0 48 3 0 49 18 0 50 33 0 51 8 0 52 10 0 53 16 0 54 12 0 55 34 0 56 31 0 57 28 0 58 32 0 59 32 0 60 21 0 61 23 0 62 32 0 63 28 0 64 26 0 65 32 0 66 27 0 67 30 0 68 33 0 69 6 0 70 9 0 71 33 0 72 7 0 73 4 0 74 33 0 75 2 0 76 5 0 77 34 0 78 22 0 79 25 0 80 34 0 81 19 0 82 24 0 83 34 0 84 12 0 85 15 0 86 35 0 87 0 0 88 1 0 89 35 0 90 17 0 91 14 0 92 35 0 93 11 0 94 13 0 95</p>
+        </triangles>
+      </mesh>
+    </geometry>
+  </library_geometries>
+  <library_visual_scenes>
+    <visual_scene id="Scene" name="Scene">
+      <node id="kitchen_chair_FP" name="kitchen_chair_FP" type="NODE">
+        <matrix sid="transform">1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1</matrix>
+        <instance_geometry url="#kitchen_chair_FP-mesh" name="kitchen_chair_FP"/>
+      </node>
+    </visual_scene>
+  </library_visual_scenes>
+  <scene>
+    <instance_visual_scene url="#Scene"/>
+  </scene>
+</COLLADA>

@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <asset>
+    <contributor>
+      <author>Blender User</author>
+      <authoring_tool>Blender 3.6.23 commit date:2025-06-16, commit time:11:52, hash:e467db79ca8c</authoring_tool>
+    </contributor>
+    <created>2026-09-10T11:27:07</created>
+    <modified>2026-09-10T11:27:07</modified>
+    <unit name="meter" meter="1"/>
+    <up_axis>Z_UP</up_axis>
+  </asset>
+  <library_effects/>
+  <library_images/>
+  <library_geometries>
+    <geometry id="Plastic_drawer_FP-mesh" name="Plastic_drawer_FP">
+      <mesh>
+        <source id="Plastic_drawer_FP-mesh-positions">
+          <float_array id="Plastic_drawer_FP-mesh-positions-array" count="69">-0.2506321 -0.1836687 0 0.2275 0.15 0 0.2275 0.1899999 0 0.2426944 -0.1252275 0 0.2426944 0.15 0 0.2422921 0.15 0 0.2506318 -0.1836687 0 0.2633042 -0.1671344 0 0.259387 -0.1776461 0 0.2675 0.1899999 0 0.2674999 -0.1652275 0 0.2674999 -0.1252275 0 0.2675 0.15 0 -0.2675002 0.15 0 -0.2633045 -0.1671344 0 -0.2593873 -0.1776461 0 -0.2675002 -0.1652275 0 -0.2675002 0.1899999 0 -0.2275002 0.15 0 -0.2275002 0.1899999 0 -0.2426947 0.15 0 -0.2675002 -0.1252275 0 -0.2426947 -0.1252275 0</float_array>
+          <technique_common>
+            <accessor source="#Plastic_drawer_FP-mesh-positions-array" count="23" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="Plastic_drawer_FP-mesh-normals">
+          <float_array id="Plastic_drawer_FP-mesh-normals-array" count="3">0 0 1</float_array>
+          <technique_common>
+            <accessor source="#Plastic_drawer_FP-mesh-normals-array" count="1" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="Plastic_drawer_FP-mesh-map">
+          <float_array id="Plastic_drawer_FP-mesh-map-array" count="132">0.6213472 0.4173862 0.63375 0.4373863 0.6259338 0.4373863 0.6213471 0.5749999 0.63375 0.582396 0.6263539 0.5949999 0.3662499 0.5876039 0.373646 0.5750001 0.3786526 0.575 0.6296935 0.411177 0.6213471 0.4164327 0.6269348 0.4092793 0.6189258 0.4164327 0.4673686 0.4081656 0.6269348 0.4092793 0.4673686 0.4081656 0.3748419 0.4164328 0.3719252 0.4100633 0.6213471 0.4244648 0.6213472 0.4750716 0.3786526 0.4373863 0.3662499 0.4373863 0.3786526 0.4173862 0.3786526 0.4373863 0.3786526 0.4373863 0.3862499 0.575 0.3786526 0.5163612 0.6213472 0.4750716 0.6211461 0.575 0.61375 0.575 0.3786526 0.4373863 0.5315979 0.5750001 0.3862499 0.575 0.6213472 0.4173862 0.6337499 0.4173862 0.63375 0.4373863 0.6263539 0.5949999 0.61375 0.5876039 0.6213471 0.5749999 0.61375 0.5876039 0.61375 0.575 0.6211461 0.575 0.61375 0.5876039 0.6211461 0.575 0.6213471 0.5749999 0.3786526 0.575 0.3862498 0.582396 0.3788539 0.595 0.3788539 0.595 0.3662499 0.5876039 0.3786526 0.575 0.6189258 0.4164327 0.3748419 0.4164328 0.4673686 0.4081656 0.3786526 0.4173862 0.3748419 0.4164328 0.3786526 0.4373863 0.3748419 0.4164328 0.6213471 0.4244648 0.3786526 0.4373863 0.6213472 0.4750716 0.6213471 0.5749999 0.6211461 0.575 0.3786526 0.4373863 0.6213472 0.4750716 0.5315979 0.5750001</float_array>
+          <technique_common>
+            <accessor source="#Plastic_drawer_FP-mesh-map-array" count="66" stride="2">
+              <param name="S" type="float"/>
+              <param name="T" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <vertices id="Plastic_drawer_FP-mesh-vertices">
+          <input semantic="POSITION" source="#Plastic_drawer_FP-mesh-positions"/>
+        </vertices>
+        <triangles count="22">
+          <input semantic="VERTEX" source="#Plastic_drawer_FP-mesh-vertices" offset="0"/>
+          <input semantic="NORMAL" source="#Plastic_drawer_FP-mesh-normals" offset="1"/>
+          <input semantic="TEXCOORD" source="#Plastic_drawer_FP-mesh-map" offset="2" set="0"/>
+          <p>7 0 0 11 0 1 3 0 2 4 0 3 12 0 4 9 0 5 17 0 6 13 0 7 20 0 8 8 0 9 7 0 10 6 0 11 7 0 12 0 0 13 6 0 14 0 0 15 14 0 16 15 0 17 7 0 18 3 0 19 22 0 20 21 0 21 16 0 22 22 0 23 22 0 24 18 0 25 20 0 26 3 0 27 5 0 28 1 0 29 22 0 30 1 0 31 18 0 32 7 0 33 10 0 34 11 0 35 9 0 36 2 0 37 4 0 38 2 0 39 1 0 40 5 0 41 2 0 42 5 0 43 4 0 44 20 0 45 18 0 46 19 0 47 19 0 48 17 0 49 20 0 50 7 0 51 14 0 52 0 0 53 16 0 54 14 0 55 22 0 56 14 0 57 7 0 58 22 0 59 3 0 60 4 0 61 5 0 62 22 0 63 3 0 64 1 0 65</p>
+        </triangles>
+      </mesh>
+    </geometry>
+  </library_geometries>
+  <library_visual_scenes>
+    <visual_scene id="Scene" name="Scene">
+      <node id="Plastic_drawer_FP" name="Plastic_drawer_FP" type="NODE">
+        <matrix sid="transform">1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1</matrix>
+        <instance_geometry url="#Plastic_drawer_FP-mesh" name="Plastic_drawer_FP"/>
+      </node>
+    </visual_scene>
+  </library_visual_scenes>
+  <scene>
+    <instance_visual_scene url="#Scene"/>
+  </scene>
+</COLLADA>

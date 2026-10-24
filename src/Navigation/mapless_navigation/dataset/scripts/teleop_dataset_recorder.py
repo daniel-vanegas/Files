@@ -2,21 +2,27 @@
 """
 Teleop sampler with start/goal pair workflow.
 
-States:
-    IDLE               - recording off
-    WAITING_FOR_START  - pair published, robot must reach start
-    RECORDING          - robot at start, buffering until goal
+Modes:
+    use_path_pool=True  (default) -> consume paths from path_pool.json.
+        If pool is missing and auto_generate_pool=True, it is generated
+        on demand via generate_path_pool.py using num_goals and class_mix.
+    use_path_pool=False           -> original random sampling.
 
 Buttons:
     B  -> toggle recording
     Y  -> discard current pair, generate new one
-    X  -> emergency teleport to unexplored room
+    X  -> emergency teleport (to current path start in pool mode,
+          to unexplored room otherwise)
 """
 
 import csv
+import json
 import math
 import os
 import random
+import shutil
+import subprocess
+import sys
 import threading
 import time
 import yaml
@@ -35,14 +41,13 @@ from geometry_msgs.msg import (PointStamped, Pose2D,
                                PoseWithCovarianceStamped, Twist)
 from nav_msgs.msg import OccupancyGrid
 from sensor_msgs.msg import Joy
-from std_msgs.msg import Bool, Float64, Float64MultiArray, Int32
+from std_msgs.msg import Bool, Float64, Float64MultiArray, Int32, String
 from tf2_ros import Buffer, TransformListener
 from visualization_msgs.msg import Marker, MarkerArray
 from PIL import Image
 
 import atexit
 import signal
-import subprocess
 
 from debugger.utils import DebugClient
 
@@ -55,6 +60,8 @@ except ImportError as exc:
 STATE_IDLE = 0
 STATE_WAITING_FOR_START = 1
 STATE_RECORDING = 2
+
+CLASS_NAMES = ('straight', 'semi_complex', 'complex', 'v_complex')
 
 
 def resolve_prohibition_png(map_name):
@@ -243,6 +250,10 @@ class TeleopDatasetRecorder(Node):
             Bool, '/mapless_nav/goal_active', 10)
         self.pub_episode = self.create_publisher(
             Int32, '/mapless_nav/episode_id', 10)
+        self.pub_episode_class = self.create_publisher(
+            String, '/mapless_nav/episode_class', 10)
+        self.pub_episode_tries = self.create_publisher(
+            Int32, '/mapless_nav/episode_tries', 10)
         self.pub_success = self.create_publisher(
             Bool, '/mapless_nav/goal_success', 10)
         self.teleport_pub = self.create_publisher(
@@ -337,6 +348,7 @@ class TeleopDatasetRecorder(Node):
         self.collision_now = False
         self._collision_prev = False
         self._collision_since = None
+        self.episode_had_collision = False
 
         self.teleport_in_progress = False
         self._teleport_thread = None
@@ -345,6 +357,22 @@ class TeleopDatasetRecorder(Node):
 
         self.goals_saved_total = 0
         self.goals_saved_session = 0
+
+        # Path pool state
+        self.path_pool_by_class = {name: [] for name in CLASS_NAMES}
+        self.class_quotas = {name: 0 for name in CLASS_NAMES}
+        self.class_counts = {name: 0 for name in CLASS_NAMES}
+        self.current_path = None
+        self.current_class = ''
+        self.path_attempts = 0
+        self.failed_paths = []
+        self.path_pool_loaded = False
+        self._generating_pool = False
+        self._pool_gen_failed = False
+        self._pool_gen_error = ''
+        self._session_complete = False
+        self._pool_deficits = {name: 0 for name in CLASS_NAMES}
+        self._class_lock = threading.Lock()
 
         self.scenario_dir = os.path.join(self.output_dir, self.scenario)
         self.load_goal_counter()
@@ -380,6 +408,34 @@ class TeleopDatasetRecorder(Node):
             f'total_saved={self.goals_saved_total} current_saved=0',
             'RECORDED', 'info', -1.0)
 
+        # Try to load existing pool.
+        if self.use_path_pool:
+            pool_path = os.path.join(
+                self.output_dir, self.scenario, 'path_pool.json')
+            poses_path = os.path.join(
+                self.output_dir, self.scenario, 'path_pool_poses.json')
+            if os.path.isfile(pool_path) and os.path.isfile(poses_path):
+                if self._load_path_pool():
+                    if self._pool_ready():
+                        self.get_logger().info(
+                            'Existing path pool loaded with enough '
+                            'fresh paths.')
+                    else:
+                        self.get_logger().warn(
+                            f'Existing pool has deficits: '
+                            f'{self._pool_deficits}. Will regenerate '
+                            f'on first B press.')
+            elif self.auto_generate_pool:
+                self.get_logger().warn(
+                    f'No pool found at {self.scenario_dir}. '
+                    f'It will be generated when recording starts '
+                    f'(num_goals={self.num_goals}, '
+                    f'class_mix="{self.class_mix_str or "balanced"}").')
+            else:
+                self.get_logger().error(
+                    'use_path_pool=true but no pool and '
+                    'auto_generate_pool=false.')
+
         threading.Thread(
             target=self.build_rooms_worker, daemon=True).start()
 
@@ -389,9 +445,15 @@ class TeleopDatasetRecorder(Node):
 
         self.get_logger().info(
             f'ready. map={self.map_name} seed={self.seed} '
+            f'use_path_pool={self.use_path_pool} '
+            f'num_goals={self.num_goals} '
+            f'class_mix="{self.class_mix_str}" '
+            f'auto_generate_pool={self.auto_generate_pool} '
             f'buttons B={self.record_button_index} '
             f'X={self.teleport_button_index} '
             f'Y={self.regenerate_button_index}')
+
+    #  Parameters
 
     def declare_node_parameters(self):
         self.declare_parameter('map', 'E01')
@@ -448,6 +510,19 @@ class TeleopDatasetRecorder(Node):
 
         self.declare_parameter('collision_stuck_s', 2.0)
         self.declare_parameter('auto_world_offset', True)
+
+        # Path pool mode
+        self.declare_parameter('use_path_pool', True)
+        self.declare_parameter('num_goals', 100)
+        self.declare_parameter('class_mix', '')
+        self.declare_parameter('path_max_attempts', 3)
+
+        # Auto-generate pool
+        self.declare_parameter('auto_generate_pool', True)
+        self.declare_parameter('generator_script', '')
+        self.declare_parameter('generator_maps_root', '')
+        self.declare_parameter('generator_seed', -1)
+        self.declare_parameter('generator_timeout_s', 900.0)
 
     def load_node_parameters(self):
         self.map_name = self.get_parameter('map').value
@@ -528,6 +603,469 @@ class TeleopDatasetRecorder(Node):
         self.auto_world_offset = self.get_parameter(
             'auto_world_offset').value
 
+        self.use_path_pool = bool(self.get_parameter('use_path_pool').value)
+        self.num_goals = int(self.get_parameter('num_goals').value)
+        self.class_mix_str = str(
+            self.get_parameter('class_mix').value).strip()
+        self.path_max_attempts = int(
+            self.get_parameter('path_max_attempts').value)
+        if self.path_max_attempts < 1:
+            self.path_max_attempts = 1
+
+        self.auto_generate_pool = bool(
+            self.get_parameter('auto_generate_pool').value)
+
+        self.generator_script = str(
+            self.get_parameter('generator_script').value).strip()
+        if not self.generator_script:
+            self.generator_script = os.path.join(
+                os.path.dirname(os.path.abspath(__file__)),
+                'generate_path_pool.py')
+
+        self.generator_maps_root = str(
+            self.get_parameter('generator_maps_root').value).strip()
+        if not self.generator_maps_root:
+            self.generator_maps_root = os.path.join(
+                get_package_share_directory('justina_description'),
+                'webots_env', 'environments', 'maps')
+
+        self.generator_seed = int(self.get_parameter('generator_seed').value)
+        self.generator_timeout_s = float(
+            self.get_parameter('generator_timeout_s').value)
+
+    #  Pool: parsing and loading
+
+    def _parse_class_mix(self, mix_str):
+        """Return dict class_name -> quota, or None if mix_str empty.
+
+        Formats:
+          - "10_10_15_20" or "10,10,15,20": integer quotas.
+            If sum != num_goals, scaled proportionally.
+          - "0.4,0.3,0.2,0.1": proportions.
+          - "": returns None.
+        """
+        s = mix_str.strip()
+        if not s:
+            return None
+        parts = [p.strip() for p in (s.split(',') if ',' in s else s.split('_'))]
+        if len(parts) != 4:
+            raise ValueError(
+                f'class_mix needs 4 values, got {len(parts)}: {mix_str}')
+        try:
+            values = [float(p) for p in parts]
+        except ValueError:
+            raise ValueError(f'class_mix values must be numeric: {mix_str}')
+        if any(v < 0 for v in values):
+            raise ValueError('class_mix values must be >= 0')
+        total = sum(values)
+        if total <= 0:
+            raise ValueError('class_mix sum must be > 0')
+
+        all_int = all(abs(v - round(v)) < 1e-9 for v in values)
+        if all_int and int(round(total)) == self.num_goals:
+            return {k: int(round(v))
+                    for k, v in zip(CLASS_NAMES, values)}
+
+        quotas = {}
+        allocated = 0
+        for i, v in enumerate(values[:-1]):
+            q = int(round(self.num_goals * v / total))
+            quotas[CLASS_NAMES[i]] = q
+            allocated += q
+        quotas[CLASS_NAMES[-1]] = max(0, self.num_goals - allocated)
+        return quotas
+
+    def _resolve_quotas_for_generation(self):
+        """Integer per-class quotas for passing to generate_path_pool.py."""
+        parsed = self._parse_class_mix(self.class_mix_str)
+        if parsed is not None:
+            return parsed
+        base, rem = divmod(self.num_goals, len(CLASS_NAMES))
+        return {k: base + (1 if i < rem else 0)
+                for i, k in enumerate(CLASS_NAMES)}
+
+    def _load_used_endpoints(self):
+        """Read episode_metadata.jsonl and failed_paths.json to collect
+        start/goal endpoint pairs that were already used in prior sessions.
+        Uses endpoint proximity instead of path_id because a regenerated
+        pool restarts IDs from 0 with different coordinates."""
+        used = []
+        meta_path = os.path.join(
+            self.output_dir, self.scenario, 'episode_metadata.jsonl')
+        if os.path.isfile(meta_path):
+            try:
+                with open(meta_path, 'r') as f:
+                    for line in f:
+                        line = line.strip()
+                        if not line:
+                            continue
+                        try:
+                            e = json.loads(line)
+                            s = e.get('start')
+                            g = e.get('goal')
+                            if (s and g and len(s) >= 2 and len(g) >= 2):
+                                used.append((
+                                    (float(s[0]), float(s[1])),
+                                    (float(g[0]), float(g[1]))))
+                        except (json.JSONDecodeError, TypeError, ValueError):
+                            continue
+            except OSError:
+                pass
+
+        failed_path = os.path.join(
+            self.output_dir, self.scenario, 'failed_paths.json')
+        if os.path.isfile(failed_path):
+            try:
+                with open(failed_path, 'r') as f:
+                    data = json.load(f)
+                for e in data.get('entries', []):
+                    s = e.get('start')
+                    g = e.get('goal')
+                    if (s and g and len(s) >= 2 and len(g) >= 2):
+                        used.append((
+                            (float(s[0]), float(s[1])),
+                            (float(g[0]), float(g[1]))))
+            except (OSError, json.JSONDecodeError):
+                pass
+
+        return used
+
+    def _endpoint_matches(self, path, used, tol=0.30):
+        """True if path start/goal matches any used endpoint pair
+        within tolerance (meters)."""
+        ps = (path['start'][0], path['start'][1])
+        pg = (path['goal'][0], path['goal'][1])
+        for us, ug in used:
+            if (math.hypot(ps[0] - us[0], ps[1] - us[1]) < tol
+                    and math.hypot(pg[0] - ug[0], pg[1] - ug[1]) < tol):
+                return True
+        return False
+
+    def _pool_ready(self):
+        """True when pool is loaded and has enough fresh paths for quotas."""
+        if not self.path_pool_loaded:
+            return False
+        return sum(self._pool_deficits.values()) == 0
+
+    def _load_path_pool(self):
+        pool_path = os.path.join(
+            self.output_dir, self.scenario, 'path_pool.json')
+        poses_path = os.path.join(
+            self.output_dir, self.scenario, 'path_pool_poses.json')
+        if not (os.path.isfile(pool_path) and os.path.isfile(poses_path)):
+            self.get_logger().error(
+                f'Pool files missing: pool={os.path.isfile(pool_path)} '
+                f'poses={os.path.isfile(poses_path)}')
+            return False
+
+        try:
+            with open(pool_path, 'r') as f:
+                pool = json.load(f)
+            with open(poses_path, 'r') as f:
+                poses_by_id = json.load(f)
+        except Exception as exc:
+            self.get_logger().error(f'Failed to read pool: {exc}')
+            return False
+
+        scenario_in_pool = str(pool.get('scenario', ''))
+        if scenario_in_pool and scenario_in_pool != self.scenario:
+            self.get_logger().error(
+                f'Pool scenario mismatch: expected {self.scenario}, '
+                f'got {scenario_in_pool}')
+            return False
+
+        try:
+            parsed = self._parse_class_mix(self.class_mix_str)
+        except ValueError as exc:
+            self.get_logger().error(f'Invalid class_mix: {exc}')
+            return False
+
+        if parsed is not None:
+            quotas = parsed
+        else:
+            pool_quota = pool.get('quota', {})
+            try:
+                pq = {k: int(pool_quota.get(k, 0)) for k in CLASS_NAMES}
+            except (TypeError, ValueError):
+                pq = {}
+            if pq and sum(pq.values()) == self.num_goals:
+                quotas = pq
+            else:
+                base, rem = divmod(self.num_goals, len(CLASS_NAMES))
+                quotas = {k: base + (1 if i < rem else 0)
+                          for i, k in enumerate(CLASS_NAMES)}
+
+        self.path_pool_by_class = {name: [] for name in CLASS_NAMES}
+        skipped = 0
+
+        for entry in pool.get('paths', []):
+            cls = entry.get('class')
+            if cls not in self.path_pool_by_class:
+                skipped += 1
+                continue
+            try:
+                pid = int(entry['id'])
+                start = [float(entry['start'][0]),
+                         float(entry['start'][1])]
+                goal = [float(entry['goal'][0]),
+                        float(entry['goal'][1])]
+                points = poses_by_id.get(str(pid))
+                if not points or len(points) < 2:
+                    skipped += 1
+                    continue
+            except (KeyError, ValueError, TypeError, IndexError):
+                skipped += 1
+                continue
+            self.path_pool_by_class[cls].append({
+                'id': pid,
+                'class': cls,
+                'start': start,
+                'goal': goal,
+            })
+
+        for cls in CLASS_NAMES:
+            random.shuffle(self.path_pool_by_class[cls])
+
+        with self._class_lock:
+            self.class_quotas = quotas
+
+        loaded = {cls: len(self.path_pool_by_class[cls])
+                  for cls in CLASS_NAMES}
+        total_loaded = sum(loaded.values())
+        if total_loaded == 0:
+            self.get_logger().error(
+                f'Pool contained zero usable paths (skipped={skipped}).')
+            return False
+
+        # Filter out endpoints already recorded in previous sessions.
+        used = self._load_used_endpoints()
+        filtered_counts = {cls: 0 for cls in CLASS_NAMES}
+        if used:
+            for cls in CLASS_NAMES:
+                before = len(self.path_pool_by_class[cls])
+                self.path_pool_by_class[cls] = [
+                    p for p in self.path_pool_by_class[cls]
+                    if not self._endpoint_matches(p, used)
+                ]
+                filtered_counts[cls] = before - len(self.path_pool_by_class[cls])
+            self.get_logger().info(
+                f'Filtered {sum(filtered_counts.values())} paths whose '
+                f'endpoints match prior sessions: {filtered_counts} '
+                f'(total used endpoints={len(used)})')
+
+        fresh = {cls: len(self.path_pool_by_class[cls])
+                 for cls in CLASS_NAMES}
+        deficits = {
+            cls: max(0, self.class_quotas[cls] - fresh[cls])
+            for cls in CLASS_NAMES
+        }
+        self._pool_deficits = deficits
+
+        self.get_logger().info(
+            f'Path pool loaded: scenario={self.scenario} '
+            f'pool_version={pool.get("pool_version")} '
+            f'usable_paths={total_loaded} skipped={skipped} '
+            f'per_class_raw={loaded} per_class_fresh={fresh}')
+        self.get_logger().info(
+            f'Class quotas: {self.class_quotas} '
+            f'(sum={sum(self.class_quotas.values())}, '
+            f'num_goals={self.num_goals})')
+
+        if sum(deficits.values()) > 0:
+            self.get_logger().warn(
+                f'Pool has insufficient fresh paths for quotas: '
+                f'{deficits}')
+
+        self.path_pool_loaded = True
+        return True
+
+    def _ensure_path_pool(self):
+        # Already loaded and has enough fresh paths.
+        if self._pool_ready():
+            return True
+
+        pool_path = os.path.join(
+            self.output_dir, self.scenario, 'path_pool.json')
+        poses_path = os.path.join(
+            self.output_dir, self.scenario, 'path_pool_poses.json')
+        pool_exists = (
+            os.path.isfile(pool_path)
+            and os.path.isfile(poses_path))
+
+        # Existing pool: try to load.
+        if pool_exists and not self.path_pool_loaded:
+            if not self._load_path_pool():
+                return False
+
+        # If still not ready after loading, we need to regenerate.
+        if self.path_pool_loaded and self._pool_ready():
+            return True
+
+        if not self.auto_generate_pool:
+            with self._class_lock:
+                deficits = dict(self._pool_deficits)
+            self.get_logger().error(
+                f'Pool unavailable or insufficient fresh paths '
+                f'(deficits={deficits}) and auto_generate_pool=False. '
+                f'Regenerate manually with a larger --st_sem_cmp_vc or '
+                f'delete {pool_path}.')
+            return False
+
+        # Compute regeneration quotas: base quota + deficit + 1 buffer.
+        with self._class_lock:
+            base = dict(self.class_quotas)
+            deficits = dict(self._pool_deficits)
+        if not base or sum(base.values()) == 0:
+            base = {cls: 1 for cls in CLASS_NAMES}
+        new_quotas = {
+            cls: max(1, base.get(cls, 1) + deficits.get(cls, 0) + 1)
+            for cls in CLASS_NAMES
+        }
+        self.get_logger().warn(
+            f'Regenerating pool with fresh paths: '
+            f'deficits={deficits} -> new_quotas={new_quotas}')
+
+        # Force reload after generation overwrites the flat pool.
+        self.path_pool_loaded = False
+        return self._generate_pool_subprocess(new_quotas)
+
+    def _generate_pool_subprocess(self, extra_quotas=None):
+        gen = self.generator_script
+        if not os.path.isfile(gen):
+            self.get_logger().error(
+                f'generator_script not found: {gen}')
+            return False
+        maps_root = self.generator_maps_root
+        if not os.path.isdir(maps_root):
+            self.get_logger().error(
+                f'generator_maps_root not found: {maps_root}')
+            return False
+
+        try:
+            if extra_quotas is not None:
+                quotas = {k: int(extra_quotas[k]) for k in CLASS_NAMES}
+            else:
+                quotas = self._resolve_quotas_for_generation()
+        except (ValueError, KeyError) as exc:
+            self.get_logger().error(f'quota resolution failed: {exc}')
+            return False
+
+        seed = (self.generator_seed if self.generator_seed >= 0
+                else random.randint(100000, 999999))
+        mix_arg = '_'.join(str(quotas[k]) for k in CLASS_NAMES)
+        run_name = f'generation_seed_{seed}'
+
+        cmd = [
+            sys.executable, gen,
+            '--scenario', self.scenario,
+            '--maps-root', maps_root,
+            '--output-dir', self.output_dir,
+            '--seed', str(seed),
+            '--st_sem_cmp_vc', mix_arg,
+            '--progress-interval-seconds', '5',
+        ]
+
+        self.dbg.send(
+            f'generating pool: scenario={self.scenario} seed={seed} '
+            f'mix={mix_arg}',
+            'STATUS', 'warn', -1.0)
+        self.get_logger().warn(
+            f'Generating path pool: scenario={self.scenario} '
+            f'seed={seed} mix={mix_arg}. This may take several minutes.')
+
+        t0 = time.time()
+        try:
+            result = subprocess.run(
+                cmd, capture_output=True, text=True,
+                timeout=self.generator_timeout_s)
+        except subprocess.TimeoutExpired:
+            self.get_logger().error(
+                f'Pool generation TIMEOUT after '
+                f'{self.generator_timeout_s:.0f}s')
+            return False
+        except Exception as exc:
+            self.get_logger().error(
+                f'Pool generation failed to launch: {exc}')
+            return False
+
+        elapsed = time.time() - t0
+        if result.returncode != 0:
+            self.get_logger().error(
+                f'Pool generation exit={result.returncode} '
+                f'elapsed={elapsed:.1f}s')
+            tail = '\n'.join(
+                (result.stderr or '').splitlines()[-15:])
+            if tail:
+                self.get_logger().error(
+                    f'generator stderr tail:\n{tail}')
+            return False
+
+        run_dir = os.path.join(
+            self.output_dir, self.scenario, run_name)
+        gen_pool = os.path.join(run_dir, 'path_pool.json')
+        gen_poses = os.path.join(run_dir, 'path_pool_poses.json')
+        if not (os.path.isfile(gen_pool) and os.path.isfile(gen_poses)):
+            self.get_logger().error(
+                f'Generator returned 0 but outputs missing in {run_dir}')
+            return False
+
+        flat_pool = os.path.join(
+            self.output_dir, self.scenario, 'path_pool.json')
+        flat_poses = os.path.join(
+            self.output_dir, self.scenario, 'path_pool_poses.json')
+        try:
+            os.makedirs(
+                os.path.dirname(flat_pool), exist_ok=True)
+            shutil.copy2(gen_pool, flat_pool)
+            shutil.copy2(gen_poses, flat_poses)
+        except Exception as exc:
+            self.get_logger().error(
+                f'Failed to install pool files: {exc}')
+            return False
+
+        self.get_logger().info(
+            f'Pool generated and installed after {elapsed:.1f}s '
+            f'(run_dir={run_dir})')
+        return self._load_path_pool()
+
+    def _next_target_class(self):
+        with self._class_lock:
+            candidates = []
+            for name in CLASS_NAMES:
+                if self.class_counts[name] >= self.class_quotas[name]:
+                    continue
+                if not self.path_pool_by_class.get(name):
+                    continue
+                candidates.append(name)
+            if not candidates:
+                return None
+            lowest = min(self.class_counts[n] for n in candidates)
+            tied = [n for n in candidates
+                    if self.class_counts[n] == lowest]
+            return random.choice(tied)
+
+    def _select_next_pool_path(self):
+        target = self._next_target_class()
+        if target is None:
+            return None
+        with self._class_lock:
+            paths = self.path_pool_by_class.get(target, [])
+            if not paths:
+                return None
+            return paths.pop()
+
+    def _should_stop_recording(self):
+        """True when all quotas are met OR no class still has both
+        remaining quota and remaining pool paths."""
+        with self._class_lock:
+            for name in CLASS_NAMES:
+                if self.class_counts[name] < self.class_quotas[name]:
+                    if self.path_pool_by_class.get(name):
+                        return False
+        return True
+
+    #  Subscriptions
+
     def on_map(self, msg):
         self.map_msg = msg
 
@@ -538,6 +1076,8 @@ class TeleopDatasetRecorder(Node):
                 self._collision_since = time.time()
             if not self._collision_prev and not self.teleport_in_progress:
                 self.flag_collision = True
+            if self.state == STATE_RECORDING:
+                self.episode_had_collision = True
         else:
             self._collision_since = None
         self._collision_prev = now
@@ -593,6 +1133,8 @@ class TeleopDatasetRecorder(Node):
             self.flag_button_x = True
         if edge(self.regenerate_button_index, 'y'):
             self.flag_button_y = True
+
+    #  Room building
 
     def build_rooms_worker(self):
         while self.map_msg is None and rclpy.ok():
@@ -690,6 +1232,8 @@ class TeleopDatasetRecorder(Node):
         for rid in valid:
             self.free_cells.extend(self.room_cells[rid])
 
+    #  Counters / debug
+
     def load_goal_counter(self):
         if not self.count_existing_goals:
             self.goals_saved_total = 0
@@ -713,11 +1257,21 @@ class TeleopDatasetRecorder(Node):
             f'total_saved={self.goals_saved_total} '
             f'current_saved={self.goals_saved_session}',
             'RECORDED', 'info', -1.0)
+        if self.use_path_pool:
+            with self._class_lock:
+                counts = dict(self.class_counts)
+                quotas = dict(self.class_quotas)
+            self.dbg.send(
+                ' '.join(f'{n}={counts[n]}/{quotas[n]}'
+                         for n in CLASS_NAMES),
+                'CLASSES', 'info', -1.0)
 
     def heartbeat(self):
         self.dbg.send('Node initialized and ready.',
                       'NODE_STATUS', 'info', -1.0)
-        if self.teleport_in_progress:
+        if self._generating_pool:
+            self.dbg.send('Generating pool', 'STATUS', 'warn', -1.0)
+        elif self.teleport_in_progress:
             self.dbg.send('Teleporting', 'STATUS', 'warn', -1.0)
         elif not self.recording:
             self.dbg.send('Idle', 'STATUS', 'info', -1.0)
@@ -728,6 +1282,8 @@ class TeleopDatasetRecorder(Node):
         if not self.joy_seen:
             self.dbg.send('joystick not seen yet',
                           'STATUS', 'warn', -1.0)
+
+    #  Geometry helpers
 
     def room_of(self, x, y):
         if self.room_map is None:
@@ -755,6 +1311,8 @@ class TeleopDatasetRecorder(Node):
             return (x, y)
         except Exception:
             return None
+
+    #  Random sampling (non-pool mode)
 
     def sample_spawn(self):
         if not self.free_cells:
@@ -786,9 +1344,7 @@ class TeleopDatasetRecorder(Node):
         cells = self.room_cells.get(room, [])
         if not cells:
             return None
-
         recent = set(self.recent_zones) if avoid_recent_zones else set()
-
         if avoid_recent_zones:
             for _ in range(min(400, len(cells))):
                 x, y = random.choice(cells)
@@ -798,18 +1354,15 @@ class TeleopDatasetRecorder(Node):
                 if self.zone_key(x, y) in recent:
                     continue
                 return (x, y)
-
         for _ in range(min(400, len(cells))):
             x, y = random.choice(cells)
             d = math.hypot(x - rx, y - ry)
             if not (min_d <= d <= max_d):
                 continue
             return (x, y)
-
         for _ in range(min(200, len(cells))):
             x, y = random.choice(cells)
             return (x, y)
-
         return None
 
     def sample_goal_from(self, ref_x, ref_y, min_d=None, max_d=None):
@@ -817,9 +1370,7 @@ class TeleopDatasetRecorder(Node):
             min_d = self.min_dist
         if max_d is None:
             max_d = self.max_dist
-
         banned = set(self.recent_goal_rooms)
-
         candidates = [r for r in self.valid_rooms if r not in banned]
         random.shuffle(candidates)
         for room in candidates:
@@ -827,7 +1378,6 @@ class TeleopDatasetRecorder(Node):
                 room, ref_x, ref_y, min_d, max_d, True)
             if g is not None:
                 return g
-
         candidates = list(self.valid_rooms)
         random.shuffle(candidates)
         for room in candidates:
@@ -835,13 +1385,11 @@ class TeleopDatasetRecorder(Node):
                 room, ref_x, ref_y, min_d, max_d, True)
             if g is not None:
                 return g
-
         for room in candidates:
             g = self.sample_goal_in_room(
                 room, ref_x, ref_y, min_d, max_d, False)
             if g is not None:
                 return g
-
         if self.free_cells:
             return random.choice(self.free_cells)
         return None
@@ -849,12 +1397,10 @@ class TeleopDatasetRecorder(Node):
     def sample_start(self, ref_x=None, ref_y=None):
         pose = self.get_robot_pose()
         rx, ry = (pose if pose else (ref_x, ref_y))
-
-        if (rx is not None and random.random() < self.start_at_robot_prob):
+        if rx is not None and random.random() < self.start_at_robot_prob:
             cell = self._closest_free_cell(rx, ry)
             if cell is not None:
                 return cell
-
         spawn = self.sample_spawn_unexplored()
         if spawn is None:
             return None
@@ -874,10 +1420,11 @@ class TeleopDatasetRecorder(Node):
                 best = (cx, cy)
         return best
 
+    #  Markers / start-goal publishing
+
     def publish_markers(self):
         markers = MarkerArray()
         now = self.get_clock().now().to_msg()
-
         if self.current_start is not None:
             m = Marker()
             m.header.frame_id = self.map_frame
@@ -898,7 +1445,6 @@ class TeleopDatasetRecorder(Node):
             m.color.b = 0.0
             m.color.a = 0.9
             markers.markers.append(m)
-
         if self.current_goal is not None:
             m = Marker()
             m.header.frame_id = self.map_frame
@@ -919,7 +1465,6 @@ class TeleopDatasetRecorder(Node):
             m.color.b = 0.0
             m.color.a = 0.9
             markers.markers.append(m)
-
         self.pub_markers.publish(markers)
 
     def clear_markers(self):
@@ -937,7 +1482,6 @@ class TeleopDatasetRecorder(Node):
         if self.current_start is None or self.current_goal is None:
             return
         now = self.get_clock().now().to_msg()
-
         msg = PointStamped()
         msg.header.frame_id = self.map_frame
         msg.header.stamp = now
@@ -945,8 +1489,9 @@ class TeleopDatasetRecorder(Node):
         msg.point.y = float(self.current_goal[1])
         msg.point.z = 0.0
         self.pub_goal.publish(msg)
-
         self.publish_markers()
+
+    #  Teleport
 
     def _stop_robot_hard(self, duration_s=0.2):
         zero = Twist()
@@ -989,17 +1534,14 @@ class TeleopDatasetRecorder(Node):
         msg.pose.pose.position.x = float(x)
         msg.pose.pose.position.y = float(y)
         msg.pose.pose.position.z = 0.0
-
         half_yaw = yaw * 0.5
         msg.pose.pose.orientation.z = math.sin(half_yaw)
         msg.pose.pose.orientation.w = math.cos(half_yaw)
-
         cov = [0.0] * 36
         cov[0] = 0.5
         cov[7] = 0.5
         cov[35] = 0.15
         msg.pose.covariance = cov
-
         self.initialpose_pub.publish(msg)
 
     def wait_for_amcl_stable(self):
@@ -1029,10 +1571,8 @@ class TeleopDatasetRecorder(Node):
         if spawn_xyyaw is None:
             return False
         x, y, yaw = spawn_xyyaw
-
         self.paused_pub.publish(Bool(data=True))
         time.sleep(0.3)
-
         try:
             self.get_logger().info(
                 f'TT stop -> ({x:+.2f}, {y:+.2f}, {yaw:+.2f})')
@@ -1057,8 +1597,15 @@ class TeleopDatasetRecorder(Node):
             self.paused_pub.publish(Bool(data=False))
             time.sleep(0.1)
 
+    #  Verification & metadata
+
     def verify_saved(self, episode_id):
         time.sleep(1.5)
+        # Launch may be shutting down by now (max_goals reached in C++).
+        # rclpy.ok() returns False after rclpy.shutdown(), so skip all
+        # rclpy calls (dbg.send, get_logger) to avoid Destroyable errors.
+        if not rclpy.ok():
+            return
         try:
             count = count_goals_in_scenario(self.scenario_dir)
             if count > self.last_saved_count:
@@ -1076,7 +1623,8 @@ class TeleopDatasetRecorder(Node):
                 self.get_logger().warn(
                     f'episode {episode_id} not confirmed')
         except Exception as exc:
-            self.get_logger().warn(f'verify_saved failed: {exc}')
+            if rclpy.ok():
+                self.get_logger().warn(f'verify_saved failed: {exc}')
 
     def check_recorder_alive(self):
         if self.count_publishers('/mapless/local_occ_grid') == 0:
@@ -1085,9 +1633,77 @@ class TeleopDatasetRecorder(Node):
             return False, 'no publisher on /NN_goal'
         return True, ''
 
+    def _append_episode_metadata(self, entry):
+        path = os.path.join(
+            self.output_dir, self.scenario, 'episode_metadata.jsonl')
+        try:
+            os.makedirs(os.path.dirname(path), exist_ok=True)
+            with open(path, 'a') as f:
+                f.write(json.dumps(entry) + '\n')
+        except Exception as exc:
+            self.get_logger().warn(
+                f'episode_metadata write failed: {exc}')
+
+    def _record_failed_path(self, path_entry, reason, attempts):
+        if path_entry is None:
+            return
+        entry = {
+            'path_id': int(path_entry['id']),
+            'class': path_entry['class'],
+            'attempts': int(attempts),
+            'last_status': str(reason),
+            'start': list(path_entry['start']),
+            'goal': list(path_entry['goal']),
+        }
+        self.failed_paths.append(entry)
+        self.get_logger().warn(
+            f'path id={entry["path_id"]} class={entry["class"]} '
+            f'discarded after {attempts} attempts ({reason})')
+        self._write_failed_paths()
+
+    def _write_failed_paths(self):
+        path = os.path.join(
+            self.output_dir, self.scenario, 'failed_paths.json')
+        try:
+            os.makedirs(os.path.dirname(path), exist_ok=True)
+            by_id = {}
+            if os.path.isfile(path):
+                try:
+                    with open(path) as f:
+                        prev = json.load(f)
+                    for e in prev.get('entries', []):
+                        if e.get('path_id') is not None:
+                            by_id[e['path_id']] = e
+                except Exception:
+                    by_id = {}
+            for e in self.failed_paths:
+                by_id[e['path_id']] = e
+            merged = sorted(
+                by_id.values(), key=lambda x: x.get('path_id', 0))
+            payload = {
+                'scenario': self.scenario,
+                'generated_at': time.strftime('%Y-%m-%dT%H:%M:%S'),
+                'class_quotas': dict(self.class_quotas),
+                'class_counts': dict(self.class_counts),
+                'entries': merged,
+            }
+            tmp = path + '.tmp'
+            with open(tmp, 'w') as f:
+                json.dump(payload, f, indent=2)
+            os.replace(tmp, path)
+        except Exception as exc:
+            self.get_logger().warn(
+                f'failed_paths.json write failed: {exc}')
+
+    #  Recording control
+
     def toggle_recording(self):
         if not self.rooms_ready:
             self.get_logger().warn('rooms not ready, button ignored')
+            return
+        if self._generating_pool:
+            self.get_logger().info(
+                'Pool generation in progress; please wait.')
             return
         if self.recording:
             self.stop_recording()
@@ -1095,6 +1711,69 @@ class TeleopDatasetRecorder(Node):
             self.start_recording()
 
     def start_recording(self):
+        if self._generating_pool:
+            self.get_logger().info(
+                'Pool generation already in progress; please wait.')
+            return
+        if self._session_complete:
+            self.get_logger().warn(
+                'Session complete: all quotas met (or pools exhausted). '
+                'Restart the launch to start a new session.')
+            return
+        if self._pool_gen_failed:
+            self.get_logger().warn(
+                f'Previous pool generation failed: '
+                f'{self._pool_gen_error}. Restart the launch to retry.')
+            return
+
+        if self.use_path_pool and not self._pool_ready():
+            if self.auto_generate_pool:
+                self._generating_pool = True
+                threading.Thread(
+                    target=self._pool_gen_and_begin,
+                    daemon=True).start()
+                return
+
+            with self._class_lock:
+                deficits = dict(self._pool_deficits)
+            self.dbg.send(
+                f'Cannot record: pool not ready (deficits={deficits}) '
+                f'and auto_generate_pool=False',
+                'NODE_STATUS', 'err', -1.0)
+            self.get_logger().error(
+                f'Pool not ready (deficits={deficits}) and '
+                f'auto_generate_pool=False. Delete the pool or '
+                f'increase --st_sem_cmp_vc.')
+            return
+
+        self._begin_recording_after_pool()
+
+    def _pool_gen_and_begin(self):
+        try:
+            ok = self._ensure_path_pool()
+            if ok:
+                self._pool_gen_failed = False
+                self._pool_gen_error = ''
+                self._begin_recording_after_pool()
+            else:
+                self._pool_gen_failed = True
+                self._pool_gen_error = (
+                    'generate_path_pool.py failed; check logs')
+                self.dbg.send(
+                    'Pool generation failed; see logs.',
+                    'NODE_STATUS', 'err', -1.0)
+                self.get_logger().error(
+                    'Pool generation failed; recording not started. '
+                    'Fix generator and restart the launch.')
+        except Exception as exc:
+            self._pool_gen_failed = True
+            self._pool_gen_error = f'exception: {exc}'
+            self.get_logger().error(
+                f'_pool_gen_and_begin crashed: {exc}')
+        finally:
+            self._generating_pool = False
+
+    def _begin_recording_after_pool(self):
         ok, reason = self.check_recorder_alive()
         if not ok:
             self.dbg.send(f'Cannot record: {reason}',
@@ -1102,51 +1781,136 @@ class TeleopDatasetRecorder(Node):
             self.get_logger().error(f'cannot start recording: {reason}')
             return
 
+        with self._class_lock:
+            if self.path_pool_loaded and sum(
+                    self.class_quotas.values()) == 0:
+                base, rem = divmod(self.num_goals, len(CLASS_NAMES))
+                self.class_quotas = {
+                    k: base + (1 if i < rem else 0)
+                    for i, k in enumerate(CLASS_NAMES)}
+
         self.goals_saved_session = 0
         self.goals_saved_total_at_start = self.goals_saved_total
         self.recording = True
         self.last_active_time = time.time()
-
         self.dbg.send('Recording', 'STATUS', 'err', -1.0)
         self.update_info_channel()
         self.get_logger().info('recording started')
-
         self.generate_new_pair()
 
     def stop_recording(self):
+        # Return current path to pool whenever we stop, regardless of state.
+        # B during WAITING_FOR_START used to lose the path because the
+        # previous condition only handled STATE_RECORDING.
+        if (self.use_path_pool
+                and self.current_path is not None
+                and self.current_class):
+            with self._class_lock:
+                self.path_pool_by_class[
+                    self.current_class].append(self.current_path)
+            self.get_logger().info(
+                f'path id={self.current_path["id"]} '
+                f'class={self.current_class} returned to pool '
+                f'(manual stop via B, state={self.state})')
+
         if self.state == STATE_RECORDING and self.current_goal is not None:
             self.pub_success.publish(Bool(data=False))
             self.pub_active.publish(Bool(data=False))
+
         self.recording = False
         self.state = STATE_IDLE
         self.current_start = None
         self.current_goal = None
-
+        self.current_path = None
+        self.current_class = ''
+        self.path_attempts = 0
         self.clear_markers()
-
+        self._write_failed_paths()
         self.dbg.send('Idle', 'STATUS', 'info', -1.0)
+
         self.get_logger().info(
             f'recording stopped. session={self.goals_saved_session} '
             f'total={self.goals_saved_total}')
+        if self.use_path_pool:
+            with self._class_lock:
+                counts = dict(self.class_counts)
+                quotas = dict(self.class_quotas)
+            self.get_logger().info(
+                f'class_counts={counts} class_quotas={quotas}')
+
+    #  Pair generation
 
     def generate_new_pair(self):
+        if self.use_path_pool:
+            if self._should_stop_recording():
+                with self._class_lock:
+                    unmet = [(n, self.class_counts[n],
+                              self.class_quotas[n])
+                             for n in CLASS_NAMES
+                             if self.class_counts[n] < self.class_quotas[n]]
+                if unmet:
+                    self.get_logger().warn(
+                        f'Stopping: pool exhausted for unmet quotas '
+                        f'{unmet}. Restart the launch with more paths.')
+                else:
+                    self.get_logger().info(
+                        'Stopping: all quotas met.')
+                self._session_complete = True
+                self.stop_recording()
+                return
+            path = self._select_next_pool_path()
+            if path is None:
+                self.get_logger().info(
+                    'No more paths available; stopping recording.')
+                self.stop_recording()
+                return
+
+            self.current_path = path
+            self.current_class = path['class']
+            self.path_attempts = 0
+            self.current_start = (
+                float(path['start'][0]), float(path['start'][1]))
+            self.current_goal = (
+                float(path['goal'][0]), float(path['goal'][1]))
+            self.goal_start_time = 0.0
+
+            self.pub_episode_class.publish(
+                String(data=self.current_class))
+            self.publish_start_goal()
+            self.state = STATE_WAITING_FOR_START
+
+            self.get_logger().info(
+                f'new pool path id={path["id"]} '
+                f'class={self.current_class} '
+                f'start=({self.current_start[0]:+.2f},'
+                f'{self.current_start[1]:+.2f}) '
+                f'-> goal=({self.current_goal[0]:+.2f},'
+                f'{self.current_goal[1]:+.2f}) '
+                f'episode_id={self.episode_id}')
+            self.dbg.send(
+                f'pool path id={path["id"]} '
+                f'class={self.current_class}',
+                'INFO', 'info', 5.0)
+            return
+
+        # Non-pool mode (original random sampling).
         pose = self.get_robot_pose()
         rx, ry = pose if pose else (None, None)
-
         start = self.sample_start(rx, ry)
         if start is None:
             self.get_logger().warn('could not sample start')
             return
-
         goal = self.sample_goal_from(start[0], start[1])
         if goal is None:
             self.get_logger().warn('could not sample goal')
             return
 
+        self.current_path = None
+        self.current_class = ''
+        self.path_attempts = 0
         self.current_start = start
         self.current_goal = goal
         self.goal_start_time = 0.0
-
         self.publish_start_goal()
         self.state = STATE_WAITING_FOR_START
 
@@ -1161,22 +1925,46 @@ class TeleopDatasetRecorder(Node):
             'INFO', 'info', 5.0)
 
     def begin_episode_at_start(self):
+        # Publish episode_id right before goal_active so the C++ recorder
+        # marks is_episode_start=1 on the first sample.
         self.episode_id += 1
         self.pub_episode.publish(Int32(data=self.episode_id))
+        # Reset per-episode collision tracker.
+        self.episode_had_collision = False
+
+        if self.current_path is None:
+            self.path_attempts = 1
+        else:
+            self.path_attempts += 1
+
+        self.pub_episode_tries.publish(Int32(data=self.path_attempts))
         self.pub_active.publish(Bool(data=True))
         self.goal_start_time = time.time()
         self.last_active_time = time.time()
         self.state = STATE_RECORDING
+
         self.get_logger().info(
-            f'episode {self.episode_id} begin at start, goal='
-            f'({self.current_goal[0]:+.2f},{self.current_goal[1]:+.2f})')
+            f'episode {self.episode_id} begin at start, '
+            f'goal=({self.current_goal[0]:+.2f},'
+            f'{self.current_goal[1]:+.2f}) '
+            f'attempt={self.path_attempts}')
         self.dbg.send(
-            f'episode {self.episode_id} begin',
+            f'episode {self.episode_id} begin '
+            f'attempt={self.path_attempts}',
             'INFO', 'info', 5.0)
 
     def finish_episode(self, success, reason):
+        # Collision during episode cancels the save even if goal reached.
+        if success and self.episode_had_collision:
+            self.get_logger().warn(
+                f'episode {self.episode_id}: collision during episode, '
+                f'canceling save')
+            success = False
+            reason = 'collision_during_episode'
+
         if success and self.current_goal is not None:
             gx, gy = self.current_goal
+            
             self.recent_goals.append((gx, gy))
             self.recent_goal_rooms.append(self.room_of(gx, gy))
             self.recent_zones.append(self.zone_key(gx, gy))
@@ -1186,17 +1974,61 @@ class TeleopDatasetRecorder(Node):
 
         self.get_logger().info(
             f'episode {self.episode_id} end | '
-            f'success={success} reason={reason}')
+            f'success={success} reason={reason} '
+            f'class={self.current_class} '
+            f'attempt={self.path_attempts}')
         self.dbg.send(
             f'end success={success} reason={reason}',
             'INFO', 'info' if success else 'warn', 5.0)
 
         if success:
+            # Log metadata only when the episode actually committed,
+            # so failed attempts do not pollute the used-endpoint filter.
+            if (self.use_path_pool
+                    and self.current_path is not None
+                    and self.current_start is not None
+                    and self.current_goal is not None):
+                self._append_episode_metadata({
+                    'timestamp': time.strftime('%Y-%m-%dT%H:%M:%S'),
+                    'episode_id': self.episode_id,
+                    'path_id': self.current_path['id'],
+                    'class': self.current_class,
+                    'start': [float(self.current_start[0]),
+                              float(self.current_start[1])],
+                    'goal': [float(self.current_goal[0]),
+                             float(self.current_goal[1])],
+                    'attempt': self.path_attempts,
+                })
             threading.Thread(
                 target=self.verify_saved,
                 args=(self.episode_id,),
                 daemon=True).start()
+            if self.use_path_pool and self.current_class:
+                with self._class_lock:
+                    self.class_counts[self.current_class] += 1
+                self.update_info_channel()
+            self.current_path = None
 
+        # Failure with retries remaining -> retry same path.
+        if (not success and self.use_path_pool
+                and self.current_path is not None):
+            if self.path_attempts < self.path_max_attempts:
+                self.get_logger().warn(
+                    f'path id={self.current_path["id"]} failed '
+                    f'(reason={reason}, attempt={self.path_attempts}/'
+                    f'{self.path_max_attempts}). '
+                    f'Drive to start to retry, or press Y to skip.')
+                # Keep current_path, current_start, current_goal.
+                # Keep episode_id (retries share the same id).
+                self.state = STATE_WAITING_FOR_START
+                self.goal_start_time = 0.0
+                return
+            # Retries exhausted -> mark failed.
+            self._record_failed_path(
+                self.current_path, reason, self.path_attempts)
+            self.current_path = None
+
+        # Success or retries exhausted: move on.
         self.current_start = None
         self.current_goal = None
         self.state = STATE_IDLE
@@ -1204,6 +2036,8 @@ class TeleopDatasetRecorder(Node):
         if self.recording:
             time.sleep(self.goal_pause_s)
             self.generate_new_pair()
+
+    #  Teleport request
 
     def request_teleport(self, reason):
         if self.teleport_in_progress:
@@ -1225,17 +2059,35 @@ class TeleopDatasetRecorder(Node):
                     'teleport ignored, rooms not ready')
                 return
 
-            if self.state == STATE_RECORDING and self.current_goal is not None:
+            if (self.state == STATE_RECORDING
+                    and self.current_goal is not None):
                 self.pub_success.publish(Bool(data=False))
                 self.pub_active.publish(Bool(data=False))
                 self.get_logger().info(
                     f'discarding ep {self.episode_id} for teleport')
-            self.current_start = None
-            self.current_goal = None
-            self.state = STATE_IDLE
-            self.clear_markers()
+                if self.use_path_pool and self.current_path is not None:
+                    self.path_attempts += 1
+                    if self.path_attempts >= self.path_max_attempts:
+                        self._record_failed_path(
+                            self.current_path,
+                            'teleport_after_collision',
+                            self.path_attempts)
+                        self.current_path = None
 
-            spawn = self.sample_spawn_unexplored()
+            # Prefer teleporting to current_start if in pool mode.
+            if (self.use_path_pool
+                    and self.current_path is not None
+                    and self.current_start is not None):
+                sx, sy = self.current_start
+                pose = self.get_robot_pose()
+                if pose is not None:
+                    yaw = math.atan2(sy - pose[1], sx - pose[0])
+                else:
+                    yaw = 0.0
+                spawn = (sx, sy, yaw)
+            else:
+                spawn = self.sample_spawn_unexplored()
+
             if spawn is None:
                 self.get_logger().warn('no spawn for teleport')
                 return
@@ -1247,7 +2099,12 @@ class TeleopDatasetRecorder(Node):
 
             self.dbg.send('teleport done', 'INFO', 'info', 5.0)
 
-            if self.recording:
+            if self.current_path is not None:
+                # We're back on the same path; remain in WAITING_FOR_START.
+                self.state = STATE_WAITING_FOR_START
+                self.clear_markers()
+                self.publish_start_goal()
+            elif self.recording:
                 self.generate_new_pair()
         except Exception as exc:
             self.get_logger().error(f'teleport worker failed: {exc}')
@@ -1255,6 +2112,8 @@ class TeleopDatasetRecorder(Node):
                           'NODE_STATUS', 'err', -1.0)
         finally:
             self.teleport_in_progress = False
+
+    #  Tick
 
     def tick(self):
         try:
@@ -1265,6 +2124,14 @@ class TeleopDatasetRecorder(Node):
                           'NODE_STATUS', 'err', -1.0)
 
     def _tick_impl(self):
+        if self._generating_pool:
+            # Ignore button presses while a pool is being generated.
+            self.flag_button_b = False
+            self.flag_button_x = False
+            self.flag_button_y = False
+            self.flag_collision = False
+            return
+
         if self.teleport_in_progress:
             self.flag_collision = False
             return
@@ -1286,11 +2153,19 @@ class TeleopDatasetRecorder(Node):
                         and self.current_goal is not None):
                     self.pub_success.publish(Bool(data=False))
                     self.pub_active.publish(Bool(data=False))
+                if self.use_path_pool and self.current_path is not None:
+                    self._record_failed_path(
+                        self.current_path,
+                        'skipped_by_operator',
+                        max(1, self.path_attempts))
+                self.current_path = None
+                self.path_attempts = 0
                 self.generate_new_pair()
             return
 
         if self.flag_collision:
             self.flag_collision = False
+            self.get_logger().info('tick: consuming flag_collision')
             self.request_teleport('collision')
             return
 
@@ -1374,8 +2249,12 @@ def main():
     except (KeyboardInterrupt, SystemExit):
         pass
     finally:
-        if node.recording:
-            node.stop_recording()
+        try:
+            if node.recording:
+                node.stop_recording()
+            node._write_failed_paths()
+        except Exception as exc:
+            print(f'[teleop] shutdown: failed_paths write: {exc}')
         executor.shutdown()
         node.destroy_node()
         if rclpy.ok():

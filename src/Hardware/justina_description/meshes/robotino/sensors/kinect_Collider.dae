@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <asset>
+    <contributor>
+      <author>Blender User</author>
+      <authoring_tool>Blender 3.6.23 commit date:2025-06-16, commit time:11:52, hash:e467db79ca8c</authoring_tool>
+    </contributor>
+    <created>2026-02-10T10:37:17</created>
+    <modified>2026-02-10T10:37:17</modified>
+    <unit name="meter" meter="1"/>
+    <up_axis>Z_UP</up_axis>
+  </asset>
+  <library_effects/>
+  <library_images/>
+  <library_geometries>
+    <geometry id="Kinect_Collider-mesh" name="Kinect_Collider">
+      <mesh>
+        <source id="Kinect_Collider-mesh-positions">
+          <float_array id="Kinect_Collider-mesh-positions-array" count="72">0.03065186 -0.1392214 0.01488894 0.03065186 -0.1392214 0.05285048 -0.0313481 -0.1096339 0.01488894 -0.0313481 -0.1096339 0.05285048 0.03065186 0.1392214 0.01488894 0.03065186 0.1392214 0.05285048 -0.0313481 0.1096339 0.01488894 -0.0313481 0.1096339 0.05285048 0.0306527 -0.03667205 -0.01714944 0.0361225 -0.04318439 -0.004310667 -0.0306527 -0.03667211 -0.01714944 -0.0361225 -0.04318439 -0.004310667 0.0306527 0.03631794 -0.01714944 0.0361225 0.04283028 -0.004310667 -0.0306527 0.03631794 -0.01714944 -0.0361225 0.04283028 -0.004310667 0.008438944 -0.007602632 0.006660044 -0.009050369 -0.007602632 0.006660044 -0.009050369 0.007602632 0.006660044 0.008438944 0.007602632 0.006660044 0.008438944 -0.007602632 0.01488894 -0.009050369 -0.007602632 0.01488894 -0.009050369 0.007602632 0.01488894 0.008438944 0.007602632 0.01488894</float_array>
+          <technique_common>
+            <accessor source="#Kinect_Collider-mesh-positions-array" count="24" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="Kinect_Collider-mesh-normals">
+          <float_array id="Kinect_Collider-mesh-normals-array" count="111">-0.4306892 -0.9025005 0 -1 0 0 -0.4306892 0.9025005 0 1 0 0 0 0 -1 0 0 1 0 -0.8918303 -0.4523702 -0.9199872 0 -0.3919487 0 0.8918306 -0.4523698 0.9199871 0 -0.3919487 0 0 -1 -0.3755751 0 0.926792 0 1 0 0 0.2973398 0.9547718 0 -0.2946386 0.9556088 0.3684164 0 0.9296609 0 0 1 0 -1 0 1 0 0 -1 0 0 -0.430689 -0.9025004 0 -1 0 0 -0.430689 0.9025004 0 1 0 0 0 0 -1 0 0 1 0 -0.8918302 -0.4523705 -0.9199873 0 -0.3919484 0 0.89183 -0.4523707 0.9199872 0 -0.3919485 0 0 -1 -0.3755749 0 0.9267922 0 0.2973398 0.9547718 0 -0.2946388 0.9556088 0.3684164 0 0.9296609 0 0 1 -1 0 0</float_array>
+          <technique_common>
+            <accessor source="#Kinect_Collider-mesh-normals-array" count="37" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="Kinect_Collider-mesh-map-0">
+          <float_array id="Kinect_Collider-mesh-map-0-array" count="240">0.625 0 0.375 0.25 0.375 0 0.625 0.25 0.375 0.5 0.375 0.25 0.625 0.5 0.375 0.75 0.375 0.5 0.625 0.75 0.375 1 0.375 0.75 0.375 0.5 0.125 0.75 0.125 0.5 0.875 0.5 0.625 0.75 0.625 0.5 0.625 0 0.375 0.25 0.375 0 0.625 0.25 0.375 0.5 0.375 0.25 0.625 0.5 0.375 0.75 0.375 0.5 0.625 0.75 0.375 1 0.375 0.75 0.375 0.5 0.125 0.75 0.125 0.5 0.625 0.5 0.625 0.25 0.625 0.5 0.625 0.5 0.625 0.75 0.625 0.75 0.625 0.5 0.625 0.75 0.625 0.75 0.625 0.25 0.625 0 0.625 0.25 0.625 0.75 0.625 1 0.625 1 0.875 0.5 0.625 0.75 0.625 0.5 0.625 0 0.625 0.25 0.625 0.25 0.625 0.75 0.625 1 0.625 1 0.625 0.25 0.625 0.5 0.625 0.5 0.625 0 0.625 0.25 0.375 0.25 0.625 0.25 0.625 0.5 0.375 0.5 0.625 0.5 0.625 0.75 0.375 0.75 0.625 0.75 0.625 1 0.375 1 0.375 0.5 0.375 0.75 0.125 0.75 0.875 0.5 0.875 0.75 0.625 0.75 0.625 0 0.625 0.25 0.375 0.25 0.625 0.25 0.625 0.5 0.375 0.5 0.625 0.5 0.625 0.75 0.375 0.75 0.625 0.75 0.625 1 0.375 1 0.375 0.5 0.375 0.75 0.125 0.75 0.625 0.5 0.625 0.25 0.625 0.25 0.625 0.5 0.625 0.5 0.625 0.75 0.625 0.5 0.625 0.5 0.625 0.75 0.625 0.25 0.625 0 0.625 0 0.625 0.75 0.625 0.75 0.625 1 0.875 0.5 0.875 0.75 0.625 0.75 0.625 0 0.625 0 0.625 0.25 0.625 0.75 0.625 0.75 0.625 1 0.625 0.25 0.625 0.25 0.625 0.5</float_array>
+          <technique_common>
+            <accessor source="#Kinect_Collider-mesh-map-0-array" count="120" stride="2">
+              <param name="S" type="float"/>
+              <param name="T" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <vertices id="Kinect_Collider-mesh-vertices">
+          <input semantic="POSITION" source="#Kinect_Collider-mesh-positions"/>
+        </vertices>
+        <triangles count="40">
+          <input semantic="VERTEX" source="#Kinect_Collider-mesh-vertices" offset="0"/>
+          <input semantic="NORMAL" source="#Kinect_Collider-mesh-normals" offset="1"/>
+          <input semantic="TEXCOORD" source="#Kinect_Collider-mesh-map-0" offset="2" set="0"/>
+          <p>1 0 0 2 0 1 0 0 2 3 1 3 6 1 4 2 1 5 7 2 6 4 2 7 6 2 8 5 3 9 0 3 10 4 3 11 6 4 12 0 4 13 2 4 14 3 5 15 5 5 16 7 5 17 9 6 18 10 6 19 8 6 20 11 7 21 14 7 22 10 7 23 15 8 24 12 8 25 14 8 26 13 9 27 8 9 28 12 9 29 14 10 30 8 10 31 10 10 32 15 11 33 17 11 34 18 11 35 18 12 36 23 12 37 19 12 38 15 13 39 19 13 40 13 13 41 11 14 42 16 14 43 17 14 44 13 15 45 16 15 46 9 15 47 21 16 48 23 16 49 22 16 50 16 17 51 21 17 52 17 17 53 19 18 54 20 18 55 16 18 56 17 19 57 22 19 58 18 19 59 1 20 60 3 20 61 2 20 62 3 21 63 7 21 64 6 21 65 7 22 66 5 22 67 4 22 68 5 23 69 1 23 70 0 23 71 6 24 72 4 24 73 0 24 74 3 25 75 1 25 76 5 25 77 9 26 78 11 26 79 10 26 80 11 27 81 15 27 82 14 27 83 15 28 84 13 28 85 12 28 86 13 29 87 9 29 88 8 29 89 14 30 90 12 30 91 8 30 92 15 31 93 11 31 94 17 31 95 18 12 96 22 12 97 23 12 98 15 32 99 18 32 100 19 32 101 11 33 102 9 33 103 16 33 104 13 34 105 19 34 106 16 34 107 21 35 108 20 35 109 23 35 110 16 17 111 20 17 112 21 17 113 19 18 114 23 18 115 20 18 116 17 36 117 21 36 118 22 36 119</p>
+        </triangles>
+      </mesh>
+    </geometry>
+  </library_geometries>
+  <library_visual_scenes>
+    <visual_scene id="Scene" name="Scene">
+      <node id="Kinect_Collider" name="Kinect_Collider" type="NODE">
+        <matrix sid="transform">1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1</matrix>
+        <instance_geometry url="#Kinect_Collider-mesh" name="Kinect_Collider"/>
+      </node>
+    </visual_scene>
+  </library_visual_scenes>
+  <scene>
+    <instance_visual_scene url="#Scene"/>
+  </scene>
+</COLLADA>
