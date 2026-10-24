@@ -1,1 +1,38 @@
 dataset.tar
+
+# ==============================
+# Python
+# ==============================
+# Compiled Python files
+*.pyc
+*.pyo
+*.pyd
+
+# Python cache directories
+__pycache__/
+**/__pycache__/
+
+# Python virtual environments
+venv/
+env/
+.venv/
+.env/
+
+# ==============================
+# ROS2 / CMake
+# ==============================
+# ROS2 build artifacts
+build/
+install/
+log/
+
+# Some ROS2 specific generated files
+*.egg-info/
+*.egg
+
+# ==============================
+# Editor / IDE
+# ==============================
+# VSCode
+.vscode/
+**/.vscode/
