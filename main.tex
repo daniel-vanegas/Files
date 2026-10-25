@@ -234,6 +234,7 @@ The underlying control loop of the PNS, which includes the potential fields for 
 \includegraphics[width=0.4\columnwidth]{images/data_collection.png}
 \caption{Automated data collection process using the PNS.}\label{fig:data_collect}
 \end{figure}
+
 \begingroup
 \color{red}
 \section{Environment Similarity Metric}\label{sec:metric_definition}
@@ -251,20 +252,20 @@ Since a full occupancy grid contains tens of thousands of points, we treat the e
     \mu = \frac{1}{|\mathcal{P}|} \sum_{i=1}^{|\mathcal{P}|} \delta_{p_i}
 \end{equation}
 
-where \(\delta_{p_i}\) is the Dirac delta function at position \(p_i\). To make the computation tractable for high-resolution grids, we subsample a fixed number \(N\) of points uniformly at random from each map, where \(N\) is referred to as the \emph{sampling density}. Throughout this work we use \(N=4000\) points per environment, yielding a sparse empirical distribution \(\hat{\mu}\) over the subsampled cells.
+where \(\delta_{p_i}\) is the Dirac delta function at position \(p_i\). To make the computation tractable for high-resolution grids, we subsample a fixed number \(n_p\) of points uniformly at random from each map, where \(n_p\) is referred to as the \emph{sampling density}. Throughout this work we use \(n_p=4000\) points per environment, yielding a sparse empirical distribution \(\hat{\mu}\) over the subsampled cells.
 
 \textbf{Wasserstein Distance and Sinkhorn Regularization.}
 
 Given two environments \(\mathcal{A}\) and \(\mathcal{B}\) with empirical distributions \(\hat{\mu}_A\) and \(\hat{\mu}_B\), we quantify their structural dissimilarity using an entropy-regularized optimal transport cost related to the 1-Wasserstein distance (Earth Mover's Distance). This cost quantifies the effort required to transport the obstacle distribution of \(\mathcal{A}\) into that of \(\mathcal{B}\). 
 
-To compute this efficiently while maintaining differentiability and numerical stability, we adopt the entropy-regularized optimal transport formulation (Sinkhorn distance). Let \(C \in \mathbb{R}^{N \times N}\) be the cost matrix, where \(C_{ij} = \|p_i - p_j\|_2\) is the Euclidean distance between points \(p_i \in \mathcal{A}\) and \(p_j \in \mathcal{B}\). The Sinkhorn distance is defined as:
+To compute this efficiently while maintaining differentiability and numerical stability, we adopt the entropy-regularized optimal transport formulation (Sinkhorn distance). Let \(\mathbf{D} \in \mathbb{R}^{n_p \times n_p}\) be the cost matrix, where \(D_{ij} = \|p_i - p_j\|_2\) is the Euclidean distance between points \(p_i \in \mathcal{A}\) and \(p_j \in \mathcal{B}\). The Sinkhorn distance is defined as:
 
 \begin{equation}
-    d_{\text{Sinkhorn}}(\mathcal{A}, \mathcal{B}) = \min_{\gamma \in \Pi(\hat{\mu}_A, \hat{\mu}_B)} \sum_{i,j} \gamma_{ij} C_{ij} - \lambda H(\gamma)
+    d_{\text{Sinkhorn}}(\mathcal{A}, \mathcal{B}) = \min_{\boldsymbol{\Gamma} \in \Pi(\hat{\mu}_A, \hat{\mu}_B)} \sum_{i,j} \Gamma_{ij} D_{ij} - \lambda H(\boldsymbol{\Gamma})
     \label{eq:sinkhorn}
 \end{equation}
 
-where \(\Pi(\hat{\mu}_A, \hat{\mu}_B)\) is the set of all transportation plans (joint probabilities with marginals \(\hat{\mu}_A\) and \(\hat{\mu}_B\)), \(H(\gamma) = -\sum_{i,j} \gamma_{ij} \log \gamma_{ij}\) is the entropy of the transport plan, and \(\lambda = 0.001\) is the entropic regularization parameter. A smaller \(\lambda\) yields a result closer to the exact EMD, but requires more iterations to converge. We use \(\lambda = 0.001\) with a maximum of 200 iterations.
+where \(\Pi(\hat{\mu}_A, \hat{\mu}_B)\) is the set of all transportation plans (joint probabilities with marginals \(\hat{\mu}_A\) and \(\hat{\mu}_B\)), \(H(\boldsymbol{\Gamma}) = -\sum_{i,j} \Gamma_{ij} \log \Gamma_{ij}\) is the entropy of the transport plan, and \(\lambda = 0.001\) is the entropic regularization parameter. A smaller \(\lambda\) yields a result closer to the exact EMD, but requires more iterations to converge. We use \(\lambda = 0.001\) with a maximum of 200 iterations.
 
 \textbf{Global Scale Normalization.}
 
@@ -272,7 +273,7 @@ To ensure that the metric values are interpretable and independent of the absolu
 
 \textbf{Bootstrap Averaging.}
 
-Because the empirical distributions depend on the random subsampling of \(N\) points, a single distance computation is subject to sampling noise. To obtain a robust estimate, we perform \(B=5\) independent bootstrap resamples. The final reported distance \(\hat{d}(\mathcal{A}, \mathcal{B})\) is the mean over the \(B\) runs, and the standard deviation across these runs summarizes resampling variability; it is not, by itself, a confidence interval.
+Because the empirical distributions depend on the random subsampling of \(n_p\) points, a single distance computation is subject to sampling noise. To obtain a robust estimate, we perform \(B=5\) independent bootstrap resamples. The final reported distance \(\hat{d}(\mathcal{A}, \mathcal{B})\) is the mean over the \(B\) runs, and the standard deviation across these runs summarizes resampling variability; it is not, by itself, a confidence interval.
 
 \subsection{Validation of the Metric}\label{sec:metric_validation}
 
@@ -280,7 +281,7 @@ To characterize the proposed environment similarity metric, we evaluated all 30 
 
 \textbf{Statistical Robustness and Dynamic Range.}
 
-As detailed in Table \ref{tab:metric_validation_stats}, the pairwise distances range from \(0.0337\) (nearly identical layouts) to \(0.1733\) (highly distinct topologies), providing a dynamic range of \(5.14\times\). The ranked pairs in Tables \ref{tab:most_similar} and \ref{tab:most_distinct} illustrate the range of structural differences measured across the 30 environments. Furthermore, the metric is highly stable: the mean coefficient of variation (CV) across all pairs is \(1.20\%\) over 5 bootstrap resamples with a sampling density of \(N=4000\) points per environment. To evaluate the sensitivity to point cloud density, we performed a cross-validation using \(N=2000\) points. The rank correlation between both configurations exceeded \(0.99\), and the dynamic range remained virtually unchanged (\(5.05\times\)). While \(N=2000\) is computationally sufficient, we report the \(N=4000\) configuration for maximum statistical fidelity.
+As detailed in Table \ref{tab:metric_validation_stats}, the pairwise distances range from \(0.0337\) (nearly identical layouts) to \(0.1733\) (highly distinct topologies), providing a dynamic range of \(5.14\times\). The ranked pairs in Tables \ref{tab:most_similar} and \ref{tab:most_distinct} illustrate the range of structural differences measured across the 30 environments. Furthermore, the metric is highly stable: the mean coefficient of variation (CV) across all pairs is \(1.20\%\) over 5 bootstrap resamples with a sampling density of \(n_p=4000\) points per environment. To evaluate the sensitivity to point cloud density, we performed a cross-validation using \(n_p=2000\) points. The rank correlation between both configurations exceeded \(0.99\), and the dynamic range remained virtually unchanged (\(5.05\times\)). While \(n_p=2000\) is computationally sufficient, we report the \(n_p=4000\) configuration for maximum statistical fidelity.
 
 \textbf{Scale Sensitivity vs. Topological Similarity.}
 
@@ -290,11 +291,11 @@ As shown in Table \ref{tab:scale_control}, despite their visual similarity, the 
 
 \begin{table}[htbp]
 \centering
-\caption{Statistical summary of the 435 pairwise Wasserstein distances across 30 environments. \(N\) denotes the sampling density (points per environment).}
+\caption{Statistical summary of the 435 pairwise Wasserstein distances across 30 environments. \(n_p\) denotes the sampling density (points per environment).}
 \label{tab:metric_validation_stats}
 \begin{tabular}{lcc}
 \toprule
-\textbf{Metric} & \textbf{Configuration \(N=4000\)} & \textbf{Configuration \(N=2000\)} \\
+\textbf{Metric} & \textbf{Configuration \(n_p=4000\)} & \textbf{Configuration \(n_p=2000\)} \\
 \midrule
 Distance range & \(0.0337 - 0.1733\) & \(0.0349 - 0.1762\) \\
 Dynamic range (max/min) & \(5.14\times\) & \(5.05\times\) \\
@@ -305,12 +306,12 @@ Spearman rank correlation & \multicolumn{2}{c}{\(> 0.99\)} \\
 \end{table}
 \begin{table}[htbp]
 \centering
-\caption{Controlled scale validation. E05 and E07 share identical visual layouts but differ in physical scale. Distances are reported as mean \(\pm\) standard deviation. \(N\) denotes the sampling density.}
+\caption{Controlled scale validation. E05 and E07 share identical visual layouts but differ in physical scale. Distances are reported as mean \(\pm\) standard deviation. \(n_p\) denotes the sampling density.}
 \label{tab:scale_control}
 
 \begin{tabular}{llcc}
 \toprule
-\textbf{Pair} & \textbf{Condition} & \textbf{Distance (\(N=4000\))} & \textbf{Distance (\(N=2000\))} \\
+\textbf{Pair} & \textbf{Condition} & \textbf{Distance (\(n_p=4000\))} & \textbf{Distance (\(n_p=2000\))} \\
 \midrule
 E05 vs. E03 & Same scale, diff. layout & \(0.0472 \pm 0.0006\) & \(0.0481 \pm 0.0002\) \\
 E05 vs. E07 & \textbf{Diff. scale, same layout} & \(\mathbf{0.1185 \pm 0.0007}\) & \(\mathbf{0.1192 \pm 0.0010}\) \\
@@ -319,7 +320,7 @@ E05 vs. E10 & Diff. scale, diff. layout & \(0.1733 \pm 0.0006\) & \(0.1762 \pm 0
 \end{tabular}
 \end{table}
 
-\textbf{Ranked environment pairs.} Tables~\ref{tab:most_distinct} and~\ref{tab:most_similar} report the ten most structurally distinct and the ten most structurally similar pairs, respectively, according to the mean normalized distance computed with \(N=4000\) points per environment. The reported \(\sigma\) is the standard deviation across the five resampling runs.
+\textbf{Ranked environment pairs.} Tables~\ref{tab:most_distinct} and~\ref{tab:most_similar} report the ten most structurally distinct and the ten most structurally similar pairs, respectively, according to the mean normalized distance computed with \(n_p=4000\) points per environment. The reported \(\sigma\) is the standard deviation across the five resampling runs.
 
 \input{tables/table_most_distinct.tex}\label{tab:most_distinct}
 
