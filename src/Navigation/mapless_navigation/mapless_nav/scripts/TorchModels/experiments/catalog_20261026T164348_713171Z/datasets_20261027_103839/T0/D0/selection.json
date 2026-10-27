@@ -1,0 +1,74 @@
+{
+  "environment_set": "T0",
+  "dataset": "D0",
+  "train_pairs": 9463,
+  "validation_pairs": 2384,
+  "validation_sha256": "7853f44a77dafa6f03836eeb1eab1a94bb613699e22d33658ba9bd390530d65c",
+  "source_train_pairs": 9463,
+  "selected_fraction_of_training": 1.0,
+  "checks": {
+    "validation_manifest": {
+      "status": "passed",
+      "pairs": 2384,
+      "observations": 4768,
+      "episodes": 111,
+      "scenarios": 3,
+      "role": "validation",
+      "duplicate_pairs": 0,
+      "overlapping_observations": 0,
+      "label_source": "second observation",
+      "sha256": "7853f44a77dafa6f03836eeb1eab1a94bb613699e22d33658ba9bd390530d65c"
+    },
+    "selection": {
+      "status": "passed",
+      "direction_balance_enforced": false
+    },
+    "train_manifest": {
+      "status": "passed",
+      "pairs": 9463,
+      "observations": 18926,
+      "episodes": 453,
+      "scenarios": 3,
+      "role": "train",
+      "duplicate_pairs": 0,
+      "overlapping_observations": 0,
+      "label_source": "second observation",
+      "sha256": "9648f29324ed5f6f014626e05bb88cb5d719473929af904c28ea9f5275b5a260"
+    }
+  },
+  "coverage": {
+    "B1/left": {
+      "pairs": 57,
+      "episodes": 3,
+      "scenarios": 3
+    },
+    "B1/right": {
+      "pairs": 9,
+      "episodes": 1,
+      "scenarios": 1
+    },
+    "B2/left": {
+      "pairs": 24,
+      "episodes": 3,
+      "scenarios": 3
+    },
+    "unassigned/not_applicable": {
+      "pairs": 8,
+      "episodes": 1,
+      "scenarios": 1
+    },
+    "unassigned/right": {
+      "pairs": 11,
+      "episodes": 1,
+      "scenarios": 1
+    },
+    "unassigned/unassigned": {
+      "pairs": 9354,
+      "episodes": 450,
+      "scenarios": 3
+    }
+  },
+  "status": "ready",
+  "selection": "all accepted training pairs",
+  "train_sha256": "9648f29324ed5f6f014626e05bb88cb5d719473929af904c28ea9f5275b5a260"
+}

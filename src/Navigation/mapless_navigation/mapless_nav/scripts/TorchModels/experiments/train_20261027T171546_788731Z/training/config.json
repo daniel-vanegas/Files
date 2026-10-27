@@ -1,0 +1,103 @@
+{
+  "format_version": 3,
+  "architecture": "ros1_legacy",
+  "data_format": "ros2_episode",
+  "sequence_length": 2,
+  "stack_n_channels": 2,
+  "hidden_size": 350,
+  "num_layers": 4,
+  "vmax": [
+    0.5,
+    0.5,
+    1.0
+  ],
+  "reverse_enable": false,
+  "distance_max": null,
+  "normalize_data": false,
+  "normalize_occupancy": false,
+  "label_normalization": "legacy_training_pool_minmax",
+  "normalize_label": true,
+  "dropout_1": 0.2,
+  "dropout_2": 0.15,
+  "batch_size": 3,
+  "epochs_requested": 20,
+  "learning_rate_initial": 0.0006,
+  "weight_decay": 0.0,
+  "train_split": 0.8,
+  "patience": 5,
+  "seed": 1022193343,
+  "device": "cuda:0",
+  "data_root": "data",
+  "split": {
+    "dataset_format": "ros2_episode",
+    "environment_set": "T0",
+    "dataset": "D0",
+    "datasets_sha256": "9652183fc0e5d43852d3294bb03eb3cf0237f8b27ac8ba2e31a10c251b966d80",
+    "manifest_sha256": {
+      "train": "9648f29324ed5f6f014626e05bb88cb5d719473929af904c28ea9f5275b5a260",
+      "validation": "7853f44a77dafa6f03836eeb1eab1a94bb613699e22d33658ba9bd390530d65c",
+      "normalization": "9648f29324ed5f6f014626e05bb88cb5d719473929af904c28ea9f5275b5a260"
+    },
+    "catalog_sha256": "548e0b2d18223a8b07d58c25832b41dff5426c9420bee277b0787917c672ce22",
+    "split_seed": 1899493870,
+    "selection_seed": 2895327133,
+    "train_sequences": 9463,
+    "validation_sequences": 2384,
+    "split": "frozen episode partition; disjoint pairs; shuffle training pairs across episodes",
+    "normalization_source": "complete D0 training pool; shared by recipes of the same environment set",
+    "preprocessing": {
+      "version": 1,
+      "lom_encoding": "raw_0_100",
+      "lom_layout": "ros2_recorded_ccw",
+      "target_encoding": "distance_m_angle_rad",
+      "sequence_length": 2,
+      "training_stride": 2,
+      "label_normalization": "legacy_training_pool_minmax",
+      "label_min": [
+        0.0,
+        -0.10267800092697144,
+        -0.5991079807281494
+      ],
+      "label_max": [
+        0.5434929728507996,
+        0.10245200246572495,
+        0.5991799831390381
+      ],
+      "normalization_manifest_sha256": "9648f29324ed5f6f014626e05bb88cb5d719473929af904c28ea9f5275b5a260"
+    }
+  },
+  "preprocessing": {
+    "version": 1,
+    "lom_encoding": "raw_0_100",
+    "lom_layout": "ros2_recorded_ccw",
+    "target_encoding": "distance_m_angle_rad",
+    "sequence_length": 2,
+    "training_stride": 2,
+    "label_normalization": "legacy_training_pool_minmax",
+    "label_min": [
+      0.0,
+      -0.10267800092697144,
+      -0.5991079807281494
+    ],
+    "label_max": [
+      0.5434929728507996,
+      0.10245200246572495,
+      0.5991799831390381
+    ],
+    "normalization_manifest_sha256": "9648f29324ed5f6f014626e05bb88cb5d719473929af904c28ea9f5275b5a260"
+  },
+  "run_mode": "training",
+  "occupancy_max": 100.0,
+  "versions": {
+    "torch": "2.4.1+cu121",
+    "numpy": "1.26.4",
+    "python": "3.12.6 (main, Sep  9 2024, 14:41:06) [GCC 13.3.0]",
+    "cuda": "12.1"
+  },
+  "source_sha256": {
+    "train.py": "34684e7ea27e17c230643ed947ac57fe87b8e38f5b30eac21436c32a8c0f59df",
+    "models.py": "2fc10758cba210b7aff588378ccb1f7c255c3fc481d3aedb010790cebc1a5912",
+    "experiment_control.py": "e9cff7797fa1fbf5ca05995f82e431e070c0fd1c7aff70d8f2f3aa9c13559d84",
+    "RNN_mapless.py": "04153a81388e707888e06df963dd7c45ce449fa0822442204c66fd5ce963d8a6"
+  }
+}

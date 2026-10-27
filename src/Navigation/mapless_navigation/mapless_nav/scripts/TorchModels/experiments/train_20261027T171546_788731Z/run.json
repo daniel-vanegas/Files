@@ -1,0 +1,36 @@
+{
+  "phase": "training",
+  "seed": 1022193343,
+  "seed_source": "random",
+  "datasets_sha256": "9652183fc0e5d43852d3294bb03eb3cf0237f8b27ac8ba2e31a10c251b966d80",
+  "cell": "T0/D0",
+  "command": [
+    "/usr/bin/python3",
+    "-u",
+    "/home/devan/GIT/mapless/src/Navigation/mapless_navigation/mapless_nav/scripts/TorchModels/train.py",
+    "--datasets-dir",
+    "/home/devan/GIT/mapless/src/Navigation/mapless_navigation/mapless_nav/scripts/TorchModels/experiments/catalog_20261026T164348_713171Z/datasets_20261027_103839",
+    "--environment-set",
+    "T0",
+    "--dataset",
+    "D0",
+    "--seed",
+    "1022193343",
+    "--epochs",
+    "20",
+    "--patience",
+    "5",
+    "--device",
+    "auto",
+    "--output-dir",
+    "/home/devan/GIT/mapless/src/Navigation/mapless_navigation/mapless_nav/scripts/TorchModels/experiments/train_20261027T171546_788731Z/training"
+  ],
+  "provenance": {
+    "created_utc": "2026-10-27T17:15:46.789279+00:00",
+    "source_baseline": "Files/main@0eab89f7b7a4abe308dbed9001ff5b1accd321be",
+    "controller_sha256": "e9cff7797fa1fbf5ca05995f82e431e070c0fd1c7aff70d8f2f3aa9c13559d84",
+    "numpy": "1.26.4"
+  },
+  "status": "completed",
+  "returncode": 0
+}

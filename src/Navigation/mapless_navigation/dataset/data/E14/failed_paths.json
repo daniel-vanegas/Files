@@ -1,8 +1,18 @@
 {
   "scenario": "E14",
-  "generated_at": "2026-10-16T23:22:59",
-  "total_target": 200,
-  "total_recorded": 198,
+  "generated_at": "2026-10-26T12:41:10",
+  "class_quotas": {
+    "straight": 25,
+    "semi_complex": 25,
+    "complex": 25,
+    "v_complex": 25
+  },
+  "class_counts": {
+    "straight": 0,
+    "semi_complex": 0,
+    "complex": 0,
+    "v_complex": 0
+  },
   "entries": [
     {
       "path_id": 144,

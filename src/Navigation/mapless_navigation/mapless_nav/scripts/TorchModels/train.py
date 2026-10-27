@@ -10,6 +10,7 @@ holdouts for generalization experiments.
 from __future__ import annotations
 
 import argparse
+import importlib.util
 import json
 import random
 import sys
@@ -228,6 +229,76 @@ def make_ros2_loaders(args, root: Path, seed: int):
     )
 
 
+def make_manifest_loaders(args, seed: int):
+    from experiment_control import load_frozen_selection, prepare_frozen_pairs
+
+    if (args.architecture, args.sequence_length, args.hidden_size, args.num_layers) != ("ros1_legacy", 2, 350, 4):
+        raise ValueError("Prepared datasets require the reference RNN with C=2, hidden size 350 and four layers")
+    if (args.normalize_data or not args.normalize_label or args.label_normalization != "legacy"
+            or args.distance_max is not None or args.occ_grid_meters != 4
+            or any((args.train_scenarios, args.validation_scenarios, args.test_scenarios))):
+        raise ValueError("Prepared datasets keep raw LOM values, raw target features, legacy label normalization and the saved partition")
+    selection = load_frozen_selection(args.datasets_dir, args.environment_set, args.dataset,
+                                      args.data_root, args.catalog_dir)
+    print("Manifest checks passed. Loading the selected observations and training normalization pool.", flush=True)
+    train_set, val_set, preprocessing = prepare_frozen_pairs(selection)
+    generator = torch.Generator().manual_seed(seed)
+    pin = torch.cuda.is_available()
+    info = {"dataset_format": "ros2_episode", "environment_set": args.environment_set, "dataset": args.dataset,
+            "datasets_sha256": selection["datasets_sha256"], "manifest_sha256": selection["manifest_hashes"],
+            "catalog_sha256": selection["metadata"]["catalog_sha256"],
+            "split_seed": selection["metadata"]["split_seed"], "selection_seed": selection["metadata"]["selection_seed"],
+            "train_sequences": len(train_set), "validation_sequences": len(val_set),
+            "split": "frozen episode partition; disjoint pairs; shuffle training pairs across episodes",
+            "normalization_source": "complete D0 training pool; shared by recipes of the same environment set",
+            "preprocessing": preprocessing}
+    return (DataLoader(train_set, batch_size=args.batch_size, shuffle=True, generator=generator,
+                       num_workers=0, pin_memory=pin),
+            DataLoader(val_set, batch_size=args.batch_size, shuffle=False, num_workers=0, pin_memory=pin),
+            info, selection["root"])
+
+
+def check_inference_contract(model, config: dict, dataset, device) -> dict:
+    node_path = SCRIPT_DIR.parent / "RNN_mapless.py"
+    module_spec = importlib.util.spec_from_file_location("mapless_inference_check", node_path)
+    module = importlib.util.module_from_spec(module_spec)
+    module_spec.loader.exec_module(module)
+    state = model.state_dict()
+    architecture = module.detect_architecture(state, {"architecture": config["architecture"]})
+    inference, settings = module.make_model(architecture, state, config)
+    inference.to(device).eval()
+    training_mode = model.training
+    model.eval()
+    try:
+        expected, _ = dataset[0]
+        actual = np.stack([module.prepare_observation(np.rot90(grid, -1), target[0], target[1], settings)
+                           for grid, target, _ in dataset.raw_pair(0)])
+        np.testing.assert_array_equal(actual, expected)
+        x = torch.as_tensor(expected[None], dtype=torch.float32, device=device)
+        with torch.inference_mode():
+            trained = model(x).detach().cpu().numpy()
+            deployed = inference(x).detach().cpu().numpy()
+        if not np.isfinite(trained).all() or not np.isfinite(deployed).all():
+            raise ValueError("Model compatibility check produced non-finite predictions")
+        np.testing.assert_allclose(trained, deployed, atol=1e-6, rtol=1e-5)
+        decoded = module.decode_action(deployed[0], settings)
+        spec = config["preprocessing"]
+        minimum, maximum = np.asarray(spec["label_min"]), np.asarray(spec["label_max"])
+        reference = deployed[0].astype(float)
+        reference[0] = minimum[0] + reference[0] * (maximum[0] - minimum[0])
+        reference[1] = minimum[1] + (reference[1] + 1) * 0.5 * (maximum[1] - minimum[1])
+        np.testing.assert_allclose(decoded, reference, atol=1e-6, rtol=1e-5)
+    finally:
+        model.train(training_mode)
+    if tuple(state["conv1.weight"].shape) != (2, 2, 3, 3) or tuple(state["rnn_cell_list.0.x2h.weight"].shape) != (350, 736):
+        raise ValueError("Checkpoint does not have the reference convolution and recurrent input sizes")
+    return {"status": "passed", "input_shape": list(actual.shape), "input_arrays_equal": True,
+            "prediction_max_absolute_difference": float(np.max(np.abs(trained - deployed))),
+            "strict_checkpoint_load": True, "action_denormalization": "passed",
+            "architecture": architecture, "hidden_size": 350, "num_layers": 4,
+            "recurrent_input_size": 736, "scope": "offline model and preprocessing compatibility"}
+
+
 def run_epoch(model, loader, optimizer, device, legacy_batch_mean=False):
     training = optimizer is not None
     model.train(training)
@@ -342,10 +413,22 @@ def main() -> int:
     parser.add_argument("--device", choices=("auto", "cpu", "cuda"), default="auto")
     parser.add_argument("--output-dir", type=Path, default=None)
     parser.add_argument("--checkpoint-name", default=None)
+    parser.add_argument("--datasets-dir", type=Path, help="Directory containing datasets.json and frozen manifests")
+    parser.add_argument("--environment-set", default=None)
+    parser.add_argument("--dataset", default=None)
+    parser.add_argument("--catalog-dir", type=Path)
+    parser.add_argument("--check-only", action="store_true", help="Check manifest, model and inference compatibility without training")
     args = parser.parse_args()
 
     script_dir = Path(__file__).resolve().parent
-    if args.data_root is not None:
+    if args.datasets_dir:
+        if not args.environment_set or not args.dataset or args.data_format not in ("auto", "ros2_episode"):
+            parser.error("--datasets-dir requires --environment-set, --dataset and ROS 2 episode data")
+        prepared = json.loads((args.datasets_dir.expanduser() / "datasets.json").read_text())
+        data_root = (args.data_root or Path(prepared["data_root"])).expanduser().resolve()
+    elif args.check_only or args.environment_set or args.dataset or args.catalog_dir:
+        parser.error("Manifest options and --check-only require --datasets-dir")
+    elif args.data_root is not None:
         data_root = args.data_root.expanduser().resolve()
     else:
         ros2_default = (script_dir / "../../../dataset/data").resolve()
@@ -366,7 +449,7 @@ def main() -> int:
     if not data_root.is_dir():
         parser.error(f"Dataset directory does not exist: {data_root}; pass --data-root explicitly")
 
-    data_format = detect_data_format(data_root) if args.data_format == "auto" else args.data_format
+    data_format = "ros2_episode" if args.datasets_dir else detect_data_format(data_root) if args.data_format == "auto" else args.data_format
     resolve_defaults(args, data_format)
     if args.sequence_length < 1 or args.batch_size < 1 or args.epochs < 1 or args.patience < 1:
         parser.error("sequence length, batch size, epochs and patience must be positive")
@@ -384,18 +467,22 @@ def main() -> int:
         parser.error("--validation-a-split must be between 0 and 1")
 
     seed = int(args.seed) if args.seed is not None else random.SystemRandom().randrange(0, 2**32)
+    if not 0 <= seed < 2**32:
+        parser.error("--seed must be between 0 and 2**32 - 1")
     print(f"Seed: {seed} ({'provided' if args.seed is not None else 'randomly generated'})")
-    seed_everything(seed)
     seed_everything(seed)
     if args.device == "cuda" and not torch.cuda.is_available():
         parser.error("--device cuda was requested, but CUDA is unavailable")
     device = torch.device("cuda:0" if args.device == "cuda" or (args.device == "auto" and torch.cuda.is_available()) else "cpu")
 
-    stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    stamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
     out_dir = (args.output_dir.expanduser().resolve() if args.output_dir else (script_dir / "experiments" / f"unified_{data_format}_{stamp}").resolve())
     out_dir.mkdir(parents=True, exist_ok=False)
 
-    if data_format == "ros1_legacy":
+    if args.datasets_dir:
+        train_loader, val_loader, split_info, data_root = make_manifest_loaders(args, seed)
+        default_checkpoint = "best_model.pth"
+    elif data_format == "ros1_legacy":
         train_loader, val_loader, split_info = make_ros1_loaders(args, data_root, seed)
         default_checkpoint = "best_model.pth"
     else:
@@ -438,18 +525,37 @@ def main() -> int:
         "data_root": data_root.name,
         "split": split_info,
     }
+    if args.datasets_dir:
+        from experiment_control import file_hash
+        config.update(format_version=3, preprocessing=split_info["preprocessing"],
+                      run_mode="check_only" if args.check_only else "training",
+                      normalize_data=False, normalize_occupancy=False, occupancy_max=100.0,
+                      label_normalization="legacy_training_pool_minmax", normalize_label=True, stack_n_channels=2,
+                      versions={"torch": str(torch.__version__), "numpy": np.__version__,
+                                "python": sys.version, "cuda": torch.version.cuda},
+                      source_sha256={p.name: file_hash(p) for p in [Path(__file__), SCRIPT_DIR / "models.py",
+                                    SCRIPT_DIR / "experiment_control.py", SCRIPT_DIR.parent / "RNN_mapless.py"]})
     (out_dir / "config.json").write_text(json.dumps(config, indent=2, ensure_ascii=False))
     print(f"Data format: {data_format} | architecture: {args.architecture}")
     print(f"Dataset: {data_root}")
     print(f"Train batches: {len(train_loader)} | validation batches: {len(val_loader)}")
     print(f"Device: {device} | output: {out_dir}")
 
+    if args.datasets_dir:
+        preflight = check_inference_contract(model, config, train_loader.dataset, device)
+        (out_dir / "preflight.json").write_text(json.dumps(preflight, indent=2))
+        print("Preflight passed: model loading, input orientation, raw LOM scale and action denormalization.", flush=True)
+        if args.check_only:
+            print(f"Checks: {out_dir / 'preflight.json'}")
+            return 0
+        seed_everything(seed)
+
     started = time.monotonic()
     try:
         for epoch in range(1, args.epochs + 1):
             epoch_start = time.monotonic()
-            train_loss = run_epoch(model, train_loader, optimizer, device, legacy_batch_mean=(data_format == "ros1_legacy"))
-            val_loss = run_epoch(model, val_loader, None, device, legacy_batch_mean=(data_format == "ros1_legacy"))
+            train_loss = run_epoch(model, train_loader, optimizer, device, legacy_batch_mean=(data_format == "ros1_legacy" or bool(args.datasets_dir)))
+            val_loss = run_epoch(model, val_loader, None, device, legacy_batch_mean=(data_format == "ros1_legacy" or bool(args.datasets_dir)))
             scheduler.step(val_loss)
             row = {
                 "epoch": epoch,
@@ -497,6 +603,16 @@ def main() -> int:
     print(f"Best epoch: {best_epoch}; best validation MSE: {best_val:.7f}")
     print(f"Checkpoint: {checkpoint_path}")
     print(f"Elapsed: {time.monotonic() - started:.1f} s")
+    if args.datasets_dir and best_epoch > 0:
+        try:
+            checkpoint = torch.load(checkpoint_path, map_location=device, weights_only=False)
+        except TypeError:
+            checkpoint = torch.load(checkpoint_path, map_location=device)
+        model.load_state_dict(checkpoint["model_state_dict"], strict=True)
+        checked = check_inference_contract(model, checkpoint["config"], train_loader.dataset, device)
+        checked.update(checkpoint=checkpoint_path.name, epoch=checkpoint["epoch"])
+        (out_dir / "checkpoint_check.json").write_text(json.dumps(checked, indent=2))
+        print(f"Checkpoint reload passed: {out_dir / 'checkpoint_check.json'}")
     return 0 if best_epoch > 0 else 2
 
 

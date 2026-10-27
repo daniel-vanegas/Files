@@ -1,7 +1,17 @@
 {
   "scenario": "E01",
-  "generated_at": "2026-10-15T19:01:36",
-  "total_target": 199,
-  "total_recorded": 199,
+  "generated_at": "2026-10-26T09:31:44",
+  "class_quotas": {
+    "straight": 25,
+    "semi_complex": 25,
+    "complex": 25,
+    "v_complex": 25
+  },
+  "class_counts": {
+    "straight": 0,
+    "semi_complex": 0,
+    "complex": 0,
+    "v_complex": 0
+  },
   "entries": []
 }

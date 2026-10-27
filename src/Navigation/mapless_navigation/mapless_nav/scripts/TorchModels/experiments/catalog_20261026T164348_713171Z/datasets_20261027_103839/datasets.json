@@ -1,0 +1,1629 @@
+{
+  "schema_version": 1,
+  "phase": "datasets",
+  "selection_seed": 2895327133,
+  "split_seed": 1899493870,
+  "provenance": {
+    "created_utc": "2026-10-27T16:38:40.167727+00:00",
+    "source_baseline": "Files/main@0eab89f7b7a4abe308dbed9001ff5b1accd321be",
+    "controller_sha256": "609734ea08bee136fcfc323b8af52c629f0cfe52c598aa7d971d9c0b8f9874a9",
+    "numpy": "1.26.4"
+  },
+  "config": {
+    "schema_version": 1,
+    "environment_sets": {
+      "T0": [
+        "E01",
+        "E02",
+        "E03"
+      ],
+      "T1": [
+        "E01",
+        "E02",
+        "E03",
+        "E12",
+        "E17",
+        "E22",
+        "E27",
+        "E30"
+      ],
+      "T2": [
+        "E01",
+        "E02",
+        "E03",
+        "E07",
+        "E09",
+        "E11",
+        "E12",
+        "E13",
+        "E14",
+        "E15",
+        "E17",
+        "E18",
+        "E21",
+        "E22",
+        "E25",
+        "E26",
+        "E28",
+        "E30"
+      ]
+    },
+    "simulation_development_scenarios": [
+      "E08",
+      "E16",
+      "E20"
+    ],
+    "final_scenarios": [
+      "E04",
+      "E05",
+      "E06",
+      "E10",
+      "E19",
+      "E23",
+      "E24",
+      "E29"
+    ],
+    "validation_episode_fraction": 0.2,
+    "sequence_length": 2,
+    "sequence_stride": 2,
+    "lom_encoding": "raw_0_100",
+    "linear_deadband_m_s": 0.02,
+    "angular_deadband_rad_s": 0.05,
+    "max_episode_fraction_per_behavior": 0.1,
+    "min_episodes_per_evasion_side": 2,
+    "behaviors": {
+      "B0": {
+        "name": "free_advance",
+        "requires_evasion_side": false
+      },
+      "B1": {
+        "name": "simple_lateral_avoidance",
+        "requires_evasion_side": true
+      },
+      "B2": {
+        "name": "restricted_avoidance",
+        "requires_evasion_side": true
+      },
+      "B3": {
+        "name": "frontal_detour",
+        "requires_evasion_side": true
+      },
+      "B4": {
+        "name": "recovery",
+        "requires_evasion_side": true
+      }
+    },
+    "recipes": {
+      "D0": {
+        "mode": "all"
+      },
+      "D1": {
+        "mode": "available_equal"
+      },
+      "D2": {
+        "weights": {
+          "B0": 0.2,
+          "B1": 0.4,
+          "B2": 0.4
+        }
+      },
+      "D3": {
+        "weights": {
+          "B0": 0.15,
+          "B1": 0.3,
+          "B2": 0.25,
+          "B3": 0.2,
+          "B4": 0.1
+        }
+      }
+    }
+  },
+  "catalog_sha256": "548e0b2d18223a8b07d58c25832b41dff5426c9420bee277b0787917c672ce22",
+  "data_root": "/home/devan/GIT/mapless/src/Navigation/mapless_navigation/dataset/data",
+  "annotations": [
+    {
+      "file": "reviewed_intervals.csv",
+      "sha256": "2d41c4b91c31cdc6ff38d4e987df61ad94b662fb62fffd1fe231b6db2e56a13a"
+    }
+  ],
+  "checks": {
+    "partition": {
+      "status": "passed",
+      "saved_split_reproduced": true,
+      "episode_keys_unique": true,
+      "source_observations_unique": true,
+      "train_validation_episode_overlap": 0,
+      "train_validation_content_overlap": 0
+    },
+    "shared_validation_manifests": "passed"
+  },
+  "annotation_coverage": {
+    "T0": {
+      "training_pairs": 9463,
+      "reviewed_classified_pairs": 90,
+      "unassigned_pairs": 9373,
+      "unknown_direction_pairs": 0,
+      "balanced_eligible_pairs": 90,
+      "local_behaviors": {
+        "B1/left": {
+          "pairs": 57,
+          "episodes": 3,
+          "scenarios": 3
+        },
+        "B1/right": {
+          "pairs": 9,
+          "episodes": 1,
+          "scenarios": 1
+        },
+        "B2/left": {
+          "pairs": 24,
+          "episodes": 3,
+          "scenarios": 3
+        },
+        "unassigned/not_applicable": {
+          "pairs": 8,
+          "episodes": 1,
+          "scenarios": 1
+        },
+        "unassigned/right": {
+          "pairs": 11,
+          "episodes": 1,
+          "scenarios": 1
+        },
+        "unassigned/unassigned": {
+          "pairs": 9354,
+          "episodes": 450,
+          "scenarios": 3
+        }
+      },
+      "global_maneuvers": {
+        "frontal_detour/reviewed": {
+          "intervals": 1,
+          "pairs": 33,
+          "episodes": 1
+        },
+        "goal_progress/reviewed": {
+          "intervals": 1,
+          "pairs": 18,
+          "episodes": 1
+        },
+        "lateral_avoidance/reviewed": {
+          "intervals": 1,
+          "pairs": 27,
+          "episodes": 1
+        },
+        "restricted_avoidance/reviewed": {
+          "intervals": 1,
+          "pairs": 25,
+          "episodes": 1
+        }
+      }
+    },
+    "T1": {
+      "training_pairs": 25305,
+      "reviewed_classified_pairs": 191,
+      "unassigned_pairs": 25114,
+      "unknown_direction_pairs": 10,
+      "balanced_eligible_pairs": 181,
+      "local_behaviors": {
+        "B0/neutral": {
+          "pairs": 13,
+          "episodes": 2,
+          "scenarios": 2
+        },
+        "B1/left": {
+          "pairs": 110,
+          "episodes": 9,
+          "scenarios": 7
+        },
+        "B1/right": {
+          "pairs": 20,
+          "episodes": 2,
+          "scenarios": 2
+        },
+        "B2/left": {
+          "pairs": 30,
+          "episodes": 4,
+          "scenarios": 4
+        },
+        "B2/right": {
+          "pairs": 8,
+          "episodes": 1,
+          "scenarios": 1
+        },
+        "B2/unknown": {
+          "pairs": 10,
+          "episodes": 2,
+          "scenarios": 2
+        },
+        "unassigned/left": {
+          "pairs": 4,
+          "episodes": 1,
+          "scenarios": 1
+        },
+        "unassigned/not_applicable": {
+          "pairs": 8,
+          "episodes": 1,
+          "scenarios": 1
+        },
+        "unassigned/right": {
+          "pairs": 19,
+          "episodes": 2,
+          "scenarios": 2
+        },
+        "unassigned/unassigned": {
+          "pairs": 25083,
+          "episodes": 1213,
+          "scenarios": 8
+        }
+      },
+      "global_maneuvers": {
+        "frontal_detour/reviewed": {
+          "intervals": 3,
+          "pairs": 82,
+          "episodes": 3
+        },
+        "goal_progress/reviewed": {
+          "intervals": 3,
+          "pairs": 33,
+          "episodes": 3
+        },
+        "lateral_avoidance/reviewed": {
+          "intervals": 4,
+          "pairs": 73,
+          "episodes": 4
+        },
+        "restricted_avoidance/reviewed": {
+          "intervals": 2,
+          "pairs": 44,
+          "episodes": 2
+        }
+      }
+    },
+    "T2": {
+      "training_pairs": 53576,
+      "reviewed_classified_pairs": 462,
+      "unassigned_pairs": 53114,
+      "unknown_direction_pairs": 22,
+      "balanced_eligible_pairs": 440,
+      "local_behaviors": {
+        "B0/neutral": {
+          "pairs": 62,
+          "episodes": 9,
+          "scenarios": 8
+        },
+        "B1/left": {
+          "pairs": 168,
+          "episodes": 13,
+          "scenarios": 10
+        },
+        "B1/right": {
+          "pairs": 49,
+          "episodes": 6,
+          "scenarios": 6
+        },
+        "B2/left": {
+          "pairs": 118,
+          "episodes": 11,
+          "scenarios": 10
+        },
+        "B2/right": {
+          "pairs": 43,
+          "episodes": 6,
+          "scenarios": 5
+        },
+        "B2/unknown": {
+          "pairs": 22,
+          "episodes": 3,
+          "scenarios": 3
+        },
+        "unassigned/left": {
+          "pairs": 4,
+          "episodes": 1,
+          "scenarios": 1
+        },
+        "unassigned/not_applicable": {
+          "pairs": 8,
+          "episodes": 1,
+          "scenarios": 1
+        },
+        "unassigned/right": {
+          "pairs": 23,
+          "episodes": 3,
+          "scenarios": 3
+        },
+        "unassigned/unassigned": {
+          "pairs": 53079,
+          "episodes": 2569,
+          "scenarios": 18
+        }
+      },
+      "global_maneuvers": {
+        "door_passage/pending_review": {
+          "intervals": 1,
+          "pairs": 21,
+          "episodes": 1
+        },
+        "door_passage/reviewed": {
+          "intervals": 1,
+          "pairs": 18,
+          "episodes": 1
+        },
+        "frontal_detour/reviewed": {
+          "intervals": 8,
+          "pairs": 204,
+          "episodes": 8
+        },
+        "goal_progress/pending_review": {
+          "intervals": 1,
+          "pairs": 15,
+          "episodes": 1
+        },
+        "goal_progress/reviewed": {
+          "intervals": 10,
+          "pairs": 122,
+          "episodes": 10
+        },
+        "lateral_avoidance/reviewed": {
+          "intervals": 8,
+          "pairs": 145,
+          "episodes": 8
+        },
+        "restricted_avoidance/reviewed": {
+          "intervals": 5,
+          "pairs": 117,
+          "episodes": 5
+        }
+      }
+    }
+  },
+  "cells": {
+    "T0/D0": {
+      "environment_set": "T0",
+      "dataset": "D0",
+      "train_pairs": 9463,
+      "validation_pairs": 2384,
+      "validation_sha256": "7853f44a77dafa6f03836eeb1eab1a94bb613699e22d33658ba9bd390530d65c",
+      "source_train_pairs": 9463,
+      "selected_fraction_of_training": 1.0,
+      "checks": {
+        "validation_manifest": {
+          "status": "passed",
+          "pairs": 2384,
+          "observations": 4768,
+          "episodes": 111,
+          "scenarios": 3,
+          "role": "validation",
+          "duplicate_pairs": 0,
+          "overlapping_observations": 0,
+          "label_source": "second observation",
+          "sha256": "7853f44a77dafa6f03836eeb1eab1a94bb613699e22d33658ba9bd390530d65c"
+        },
+        "selection": {
+          "status": "passed",
+          "direction_balance_enforced": false
+        },
+        "train_manifest": {
+          "status": "passed",
+          "pairs": 9463,
+          "observations": 18926,
+          "episodes": 453,
+          "scenarios": 3,
+          "role": "train",
+          "duplicate_pairs": 0,
+          "overlapping_observations": 0,
+          "label_source": "second observation",
+          "sha256": "9648f29324ed5f6f014626e05bb88cb5d719473929af904c28ea9f5275b5a260"
+        }
+      },
+      "coverage": {
+        "B1/left": {
+          "pairs": 57,
+          "episodes": 3,
+          "scenarios": 3
+        },
+        "B1/right": {
+          "pairs": 9,
+          "episodes": 1,
+          "scenarios": 1
+        },
+        "B2/left": {
+          "pairs": 24,
+          "episodes": 3,
+          "scenarios": 3
+        },
+        "unassigned/not_applicable": {
+          "pairs": 8,
+          "episodes": 1,
+          "scenarios": 1
+        },
+        "unassigned/right": {
+          "pairs": 11,
+          "episodes": 1,
+          "scenarios": 1
+        },
+        "unassigned/unassigned": {
+          "pairs": 9354,
+          "episodes": 450,
+          "scenarios": 3
+        }
+      },
+      "status": "ready",
+      "selection": "all accepted training pairs",
+      "train_sha256": "9648f29324ed5f6f014626e05bb88cb5d719473929af904c28ea9f5275b5a260"
+    },
+    "T0/D1": {
+      "environment_set": "T0",
+      "dataset": "D1",
+      "train_pairs": 0,
+      "validation_pairs": 2384,
+      "validation_sha256": "7853f44a77dafa6f03836eeb1eab1a94bb613699e22d33658ba9bd390530d65c",
+      "source_train_pairs": 9463,
+      "selected_fraction_of_training": 0.0,
+      "checks": {
+        "validation_manifest": {
+          "status": "passed",
+          "pairs": 2384,
+          "observations": 4768,
+          "episodes": 111,
+          "scenarios": 3,
+          "role": "validation",
+          "duplicate_pairs": 0,
+          "overlapping_observations": 0,
+          "label_source": "second observation",
+          "sha256": "7853f44a77dafa6f03836eeb1eab1a94bb613699e22d33658ba9bd390530d65c"
+        }
+      },
+      "coverage": {},
+      "status": "needs_annotations",
+      "deficits": [
+        "B1/right: insufficient distinct reviewed episodes",
+        "B2/right: insufficient distinct reviewed episodes"
+      ],
+      "support": {
+        "B1": {
+          "neutral": {
+            "pairs": 0,
+            "episodes": 0,
+            "scenarios": 0
+          },
+          "left": {
+            "pairs": 57,
+            "episodes": 3,
+            "scenarios": 3
+          },
+          "right": {
+            "pairs": 9,
+            "episodes": 1,
+            "scenarios": 1
+          }
+        },
+        "B2": {
+          "neutral": {
+            "pairs": 0,
+            "episodes": 0,
+            "scenarios": 0
+          },
+          "left": {
+            "pairs": 24,
+            "episodes": 3,
+            "scenarios": 3
+          },
+          "right": {
+            "pairs": 0,
+            "episodes": 0,
+            "scenarios": 0
+          }
+        }
+      }
+    },
+    "T0/D2": {
+      "environment_set": "T0",
+      "dataset": "D2",
+      "train_pairs": 0,
+      "validation_pairs": 2384,
+      "validation_sha256": "7853f44a77dafa6f03836eeb1eab1a94bb613699e22d33658ba9bd390530d65c",
+      "source_train_pairs": 9463,
+      "selected_fraction_of_training": 0.0,
+      "checks": {
+        "validation_manifest": {
+          "status": "passed",
+          "pairs": 2384,
+          "observations": 4768,
+          "episodes": 111,
+          "scenarios": 3,
+          "role": "validation",
+          "duplicate_pairs": 0,
+          "overlapping_observations": 0,
+          "label_source": "second observation",
+          "sha256": "7853f44a77dafa6f03836eeb1eab1a94bb613699e22d33658ba9bd390530d65c"
+        }
+      },
+      "coverage": {},
+      "status": "needs_annotations",
+      "deficits": [
+        "B0: no reviewed pairs",
+        "B1/right: insufficient distinct reviewed episodes",
+        "B2/right: insufficient distinct reviewed episodes"
+      ],
+      "support": {
+        "B0": {
+          "neutral": {
+            "pairs": 0,
+            "episodes": 0,
+            "scenarios": 0
+          },
+          "left": {
+            "pairs": 0,
+            "episodes": 0,
+            "scenarios": 0
+          },
+          "right": {
+            "pairs": 0,
+            "episodes": 0,
+            "scenarios": 0
+          }
+        },
+        "B1": {
+          "neutral": {
+            "pairs": 0,
+            "episodes": 0,
+            "scenarios": 0
+          },
+          "left": {
+            "pairs": 57,
+            "episodes": 3,
+            "scenarios": 3
+          },
+          "right": {
+            "pairs": 9,
+            "episodes": 1,
+            "scenarios": 1
+          }
+        },
+        "B2": {
+          "neutral": {
+            "pairs": 0,
+            "episodes": 0,
+            "scenarios": 0
+          },
+          "left": {
+            "pairs": 24,
+            "episodes": 3,
+            "scenarios": 3
+          },
+          "right": {
+            "pairs": 0,
+            "episodes": 0,
+            "scenarios": 0
+          }
+        }
+      }
+    },
+    "T0/D3": {
+      "environment_set": "T0",
+      "dataset": "D3",
+      "train_pairs": 0,
+      "validation_pairs": 2384,
+      "validation_sha256": "7853f44a77dafa6f03836eeb1eab1a94bb613699e22d33658ba9bd390530d65c",
+      "source_train_pairs": 9463,
+      "selected_fraction_of_training": 0.0,
+      "checks": {
+        "validation_manifest": {
+          "status": "passed",
+          "pairs": 2384,
+          "observations": 4768,
+          "episodes": 111,
+          "scenarios": 3,
+          "role": "validation",
+          "duplicate_pairs": 0,
+          "overlapping_observations": 0,
+          "label_source": "second observation",
+          "sha256": "7853f44a77dafa6f03836eeb1eab1a94bb613699e22d33658ba9bd390530d65c"
+        }
+      },
+      "coverage": {},
+      "status": "needs_annotations",
+      "deficits": [
+        "B0: no reviewed pairs",
+        "B1/right: insufficient distinct reviewed episodes",
+        "B2/right: insufficient distinct reviewed episodes",
+        "B3/left: insufficient distinct reviewed episodes",
+        "B3/right: insufficient distinct reviewed episodes",
+        "B4/left: insufficient distinct reviewed episodes",
+        "B4/right: insufficient distinct reviewed episodes"
+      ],
+      "support": {
+        "B0": {
+          "neutral": {
+            "pairs": 0,
+            "episodes": 0,
+            "scenarios": 0
+          },
+          "left": {
+            "pairs": 0,
+            "episodes": 0,
+            "scenarios": 0
+          },
+          "right": {
+            "pairs": 0,
+            "episodes": 0,
+            "scenarios": 0
+          }
+        },
+        "B1": {
+          "neutral": {
+            "pairs": 0,
+            "episodes": 0,
+            "scenarios": 0
+          },
+          "left": {
+            "pairs": 57,
+            "episodes": 3,
+            "scenarios": 3
+          },
+          "right": {
+            "pairs": 9,
+            "episodes": 1,
+            "scenarios": 1
+          }
+        },
+        "B2": {
+          "neutral": {
+            "pairs": 0,
+            "episodes": 0,
+            "scenarios": 0
+          },
+          "left": {
+            "pairs": 24,
+            "episodes": 3,
+            "scenarios": 3
+          },
+          "right": {
+            "pairs": 0,
+            "episodes": 0,
+            "scenarios": 0
+          }
+        },
+        "B3": {
+          "neutral": {
+            "pairs": 0,
+            "episodes": 0,
+            "scenarios": 0
+          },
+          "left": {
+            "pairs": 0,
+            "episodes": 0,
+            "scenarios": 0
+          },
+          "right": {
+            "pairs": 0,
+            "episodes": 0,
+            "scenarios": 0
+          }
+        },
+        "B4": {
+          "neutral": {
+            "pairs": 0,
+            "episodes": 0,
+            "scenarios": 0
+          },
+          "left": {
+            "pairs": 0,
+            "episodes": 0,
+            "scenarios": 0
+          },
+          "right": {
+            "pairs": 0,
+            "episodes": 0,
+            "scenarios": 0
+          }
+        }
+      }
+    },
+    "T1/D0": {
+      "environment_set": "T1",
+      "dataset": "D0",
+      "train_pairs": 25305,
+      "validation_pairs": 6430,
+      "validation_sha256": "8a6392d0e902ca51f82205dab5ecba5351a1576310491cacaa9f339607752065",
+      "source_train_pairs": 25305,
+      "selected_fraction_of_training": 1.0,
+      "checks": {
+        "validation_manifest": {
+          "status": "passed",
+          "pairs": 6430,
+          "observations": 12860,
+          "episodes": 302,
+          "scenarios": 8,
+          "role": "validation",
+          "duplicate_pairs": 0,
+          "overlapping_observations": 0,
+          "label_source": "second observation",
+          "sha256": "8a6392d0e902ca51f82205dab5ecba5351a1576310491cacaa9f339607752065"
+        },
+        "selection": {
+          "status": "passed",
+          "direction_balance_enforced": false
+        },
+        "train_manifest": {
+          "status": "passed",
+          "pairs": 25305,
+          "observations": 50610,
+          "episodes": 1220,
+          "scenarios": 8,
+          "role": "train",
+          "duplicate_pairs": 0,
+          "overlapping_observations": 0,
+          "label_source": "second observation",
+          "sha256": "aef20d242d96d432bfea3df3921d23d0995defb389c192b847feb6268885b3a1"
+        }
+      },
+      "coverage": {
+        "B0/neutral": {
+          "pairs": 13,
+          "episodes": 2,
+          "scenarios": 2
+        },
+        "B1/left": {
+          "pairs": 110,
+          "episodes": 9,
+          "scenarios": 7
+        },
+        "B1/right": {
+          "pairs": 20,
+          "episodes": 2,
+          "scenarios": 2
+        },
+        "B2/left": {
+          "pairs": 30,
+          "episodes": 4,
+          "scenarios": 4
+        },
+        "B2/right": {
+          "pairs": 8,
+          "episodes": 1,
+          "scenarios": 1
+        },
+        "B2/unknown": {
+          "pairs": 10,
+          "episodes": 2,
+          "scenarios": 2
+        },
+        "unassigned/left": {
+          "pairs": 4,
+          "episodes": 1,
+          "scenarios": 1
+        },
+        "unassigned/not_applicable": {
+          "pairs": 8,
+          "episodes": 1,
+          "scenarios": 1
+        },
+        "unassigned/right": {
+          "pairs": 19,
+          "episodes": 2,
+          "scenarios": 2
+        },
+        "unassigned/unassigned": {
+          "pairs": 25083,
+          "episodes": 1213,
+          "scenarios": 8
+        }
+      },
+      "status": "ready",
+      "selection": "all accepted training pairs",
+      "train_sha256": "aef20d242d96d432bfea3df3921d23d0995defb389c192b847feb6268885b3a1"
+    },
+    "T1/D1": {
+      "environment_set": "T1",
+      "dataset": "D1",
+      "train_pairs": 0,
+      "validation_pairs": 6430,
+      "validation_sha256": "8a6392d0e902ca51f82205dab5ecba5351a1576310491cacaa9f339607752065",
+      "source_train_pairs": 25305,
+      "selected_fraction_of_training": 0.0,
+      "checks": {
+        "validation_manifest": {
+          "status": "passed",
+          "pairs": 6430,
+          "observations": 12860,
+          "episodes": 302,
+          "scenarios": 8,
+          "role": "validation",
+          "duplicate_pairs": 0,
+          "overlapping_observations": 0,
+          "label_source": "second observation",
+          "sha256": "8a6392d0e902ca51f82205dab5ecba5351a1576310491cacaa9f339607752065"
+        }
+      },
+      "coverage": {},
+      "status": "needs_annotations",
+      "deficits": [
+        "B2/right: insufficient distinct reviewed episodes"
+      ],
+      "support": {
+        "B0": {
+          "neutral": {
+            "pairs": 13,
+            "episodes": 2,
+            "scenarios": 2
+          },
+          "left": {
+            "pairs": 0,
+            "episodes": 0,
+            "scenarios": 0
+          },
+          "right": {
+            "pairs": 0,
+            "episodes": 0,
+            "scenarios": 0
+          }
+        },
+        "B1": {
+          "neutral": {
+            "pairs": 0,
+            "episodes": 0,
+            "scenarios": 0
+          },
+          "left": {
+            "pairs": 110,
+            "episodes": 9,
+            "scenarios": 7
+          },
+          "right": {
+            "pairs": 20,
+            "episodes": 2,
+            "scenarios": 2
+          }
+        },
+        "B2": {
+          "neutral": {
+            "pairs": 0,
+            "episodes": 0,
+            "scenarios": 0
+          },
+          "left": {
+            "pairs": 30,
+            "episodes": 4,
+            "scenarios": 4
+          },
+          "right": {
+            "pairs": 8,
+            "episodes": 1,
+            "scenarios": 1
+          }
+        }
+      }
+    },
+    "T1/D2": {
+      "environment_set": "T1",
+      "dataset": "D2",
+      "train_pairs": 0,
+      "validation_pairs": 6430,
+      "validation_sha256": "8a6392d0e902ca51f82205dab5ecba5351a1576310491cacaa9f339607752065",
+      "source_train_pairs": 25305,
+      "selected_fraction_of_training": 0.0,
+      "checks": {
+        "validation_manifest": {
+          "status": "passed",
+          "pairs": 6430,
+          "observations": 12860,
+          "episodes": 302,
+          "scenarios": 8,
+          "role": "validation",
+          "duplicate_pairs": 0,
+          "overlapping_observations": 0,
+          "label_source": "second observation",
+          "sha256": "8a6392d0e902ca51f82205dab5ecba5351a1576310491cacaa9f339607752065"
+        }
+      },
+      "coverage": {},
+      "status": "needs_annotations",
+      "deficits": [
+        "B2/right: insufficient distinct reviewed episodes"
+      ],
+      "support": {
+        "B0": {
+          "neutral": {
+            "pairs": 13,
+            "episodes": 2,
+            "scenarios": 2
+          },
+          "left": {
+            "pairs": 0,
+            "episodes": 0,
+            "scenarios": 0
+          },
+          "right": {
+            "pairs": 0,
+            "episodes": 0,
+            "scenarios": 0
+          }
+        },
+        "B1": {
+          "neutral": {
+            "pairs": 0,
+            "episodes": 0,
+            "scenarios": 0
+          },
+          "left": {
+            "pairs": 110,
+            "episodes": 9,
+            "scenarios": 7
+          },
+          "right": {
+            "pairs": 20,
+            "episodes": 2,
+            "scenarios": 2
+          }
+        },
+        "B2": {
+          "neutral": {
+            "pairs": 0,
+            "episodes": 0,
+            "scenarios": 0
+          },
+          "left": {
+            "pairs": 30,
+            "episodes": 4,
+            "scenarios": 4
+          },
+          "right": {
+            "pairs": 8,
+            "episodes": 1,
+            "scenarios": 1
+          }
+        }
+      }
+    },
+    "T1/D3": {
+      "environment_set": "T1",
+      "dataset": "D3",
+      "train_pairs": 0,
+      "validation_pairs": 6430,
+      "validation_sha256": "8a6392d0e902ca51f82205dab5ecba5351a1576310491cacaa9f339607752065",
+      "source_train_pairs": 25305,
+      "selected_fraction_of_training": 0.0,
+      "checks": {
+        "validation_manifest": {
+          "status": "passed",
+          "pairs": 6430,
+          "observations": 12860,
+          "episodes": 302,
+          "scenarios": 8,
+          "role": "validation",
+          "duplicate_pairs": 0,
+          "overlapping_observations": 0,
+          "label_source": "second observation",
+          "sha256": "8a6392d0e902ca51f82205dab5ecba5351a1576310491cacaa9f339607752065"
+        }
+      },
+      "coverage": {},
+      "status": "needs_annotations",
+      "deficits": [
+        "B2/right: insufficient distinct reviewed episodes",
+        "B3/left: insufficient distinct reviewed episodes",
+        "B3/right: insufficient distinct reviewed episodes",
+        "B4/left: insufficient distinct reviewed episodes",
+        "B4/right: insufficient distinct reviewed episodes"
+      ],
+      "support": {
+        "B0": {
+          "neutral": {
+            "pairs": 13,
+            "episodes": 2,
+            "scenarios": 2
+          },
+          "left": {
+            "pairs": 0,
+            "episodes": 0,
+            "scenarios": 0
+          },
+          "right": {
+            "pairs": 0,
+            "episodes": 0,
+            "scenarios": 0
+          }
+        },
+        "B1": {
+          "neutral": {
+            "pairs": 0,
+            "episodes": 0,
+            "scenarios": 0
+          },
+          "left": {
+            "pairs": 110,
+            "episodes": 9,
+            "scenarios": 7
+          },
+          "right": {
+            "pairs": 20,
+            "episodes": 2,
+            "scenarios": 2
+          }
+        },
+        "B2": {
+          "neutral": {
+            "pairs": 0,
+            "episodes": 0,
+            "scenarios": 0
+          },
+          "left": {
+            "pairs": 30,
+            "episodes": 4,
+            "scenarios": 4
+          },
+          "right": {
+            "pairs": 8,
+            "episodes": 1,
+            "scenarios": 1
+          }
+        },
+        "B3": {
+          "neutral": {
+            "pairs": 0,
+            "episodes": 0,
+            "scenarios": 0
+          },
+          "left": {
+            "pairs": 0,
+            "episodes": 0,
+            "scenarios": 0
+          },
+          "right": {
+            "pairs": 0,
+            "episodes": 0,
+            "scenarios": 0
+          }
+        },
+        "B4": {
+          "neutral": {
+            "pairs": 0,
+            "episodes": 0,
+            "scenarios": 0
+          },
+          "left": {
+            "pairs": 0,
+            "episodes": 0,
+            "scenarios": 0
+          },
+          "right": {
+            "pairs": 0,
+            "episodes": 0,
+            "scenarios": 0
+          }
+        }
+      }
+    },
+    "T2/D0": {
+      "environment_set": "T2",
+      "dataset": "D0",
+      "train_pairs": 53576,
+      "validation_pairs": 13237,
+      "validation_sha256": "df609ff556d9b0cf4171951e6305934a8aa60d8051d10e7593f08d95aa865bd0",
+      "source_train_pairs": 53576,
+      "selected_fraction_of_training": 1.0,
+      "checks": {
+        "validation_manifest": {
+          "status": "passed",
+          "pairs": 13237,
+          "observations": 26474,
+          "episodes": 637,
+          "scenarios": 18,
+          "role": "validation",
+          "duplicate_pairs": 0,
+          "overlapping_observations": 0,
+          "label_source": "second observation",
+          "sha256": "df609ff556d9b0cf4171951e6305934a8aa60d8051d10e7593f08d95aa865bd0"
+        },
+        "selection": {
+          "status": "passed",
+          "direction_balance_enforced": false
+        },
+        "train_manifest": {
+          "status": "passed",
+          "pairs": 53576,
+          "observations": 107152,
+          "episodes": 2586,
+          "scenarios": 18,
+          "role": "train",
+          "duplicate_pairs": 0,
+          "overlapping_observations": 0,
+          "label_source": "second observation",
+          "sha256": "0a6984d8ecbc26899e56e2acd87ecf1b29eb6c88e01fc50a4e4d7db6ee6591d6"
+        }
+      },
+      "coverage": {
+        "B0/neutral": {
+          "pairs": 62,
+          "episodes": 9,
+          "scenarios": 8
+        },
+        "B1/left": {
+          "pairs": 168,
+          "episodes": 13,
+          "scenarios": 10
+        },
+        "B1/right": {
+          "pairs": 49,
+          "episodes": 6,
+          "scenarios": 6
+        },
+        "B2/left": {
+          "pairs": 118,
+          "episodes": 11,
+          "scenarios": 10
+        },
+        "B2/right": {
+          "pairs": 43,
+          "episodes": 6,
+          "scenarios": 5
+        },
+        "B2/unknown": {
+          "pairs": 22,
+          "episodes": 3,
+          "scenarios": 3
+        },
+        "unassigned/left": {
+          "pairs": 4,
+          "episodes": 1,
+          "scenarios": 1
+        },
+        "unassigned/not_applicable": {
+          "pairs": 8,
+          "episodes": 1,
+          "scenarios": 1
+        },
+        "unassigned/right": {
+          "pairs": 23,
+          "episodes": 3,
+          "scenarios": 3
+        },
+        "unassigned/unassigned": {
+          "pairs": 53079,
+          "episodes": 2569,
+          "scenarios": 18
+        }
+      },
+      "status": "ready",
+      "selection": "all accepted training pairs",
+      "train_sha256": "0a6984d8ecbc26899e56e2acd87ecf1b29eb6c88e01fc50a4e4d7db6ee6591d6"
+    },
+    "T2/D1": {
+      "environment_set": "T2",
+      "dataset": "D1",
+      "train_pairs": 156,
+      "validation_pairs": 13237,
+      "validation_sha256": "df609ff556d9b0cf4171951e6305934a8aa60d8051d10e7593f08d95aa865bd0",
+      "source_train_pairs": 53576,
+      "selected_fraction_of_training": 0.002911751530536061,
+      "checks": {
+        "validation_manifest": {
+          "status": "passed",
+          "pairs": 13237,
+          "observations": 26474,
+          "episodes": 637,
+          "scenarios": 18,
+          "role": "validation",
+          "duplicate_pairs": 0,
+          "overlapping_observations": 0,
+          "label_source": "second observation",
+          "sha256": "df609ff556d9b0cf4171951e6305934a8aa60d8051d10e7593f08d95aa865bd0"
+        },
+        "selection": {
+          "status": "passed",
+          "direction_balance_enforced": true,
+          "episode_caps": "passed",
+          "minimum_episodes_per_side": "passed"
+        },
+        "train_manifest": {
+          "status": "passed",
+          "pairs": 156,
+          "observations": 312,
+          "episodes": 25,
+          "scenarios": 15,
+          "role": "train",
+          "duplicate_pairs": 0,
+          "overlapping_observations": 0,
+          "label_source": "second observation",
+          "sha256": "8c8c31fb2bd6807d56c96f944c9b3b490a19e34589e2a587a0d30102dc6c2f7b"
+        }
+      },
+      "coverage": {
+        "B0/neutral": {
+          "pairs": 52,
+          "episodes": 9,
+          "scenarios": 8
+        },
+        "B1/left": {
+          "pairs": 26,
+          "episodes": 13,
+          "scenarios": 10
+        },
+        "B1/right": {
+          "pairs": 26,
+          "episodes": 6,
+          "scenarios": 6
+        },
+        "B2/left": {
+          "pairs": 26,
+          "episodes": 11,
+          "scenarios": 10
+        },
+        "B2/right": {
+          "pairs": 26,
+          "episodes": 6,
+          "scenarios": 5
+        }
+      },
+      "status": "ready",
+      "support": {
+        "B0": {
+          "neutral": {
+            "pairs": 62,
+            "episodes": 9,
+            "scenarios": 8
+          },
+          "left": {
+            "pairs": 0,
+            "episodes": 0,
+            "scenarios": 0
+          },
+          "right": {
+            "pairs": 0,
+            "episodes": 0,
+            "scenarios": 0
+          }
+        },
+        "B1": {
+          "neutral": {
+            "pairs": 0,
+            "episodes": 0,
+            "scenarios": 0
+          },
+          "left": {
+            "pairs": 168,
+            "episodes": 13,
+            "scenarios": 10
+          },
+          "right": {
+            "pairs": 49,
+            "episodes": 6,
+            "scenarios": 6
+          }
+        },
+        "B2": {
+          "neutral": {
+            "pairs": 0,
+            "episodes": 0,
+            "scenarios": 0
+          },
+          "left": {
+            "pairs": 118,
+            "episodes": 11,
+            "scenarios": 10
+          },
+          "right": {
+            "pairs": 43,
+            "episodes": 6,
+            "scenarios": 5
+          }
+        }
+      },
+      "quotas": {
+        "B0": {
+          "target_pairs": 52,
+          "episode_cap": 6,
+          "selected_pairs": 52
+        },
+        "B1": {
+          "target_pairs": 52,
+          "episode_cap": 6,
+          "selected_pairs": 52
+        },
+        "B2": {
+          "target_pairs": 52,
+          "episode_cap": 6,
+          "selected_pairs": 52
+        }
+      },
+      "requested_proportions": {
+        "B0": 0.3333333333333333,
+        "B1": 0.3333333333333333,
+        "B2": 0.3333333333333333
+      },
+      "achieved_proportions": {
+        "B0": 0.3333333333333333,
+        "B1": 0.3333333333333333,
+        "B2": 0.3333333333333333
+      },
+      "sampling_budget": {
+        "upper_bound": 186,
+        "used": 158,
+        "selected_pairs": 156,
+        "reduced": true
+      },
+      "rounding": "floor each behavior quota, then round directional quotas down to an even number",
+      "sampling": "without replacement",
+      "train_sha256": "8c8c31fb2bd6807d56c96f944c9b3b490a19e34589e2a587a0d30102dc6c2f7b"
+    },
+    "T2/D2": {
+      "environment_set": "T2",
+      "dataset": "D2",
+      "train_pairs": 180,
+      "validation_pairs": 13237,
+      "validation_sha256": "df609ff556d9b0cf4171951e6305934a8aa60d8051d10e7593f08d95aa865bd0",
+      "source_train_pairs": 53576,
+      "selected_fraction_of_training": 0.0033597133044646855,
+      "checks": {
+        "validation_manifest": {
+          "status": "passed",
+          "pairs": 13237,
+          "observations": 26474,
+          "episodes": 637,
+          "scenarios": 18,
+          "role": "validation",
+          "duplicate_pairs": 0,
+          "overlapping_observations": 0,
+          "label_source": "second observation",
+          "sha256": "df609ff556d9b0cf4171951e6305934a8aa60d8051d10e7593f08d95aa865bd0"
+        },
+        "selection": {
+          "status": "passed",
+          "direction_balance_enforced": true,
+          "episode_caps": "passed",
+          "minimum_episodes_per_side": "passed"
+        },
+        "train_manifest": {
+          "status": "passed",
+          "pairs": 180,
+          "observations": 360,
+          "episodes": 22,
+          "scenarios": 15,
+          "role": "train",
+          "duplicate_pairs": 0,
+          "overlapping_observations": 0,
+          "label_source": "second observation",
+          "sha256": "975a4b918ba1bad19459552e8f6d506ae55b5937901e93ebae3b40a4a9d5569b"
+        }
+      },
+      "coverage": {
+        "B0/neutral": {
+          "pairs": 36,
+          "episodes": 9,
+          "scenarios": 8
+        },
+        "B1/left": {
+          "pairs": 36,
+          "episodes": 6,
+          "scenarios": 6
+        },
+        "B1/right": {
+          "pairs": 36,
+          "episodes": 6,
+          "scenarios": 6
+        },
+        "B2/left": {
+          "pairs": 36,
+          "episodes": 11,
+          "scenarios": 10
+        },
+        "B2/right": {
+          "pairs": 36,
+          "episodes": 6,
+          "scenarios": 5
+        }
+      },
+      "status": "ready",
+      "support": {
+        "B0": {
+          "neutral": {
+            "pairs": 62,
+            "episodes": 9,
+            "scenarios": 8
+          },
+          "left": {
+            "pairs": 0,
+            "episodes": 0,
+            "scenarios": 0
+          },
+          "right": {
+            "pairs": 0,
+            "episodes": 0,
+            "scenarios": 0
+          }
+        },
+        "B1": {
+          "neutral": {
+            "pairs": 0,
+            "episodes": 0,
+            "scenarios": 0
+          },
+          "left": {
+            "pairs": 168,
+            "episodes": 13,
+            "scenarios": 10
+          },
+          "right": {
+            "pairs": 49,
+            "episodes": 6,
+            "scenarios": 6
+          }
+        },
+        "B2": {
+          "neutral": {
+            "pairs": 0,
+            "episodes": 0,
+            "scenarios": 0
+          },
+          "left": {
+            "pairs": 118,
+            "episodes": 11,
+            "scenarios": 10
+          },
+          "right": {
+            "pairs": 43,
+            "episodes": 6,
+            "scenarios": 5
+          }
+        }
+      },
+      "quotas": {
+        "B0": {
+          "target_pairs": 36,
+          "episode_cap": 4,
+          "selected_pairs": 36
+        },
+        "B1": {
+          "target_pairs": 72,
+          "episode_cap": 8,
+          "selected_pairs": 72
+        },
+        "B2": {
+          "target_pairs": 72,
+          "episode_cap": 8,
+          "selected_pairs": 72
+        }
+      },
+      "requested_proportions": {
+        "B0": 0.2,
+        "B1": 0.4,
+        "B2": 0.4
+      },
+      "achieved_proportions": {
+        "B0": 0.2,
+        "B1": 0.4,
+        "B2": 0.4
+      },
+      "sampling_budget": {
+        "upper_bound": 215,
+        "used": 184,
+        "selected_pairs": 180,
+        "reduced": true
+      },
+      "rounding": "floor each behavior quota, then round directional quotas down to an even number",
+      "sampling": "without replacement",
+      "train_sha256": "975a4b918ba1bad19459552e8f6d506ae55b5937901e93ebae3b40a4a9d5569b"
+    },
+    "T2/D3": {
+      "environment_set": "T2",
+      "dataset": "D3",
+      "train_pairs": 0,
+      "validation_pairs": 13237,
+      "validation_sha256": "df609ff556d9b0cf4171951e6305934a8aa60d8051d10e7593f08d95aa865bd0",
+      "source_train_pairs": 53576,
+      "selected_fraction_of_training": 0.0,
+      "checks": {
+        "validation_manifest": {
+          "status": "passed",
+          "pairs": 13237,
+          "observations": 26474,
+          "episodes": 637,
+          "scenarios": 18,
+          "role": "validation",
+          "duplicate_pairs": 0,
+          "overlapping_observations": 0,
+          "label_source": "second observation",
+          "sha256": "df609ff556d9b0cf4171951e6305934a8aa60d8051d10e7593f08d95aa865bd0"
+        }
+      },
+      "coverage": {},
+      "status": "needs_annotations",
+      "deficits": [
+        "B3/left: insufficient distinct reviewed episodes",
+        "B3/right: insufficient distinct reviewed episodes",
+        "B4/left: insufficient distinct reviewed episodes",
+        "B4/right: insufficient distinct reviewed episodes"
+      ],
+      "support": {
+        "B0": {
+          "neutral": {
+            "pairs": 62,
+            "episodes": 9,
+            "scenarios": 8
+          },
+          "left": {
+            "pairs": 0,
+            "episodes": 0,
+            "scenarios": 0
+          },
+          "right": {
+            "pairs": 0,
+            "episodes": 0,
+            "scenarios": 0
+          }
+        },
+        "B1": {
+          "neutral": {
+            "pairs": 0,
+            "episodes": 0,
+            "scenarios": 0
+          },
+          "left": {
+            "pairs": 168,
+            "episodes": 13,
+            "scenarios": 10
+          },
+          "right": {
+            "pairs": 49,
+            "episodes": 6,
+            "scenarios": 6
+          }
+        },
+        "B2": {
+          "neutral": {
+            "pairs": 0,
+            "episodes": 0,
+            "scenarios": 0
+          },
+          "left": {
+            "pairs": 118,
+            "episodes": 11,
+            "scenarios": 10
+          },
+          "right": {
+            "pairs": 43,
+            "episodes": 6,
+            "scenarios": 5
+          }
+        },
+        "B3": {
+          "neutral": {
+            "pairs": 0,
+            "episodes": 0,
+            "scenarios": 0
+          },
+          "left": {
+            "pairs": 0,
+            "episodes": 0,
+            "scenarios": 0
+          },
+          "right": {
+            "pairs": 0,
+            "episodes": 0,
+            "scenarios": 0
+          }
+        },
+        "B4": {
+          "neutral": {
+            "pairs": 0,
+            "episodes": 0,
+            "scenarios": 0
+          },
+          "left": {
+            "pairs": 0,
+            "episodes": 0,
+            "scenarios": 0
+          },
+          "right": {
+            "pairs": 0,
+            "episodes": 0,
+            "scenarios": 0
+          }
+        }
+      }
+    }
+  },
+  "report": "dataset_report.md"
+}

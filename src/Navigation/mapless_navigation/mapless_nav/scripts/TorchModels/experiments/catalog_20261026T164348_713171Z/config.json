@@ -1,0 +1,109 @@
+{
+  "schema_version": 1,
+  "environment_sets": {
+    "T0": [
+      "E01",
+      "E02",
+      "E03"
+    ],
+    "T1": [
+      "E01",
+      "E02",
+      "E03",
+      "E12",
+      "E17",
+      "E22",
+      "E27",
+      "E30"
+    ],
+    "T2": [
+      "E01",
+      "E02",
+      "E03",
+      "E07",
+      "E09",
+      "E11",
+      "E12",
+      "E13",
+      "E14",
+      "E15",
+      "E17",
+      "E18",
+      "E21",
+      "E22",
+      "E25",
+      "E26",
+      "E28",
+      "E30"
+    ]
+  },
+  "simulation_development_scenarios": [
+    "E08",
+    "E16",
+    "E20"
+  ],
+  "final_scenarios": [
+    "E04",
+    "E05",
+    "E06",
+    "E10",
+    "E19",
+    "E23",
+    "E24",
+    "E29"
+  ],
+  "validation_episode_fraction": 0.2,
+  "sequence_length": 2,
+  "sequence_stride": 2,
+  "lom_encoding": "raw_0_100",
+  "linear_deadband_m_s": 0.02,
+  "angular_deadband_rad_s": 0.05,
+  "max_episode_fraction_per_behavior": 0.1,
+  "min_episodes_per_evasion_side": 2,
+  "behaviors": {
+    "B0": {
+      "name": "free_advance",
+      "requires_evasion_side": false
+    },
+    "B1": {
+      "name": "simple_lateral_avoidance",
+      "requires_evasion_side": true
+    },
+    "B2": {
+      "name": "restricted_avoidance",
+      "requires_evasion_side": true
+    },
+    "B3": {
+      "name": "frontal_detour",
+      "requires_evasion_side": true
+    },
+    "B4": {
+      "name": "recovery",
+      "requires_evasion_side": true
+    }
+  },
+  "recipes": {
+    "D0": {
+      "mode": "all"
+    },
+    "D1": {
+      "mode": "available_equal"
+    },
+    "D2": {
+      "weights": {
+        "B0": 0.2,
+        "B1": 0.4,
+        "B2": 0.4
+      }
+    },
+    "D3": {
+      "weights": {
+        "B0": 0.15,
+        "B1": 0.3,
+        "B2": 0.25,
+        "B3": 0.2,
+        "B4": 0.1
+      }
+    }
+  }
+}

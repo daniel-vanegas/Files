@@ -1,0 +1,94 @@
+{
+  "environment_set": "T2",
+  "dataset": "D0",
+  "train_pairs": 53576,
+  "validation_pairs": 13237,
+  "validation_sha256": "df609ff556d9b0cf4171951e6305934a8aa60d8051d10e7593f08d95aa865bd0",
+  "source_train_pairs": 53576,
+  "selected_fraction_of_training": 1.0,
+  "checks": {
+    "validation_manifest": {
+      "status": "passed",
+      "pairs": 13237,
+      "observations": 26474,
+      "episodes": 637,
+      "scenarios": 18,
+      "role": "validation",
+      "duplicate_pairs": 0,
+      "overlapping_observations": 0,
+      "label_source": "second observation",
+      "sha256": "df609ff556d9b0cf4171951e6305934a8aa60d8051d10e7593f08d95aa865bd0"
+    },
+    "selection": {
+      "status": "passed",
+      "direction_balance_enforced": false
+    },
+    "train_manifest": {
+      "status": "passed",
+      "pairs": 53576,
+      "observations": 107152,
+      "episodes": 2586,
+      "scenarios": 18,
+      "role": "train",
+      "duplicate_pairs": 0,
+      "overlapping_observations": 0,
+      "label_source": "second observation",
+      "sha256": "0a6984d8ecbc26899e56e2acd87ecf1b29eb6c88e01fc50a4e4d7db6ee6591d6"
+    }
+  },
+  "coverage": {
+    "B0/neutral": {
+      "pairs": 62,
+      "episodes": 9,
+      "scenarios": 8
+    },
+    "B1/left": {
+      "pairs": 168,
+      "episodes": 13,
+      "scenarios": 10
+    },
+    "B1/right": {
+      "pairs": 49,
+      "episodes": 6,
+      "scenarios": 6
+    },
+    "B2/left": {
+      "pairs": 118,
+      "episodes": 11,
+      "scenarios": 10
+    },
+    "B2/right": {
+      "pairs": 43,
+      "episodes": 6,
+      "scenarios": 5
+    },
+    "B2/unknown": {
+      "pairs": 22,
+      "episodes": 3,
+      "scenarios": 3
+    },
+    "unassigned/left": {
+      "pairs": 4,
+      "episodes": 1,
+      "scenarios": 1
+    },
+    "unassigned/not_applicable": {
+      "pairs": 8,
+      "episodes": 1,
+      "scenarios": 1
+    },
+    "unassigned/right": {
+      "pairs": 23,
+      "episodes": 3,
+      "scenarios": 3
+    },
+    "unassigned/unassigned": {
+      "pairs": 53079,
+      "episodes": 2569,
+      "scenarios": 18
+    }
+  },
+  "status": "ready",
+  "selection": "all accepted training pairs",
+  "train_sha256": "0a6984d8ecbc26899e56e2acd87ecf1b29eb6c88e01fc50a4e4d7db6ee6591d6"
+}

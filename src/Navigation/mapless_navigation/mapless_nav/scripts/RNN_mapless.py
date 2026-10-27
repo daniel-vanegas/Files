@@ -16,12 +16,17 @@ from pathlib import Path
 from typing import Any
 
 import numpy as np
-import rclpy
 import torch
-from geometry_msgs.msg import PointStamped, Twist
-from nav_msgs.msg import OccupancyGrid
-from rclpy.node import Node
-from std_msgs.msg import Bool, Float32MultiArray, Float64MultiArray
+try:
+    import rclpy
+    from geometry_msgs.msg import PointStamped, Twist
+    from nav_msgs.msg import OccupancyGrid
+    from rclpy.node import Node
+    from std_msgs.msg import Bool, Float32MultiArray, Float64MultiArray
+except ModuleNotFoundError as exc:
+    if (exc.name or "").split('.')[0] not in ("rclpy", "geometry_msgs", "nav_msgs", "std_msgs"):
+        raise
+    rclpy, Node = None, object
 
 
 # LOM255_REEVALUATION_FIX_V1
@@ -34,6 +39,30 @@ def scale_occupancy_grid(occupancy, normalize_occupancy: bool, occupancy_max: fl
     if normalize_occupancy:
         return np.clip(values / np.float32(100.0), 0.0, 1.0)
     return values * np.float32(maximum / 100.0)
+
+
+def prepare_observation(grid, distance: float, theta: float, settings: dict) -> np.ndarray:
+    if settings.get("preprocessing") is not None:
+        from experiment_control import policy_frame
+        return policy_frame(grid, [distance, theta], source="ros_occupancy_grid")
+    values = np.rot90(np.flip(np.asarray(grid, dtype=np.float32), axis=0))
+    occ = scale_occupancy_grid(values, settings["normalize_occupancy"], settings["occupancy_max"])
+    maximum = settings.get("distance_max")
+    target_distance = float(np.clip(distance / float(maximum), 0, 1)) if maximum is not None and float(maximum) > 0 else distance
+    rows = np.empty((2, values.shape[1]), dtype=np.float32)
+    rows[0, :], rows[1, :] = target_distance, theta
+    return np.vstack((occ, rows)).astype(np.float32, copy=False)
+
+
+def decode_action(output, settings: dict) -> np.ndarray:
+    if settings.get("preprocessing") is not None:
+        from experiment_control import normalize_policy_actions
+        return normalize_policy_actions(output, settings["preprocessing"], inverse=True)
+    values = np.asarray(output, dtype=float)[:3].copy()
+    values[:2] *= np.asarray(settings["vmax"][:2], dtype=float)
+    if settings["wz_normalized"]:
+        values[2] *= settings["vmax"][2]
+    return values
 
 
 def get_state_dict(checkpoint: Any) -> dict:
@@ -179,6 +208,20 @@ def make_model(architecture: str, state: dict, config: dict, sequence_length_ove
         "wz_normalized": wz_normalized,
         "data_format": data_format or ("ros1_legacy" if architecture == "ros1_legacy" else "ros2_episode"),
     }
+    preprocessing = config.get("preprocessing")
+    if int(config.get("format_version", 0)) >= 3 or preprocessing is not None:
+        from experiment_control import validate_policy_spec
+        if not isinstance(preprocessing, dict):
+            raise ValueError("Checkpoint preprocessing metadata is missing")
+        validate_policy_spec(preprocessing)
+        if ((architecture, channels, hidden_size, num_layers) != ("ros1_legacy", 2, 350, 4)
+                or normalize_occupancy or config.get("distance_max") is not None
+                or not config.get("normalize_label", False)
+                or config.get("label_normalization") != "legacy_training_pool_minmax"
+                or float(config.get("occupancy_max", 100.0)) != 100.0):
+            raise ValueError("Checkpoint settings disagree with the reference preprocessing specification")
+        settings["preprocessing"] = preprocessing
+        settings["wz_normalized"] = False
     model.load_state_dict(state, strict=True)
     return model, settings
 
@@ -367,18 +410,13 @@ class RNNMapless(Node):
             return
 
         occ_source = np.asarray(msg.data, dtype=np.float32).reshape(height, width)
-        occ_source = np.rot90(np.flip(occ_source, axis=0))
         occ_source_max = float(np.max(occ_source))
-        occ = scale_occupancy_grid(occ_source, self.normalize_occupancy, self.occupancy_max)
-
-        target_distance = distance
-        if self.distance_max is not None and float(self.distance_max) > 0:
-            target_distance = float(np.clip(distance / float(self.distance_max), 0.0, 1.0))
-        target_rows = np.empty((2, width), dtype=np.float32)
-        target_rows[0, :] = target_distance
-        target_rows[1, :] = theta
-        frame = np.vstack((occ, target_rows)).astype(np.float32, copy=False)
+        frame = prepare_observation(occ_source, distance, theta, self.model_settings)
+        occ = frame[:-2]
         self.frames.append(frame)
+        if self.model_settings.get("preprocessing") is not None and len(self.frames) < self.sequence_length:
+            self.stop_command()
+            return
         while len(self.frames) < self.sequence_length:
             self.frames.appendleft(frame)
         sequence = np.stack(tuple(self.frames), axis=0)[None, ...]
@@ -393,13 +431,9 @@ class RNNMapless(Node):
             if y.size < 3 or not np.all(np.isfinite(y[:3])):
                 raise ValueError(f"Invalid output from RNN: {y}")
 
-            # Both published trainers use [vx_norm, vy_norm, wz_norm/raw]. Historical
-            # ROS 1 labels keep the third component in native scale; vmax_w defaults to 1.
-            vx = float(y[0]) * self.vmax[0]
+            vx, vy, wz = (float(value) for value in decode_action(y, self.model_settings))
             if not self.model_settings["reverse_enable"]:
                 vx = max(0.0, vx)
-            vy = float(y[1]) * self.vmax[1]
-            wz = float(y[2]) * self.vmax[2] if self.model_settings["wz_normalized"] else float(y[2])
 
             if self.turn_help:
                 if abs(theta) < 0.5:
@@ -457,6 +491,8 @@ class RNNMapless(Node):
 
 
 def main(args=None):
+    if rclpy is None:
+        raise RuntimeError("ROS 2 is unavailable. Source the ROS 2 workspace before starting navigation.")
     rclpy.init(args=args)
     node = None
     try:

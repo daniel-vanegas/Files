@@ -1,0 +1,331 @@
+{
+  "pose_frame": "map",
+  "lom_view": "robot",
+  "lom_array_transform": "none",
+  "map_variant": "prohibition",
+  "maps": {
+    "E01": {
+      "scenario": "E01",
+      "variant": "prohibition",
+      "pose_frame": "map",
+      "yaml": "/home/devan/GIT/mapless/src/Hardware/justina_description/webots_env/environments/maps/E01_C2_02/map_E01_C2_02_prohibition.yaml",
+      "yaml_sha256": "c9fa76941c41bf3df3d9d2e9455b23e73738f2eb2bbec0df0ac84c1ed4d84e53",
+      "image": "/home/devan/GIT/mapless/src/Hardware/justina_description/webots_env/environments/maps/E01_C2_02/map_E01_C2_02_prohibition.png",
+      "image_sha256": "d759d9de3ccd960b680d4c02e0af3c4d6c0fb70d18a977a3ab494df5c2809dcf",
+      "resolution": 0.01,
+      "origin": [
+        -8.05,
+        -5.53,
+        0.0
+      ],
+      "width": 1610,
+      "height": 1106
+    },
+    "E02": {
+      "scenario": "E02",
+      "variant": "prohibition",
+      "pose_frame": "map",
+      "yaml": "/home/devan/GIT/mapless/src/Hardware/justina_description/webots_env/environments/maps/E02_C2_03/map_E02_C2_03_prohibition.yaml",
+      "yaml_sha256": "2a0a07fb87777e0be1e76825ed9246e1562ddbe19788f92352c35c4b6848fc44",
+      "image": "/home/devan/GIT/mapless/src/Hardware/justina_description/webots_env/environments/maps/E02_C2_03/map_E02_C2_03_prohibition.png",
+      "image_sha256": "9c439d1bb45d861c1656052f7e245b3d90636103da5538f99a3e470ff5d9372c",
+      "resolution": 0.01,
+      "origin": [
+        -8.05,
+        -5.53,
+        0.0
+      ],
+      "width": 1610,
+      "height": 1106
+    },
+    "E03": {
+      "scenario": "E03",
+      "variant": "prohibition",
+      "pose_frame": "map",
+      "yaml": "/home/devan/GIT/mapless/src/Hardware/justina_description/webots_env/environments/maps/E03_C2_04/map_E03_C2_04_prohibition.yaml",
+      "yaml_sha256": "0b98479785d786e0544aac529f3cc623de69a9f21c127243d26867e61bae8c84",
+      "image": "/home/devan/GIT/mapless/src/Hardware/justina_description/webots_env/environments/maps/E03_C2_04/map_E03_C2_04_prohibition.png",
+      "image_sha256": "68176beaaba75260a50d68f7cedf296950bb05a35efdf27079151fb07c58ba81",
+      "resolution": 0.01,
+      "origin": [
+        -8.05,
+        -5.53,
+        0.0
+      ],
+      "width": 1610,
+      "height": 1106
+    },
+    "E07": {
+      "scenario": "E07",
+      "variant": "prohibition",
+      "pose_frame": "map",
+      "yaml": "/home/devan/GIT/mapless/src/Hardware/justina_description/webots_env/environments/maps/E07_C3_05/map_E07_C3_05_prohibition.yaml",
+      "yaml_sha256": "5ed9af5f954625c2bcb6c5e2aea15e02b5361625fe9c0f30d9bedff58705d867",
+      "image": "/home/devan/GIT/mapless/src/Hardware/justina_description/webots_env/environments/maps/E07_C3_05/map_E07_C3_05_prohibition.png",
+      "image_sha256": "837c67485b3673c41ac0f59af1855fd9c51a8c072ac9c17608fae026f4835886",
+      "resolution": 0.01,
+      "origin": [
+        -8.05,
+        -5.53,
+        0.0
+      ],
+      "width": 1610,
+      "height": 1106
+    },
+    "E09": {
+      "scenario": "E09",
+      "variant": "prohibition",
+      "pose_frame": "map",
+      "yaml": "/home/devan/GIT/mapless/src/Hardware/justina_description/webots_env/environments/maps/E09_C3_02/map_E09_C3_02_prohibition.yaml",
+      "yaml_sha256": "b3ad4ea633084b090ff0a23d962bf34445d5875bf805700c22ca9b2ba14710fd",
+      "image": "/home/devan/GIT/mapless/src/Hardware/justina_description/webots_env/environments/maps/E09_C3_02/map_E09_C3_02_prohibition.png",
+      "image_sha256": "4932cfca12717352cb6513b700200bcd7d0d2e8d80f0f439cbcf45a969766cc2",
+      "resolution": 0.01,
+      "origin": [
+        -8.05,
+        -5.53,
+        0.0
+      ],
+      "width": 1610,
+      "height": 1106
+    },
+    "E11": {
+      "scenario": "E11",
+      "variant": "prohibition",
+      "pose_frame": "map",
+      "yaml": "/home/devan/GIT/mapless/src/Hardware/justina_description/webots_env/environments/maps/E11_C3_04/map_E11_C3_04_prohibition.yaml",
+      "yaml_sha256": "c350172bc08501dfbbbbde331c1ffb98f5de0aedf310d29bb6fcbb7ee81cef51",
+      "image": "/home/devan/GIT/mapless/src/Hardware/justina_description/webots_env/environments/maps/E11_C3_04/map_E11_C3_04_prohibition.png",
+      "image_sha256": "7a9a399e5ac34ba31a49f97994fe164c591f51b630f942e8f62a412d1d52e825",
+      "resolution": 0.01,
+      "origin": [
+        -8.05,
+        -5.53,
+        0.0
+      ],
+      "width": 1610,
+      "height": 1106
+    },
+    "E12": {
+      "scenario": "E12",
+      "variant": "prohibition",
+      "pose_frame": "map",
+      "yaml": "/home/devan/GIT/mapless/src/Hardware/justina_description/webots_env/environments/maps/E12_C3_06/map_E12_C3_06_prohibition.yaml",
+      "yaml_sha256": "51ca9afc1e7e6d9becc4e9d6a7b3eb2b8ac4bb52481f3edef222732346163089",
+      "image": "/home/devan/GIT/mapless/src/Hardware/justina_description/webots_env/environments/maps/E12_C3_06/map_E12_C3_06_prohibition.png",
+      "image_sha256": "44d45afe2449bd04a4c9ec1e99ae40612987b49099f1237ee4e265f9ca5fe8b2",
+      "resolution": 0.01,
+      "origin": [
+        -8.05,
+        -5.53,
+        0.0
+      ],
+      "width": 1610,
+      "height": 1106
+    },
+    "E13": {
+      "scenario": "E13",
+      "variant": "prohibition",
+      "pose_frame": "map",
+      "yaml": "/home/devan/GIT/mapless/src/Hardware/justina_description/webots_env/environments/maps/E13_C3_07/map_E13_C3_07_prohibition.yaml",
+      "yaml_sha256": "b7177220fa21b1ead29c2ab04d99f9e6a7e719d711783e1c97b24b78fb64a4b1",
+      "image": "/home/devan/GIT/mapless/src/Hardware/justina_description/webots_env/environments/maps/E13_C3_07/map_E13_C3_07_prohibition.png",
+      "image_sha256": "d296c6d4cdc124f6d966fb72e9800404b40fdf3a2939c800f54683f211919cd1",
+      "resolution": 0.01,
+      "origin": [
+        -8.05,
+        -5.53,
+        0.0
+      ],
+      "width": 1610,
+      "height": 1106
+    },
+    "E14": {
+      "scenario": "E14",
+      "variant": "prohibition",
+      "pose_frame": "map",
+      "yaml": "/home/devan/GIT/mapless/src/Hardware/justina_description/webots_env/environments/maps/E14_C3_08/map_E14_C3_08_prohibition.yaml",
+      "yaml_sha256": "bd7bdcbafe2191a4556f4118c01dbcbdda0a5e719a9198614bb585a90a4af175",
+      "image": "/home/devan/GIT/mapless/src/Hardware/justina_description/webots_env/environments/maps/E14_C3_08/map_E14_C3_08_prohibition.png",
+      "image_sha256": "429b6ee45d8a9aef27fabfdcba9dd8147516a980f6a69f3a0a743676c81e4603",
+      "resolution": 0.01,
+      "origin": [
+        -8.05,
+        -5.53,
+        0.0
+      ],
+      "width": 1610,
+      "height": 1106
+    },
+    "E15": {
+      "scenario": "E15",
+      "variant": "prohibition",
+      "pose_frame": "map",
+      "yaml": "/home/devan/GIT/mapless/src/Hardware/justina_description/webots_env/environments/maps/E15_C5_01/map_E15_C5_01_prohibition.yaml",
+      "yaml_sha256": "d129d3401b3901a1952145d5c034e6e2dd2576244a1102a64cb6801d7fffdff0",
+      "image": "/home/devan/GIT/mapless/src/Hardware/justina_description/webots_env/environments/maps/E15_C5_01/map_E15_C5_01_prohibition.png",
+      "image_sha256": "ac42c82fc9b838e611a3eca565cabca42882660921998684798fce5cc1b47bc7",
+      "resolution": 0.01,
+      "origin": [
+        -8.05,
+        -5.53,
+        0.0
+      ],
+      "width": 1610,
+      "height": 1106
+    },
+    "E17": {
+      "scenario": "E17",
+      "variant": "prohibition",
+      "pose_frame": "map",
+      "yaml": "/home/devan/GIT/mapless/src/Hardware/justina_description/webots_env/environments/maps/E17_C5_03/map_E17_C5_03_prohibition.yaml",
+      "yaml_sha256": "9703dd7ec83cfb2f5a4547b0dabd41e74ffde4d45a192d5797ad149267f9d011",
+      "image": "/home/devan/GIT/mapless/src/Hardware/justina_description/webots_env/environments/maps/E17_C5_03/map_E17_C5_03_prohibition.png",
+      "image_sha256": "713a4a84fa1622b0337832db7e78baaf9b2e1475f79804651ca99ff69f468d2e",
+      "resolution": 0.01,
+      "origin": [
+        -8.05,
+        -5.53,
+        0.0
+      ],
+      "width": 1610,
+      "height": 1106
+    },
+    "E18": {
+      "scenario": "E18",
+      "variant": "prohibition",
+      "pose_frame": "map",
+      "yaml": "/home/devan/GIT/mapless/src/Hardware/justina_description/webots_env/environments/maps/E18_C5_04/map_E18_C5_04_prohibition.yaml",
+      "yaml_sha256": "463213bfc4c0a33578857eb1b8b34f63a002b11a7ee08f1611b542866481982c",
+      "image": "/home/devan/GIT/mapless/src/Hardware/justina_description/webots_env/environments/maps/E18_C5_04/map_E18_C5_04_prohibition.png",
+      "image_sha256": "9fec45a6e9a93e7bee70ac45540152c90f441f602f369bda5eafe2b74d76f6e2",
+      "resolution": 0.01,
+      "origin": [
+        -8.05,
+        -5.53,
+        0.0
+      ],
+      "width": 1610,
+      "height": 1106
+    },
+    "E21": {
+      "scenario": "E21",
+      "variant": "prohibition",
+      "pose_frame": "map",
+      "yaml": "/home/devan/GIT/mapless/src/Hardware/justina_description/webots_env/environments/maps/E21_C8_01/map_E21_C8_01_prohibition.yaml",
+      "yaml_sha256": "ef7800e49c3231cbad85350cd576d2c53bced5fcb60f2fbf145d1db1d1d358fe",
+      "image": "/home/devan/GIT/mapless/src/Hardware/justina_description/webots_env/environments/maps/E21_C8_01/map_E21_C8_01_prohibition.png",
+      "image_sha256": "20569c720d00da03d5f15eadb6d13d2e728f12f3d0f8394f6f61bea0aa66ad49",
+      "resolution": 0.01,
+      "origin": [
+        -8.05,
+        -5.53,
+        0.0
+      ],
+      "width": 1610,
+      "height": 1106
+    },
+    "E22": {
+      "scenario": "E22",
+      "variant": "prohibition",
+      "pose_frame": "map",
+      "yaml": "/home/devan/GIT/mapless/src/Hardware/justina_description/webots_env/environments/maps/E22_C8_02/map_E22_C8_02_prohibition.yaml",
+      "yaml_sha256": "4617d18df27dadb3817dcfd3e62373453e0aa38154d6cde0ae07acc478df727c",
+      "image": "/home/devan/GIT/mapless/src/Hardware/justina_description/webots_env/environments/maps/E22_C8_02/map_E22_C8_02_prohibition.png",
+      "image_sha256": "1301c0640bdeafc40e63a69106094d138b3ffedd47ec5e6f193e4ede9f7b2982",
+      "resolution": 0.01,
+      "origin": [
+        -8.05,
+        -5.53,
+        0.0
+      ],
+      "width": 1610,
+      "height": 1106
+    },
+    "E25": {
+      "scenario": "E25",
+      "variant": "prohibition",
+      "pose_frame": "map",
+      "yaml": "/home/devan/GIT/mapless/src/Hardware/justina_description/webots_env/environments/maps/E25_C10_02/map_E25_C10_02_prohibition.yaml",
+      "yaml_sha256": "85ab766a7ad47c0da42f6bbb470e89ec54141d4fb8fff39d03d82ce517ee591b",
+      "image": "/home/devan/GIT/mapless/src/Hardware/justina_description/webots_env/environments/maps/E25_C10_02/map_E25_C10_02_prohibition.png",
+      "image_sha256": "3513439b6a288e46c7f5d12521b16cda830c0199c7c8ab898c7b2198e7c611b6",
+      "resolution": 0.01,
+      "origin": [
+        -8.05,
+        -5.53,
+        0.0
+      ],
+      "width": 1610,
+      "height": 1106
+    },
+    "E26": {
+      "scenario": "E26",
+      "variant": "prohibition",
+      "pose_frame": "map",
+      "yaml": "/home/devan/GIT/mapless/src/Hardware/justina_description/webots_env/environments/maps/E26_C10_03/map_E26_C10_03_prohibition.yaml",
+      "yaml_sha256": "a3915f7d4d363b12f348d22a734ecfbf688b3cfdb9a012bd83a7c285e0f14204",
+      "image": "/home/devan/GIT/mapless/src/Hardware/justina_description/webots_env/environments/maps/E26_C10_03/map_E26_C10_03_prohibition.png",
+      "image_sha256": "b0237fda45c95e275cc5f777ec940d46a1a80fade55e1fee0137f4489af29d7f",
+      "resolution": 0.01,
+      "origin": [
+        -8.05,
+        -5.53,
+        0.0
+      ],
+      "width": 1610,
+      "height": 1106
+    },
+    "E27": {
+      "scenario": "E27",
+      "variant": "prohibition",
+      "pose_frame": "map",
+      "yaml": "/home/devan/GIT/mapless/src/Hardware/justina_description/webots_env/environments/maps/E27_C10_04/map_E27_C10_04_prohibition.yaml",
+      "yaml_sha256": "bae97919b502230e7d8eb1a1ce2fca343c29038072882ba0a68ff54421e5afdf",
+      "image": "/home/devan/GIT/mapless/src/Hardware/justina_description/webots_env/environments/maps/E27_C10_04/map_E27_C10_04_prohibition.png",
+      "image_sha256": "e72a89c178be82466864ece0f6629882854f6f7273eb048e28a890aa753ece30",
+      "resolution": 0.01,
+      "origin": [
+        -8.05,
+        -5.53,
+        0.0
+      ],
+      "width": 1610,
+      "height": 1106
+    },
+    "E28": {
+      "scenario": "E28",
+      "variant": "prohibition",
+      "pose_frame": "map",
+      "yaml": "/home/devan/GIT/mapless/src/Hardware/justina_description/webots_env/environments/maps/E28_C30_01/map_E28_C30_01_prohibition.yaml",
+      "yaml_sha256": "a27bba0e469a0ff1a08de17499c73167528c042e9259e33a4def3df38e73eed0",
+      "image": "/home/devan/GIT/mapless/src/Hardware/justina_description/webots_env/environments/maps/E28_C30_01/map_E28_C30_01_prohibition.png",
+      "image_sha256": "0dd0f789d6398f45c424492b9d96115d36ebf5de67d440b5bfafeb57fa615c8e",
+      "resolution": 0.01,
+      "origin": [
+        -8.05,
+        -5.53,
+        0.0
+      ],
+      "width": 1610,
+      "height": 1106
+    },
+    "E30": {
+      "scenario": "E30",
+      "variant": "prohibition",
+      "pose_frame": "map",
+      "yaml": "/home/devan/GIT/mapless/src/Hardware/justina_description/webots_env/environments/maps/E30_C30_03/map_E30_C30_03_prohibition.yaml",
+      "yaml_sha256": "f72dfe7052e0b38166ea5917516e730bdd0c84d3aac0fc4a3a189ed788a730d4",
+      "image": "/home/devan/GIT/mapless/src/Hardware/justina_description/webots_env/environments/maps/E30_C30_03/map_E30_C30_03_prohibition.png",
+      "image_sha256": "a63ea9dae23803c3aea6e145db49b348b927bf61c9b3bf805384fad93885b2f0",
+      "resolution": 0.01,
+      "origin": [
+        -8.05,
+        -5.53,
+        0.0
+      ],
+      "width": 1610,
+      "height": 1106
+    }
+  }
+}

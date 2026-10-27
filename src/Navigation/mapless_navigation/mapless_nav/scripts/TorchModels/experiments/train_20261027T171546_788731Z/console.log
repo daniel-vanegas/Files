@@ -1,0 +1,40 @@
+Seed: 1022193343 (provided)
+Manifest checks passed. Loading the selected observations and training normalization pool.
+Data format: ros2_episode | architecture: ros1_legacy
+Dataset: /home/devan/GIT/mapless/src/Navigation/mapless_navigation/dataset/data
+Train batches: 3155 | validation batches: 795
+Device: cuda:0 | output: /home/devan/GIT/mapless/src/Navigation/mapless_navigation/mapless_nav/scripts/TorchModels/experiments/train_20261027T171546_788731Z/training
+Preflight passed: model loading, input orientation, raw LOM scale and action denormalization.
+epoch 001/20 train=0.1074581 val=0.1105733 lr=0.0006 t=8.72s
+  -> Saving best model at epoch 1: validation MSE=0.1105733 (initial best)
+epoch 002/20 train=0.0911155 val=0.0872218 lr=0.0006 t=8.20s
+  -> Saving best model at epoch 2: validation MSE=0.0872218 (previous best=0.1105733)
+epoch 003/20 train=0.0861996 val=0.0895492 lr=0.0006 t=8.14s
+epoch 004/20 train=0.0823646 val=0.0849622 lr=0.0006 t=8.05s
+  -> Saving best model at epoch 4: validation MSE=0.0849622 (previous best=0.0872218)
+epoch 005/20 train=0.0809397 val=0.0916187 lr=0.0006 t=7.99s
+epoch 006/20 train=0.0785262 val=0.0868468 lr=0.0006 t=7.99s
+epoch 007/20 train=0.0766129 val=0.0847560 lr=0.0006 t=8.03s
+  -> Saving best model at epoch 7: validation MSE=0.0847560 (previous best=0.0849622)
+epoch 008/20 train=0.0747959 val=0.0887591 lr=0.0006 t=7.53s
+epoch 009/20 train=0.0746396 val=0.0830020 lr=0.0006 t=7.31s
+  -> Saving best model at epoch 9: validation MSE=0.0830020 (previous best=0.0847560)
+epoch 010/20 train=0.0726299 val=0.0806735 lr=0.0006 t=7.65s
+  -> Saving best model at epoch 10: validation MSE=0.0806735 (previous best=0.0830020)
+epoch 011/20 train=0.0727777 val=0.0860290 lr=0.0006 t=7.98s
+epoch 012/20 train=0.0718761 val=0.0825329 lr=0.0006 t=8.01s
+epoch 013/20 train=0.0727881 val=0.0793418 lr=0.0006 t=7.36s
+  -> Saving best model at epoch 13: validation MSE=0.0793418 (previous best=0.0806735)
+epoch 014/20 train=0.0710575 val=0.0809283 lr=0.0006 t=7.40s
+epoch 015/20 train=0.0700155 val=0.0797400 lr=0.0006 t=7.34s
+epoch 016/20 train=0.0708644 val=0.0808768 lr=0.0006 t=7.64s
+epoch 017/20 train=0.0698430 val=0.0793353 lr=0.0006 t=7.54s
+  -> Saving best model at epoch 17: validation MSE=0.0793353 (previous best=0.0793418)
+epoch 018/20 train=0.0693627 val=0.0837305 lr=0.0006 t=7.72s
+epoch 019/20 train=0.0691523 val=0.0793743 lr=0.0003 t=7.93s
+epoch 020/20 train=0.0660719 val=0.0788321 lr=0.0003 t=7.34s
+  -> Saving best model at epoch 20: validation MSE=0.0788321 (previous best=0.0793353)
+Best epoch: 20; best validation MSE: 0.0788321
+Checkpoint: /home/devan/GIT/mapless/src/Navigation/mapless_navigation/mapless_nav/scripts/TorchModels/experiments/train_20261027T171546_788731Z/training/best_model.pth
+Elapsed: 156.3 s
+Checkpoint reload passed: /home/devan/GIT/mapless/src/Navigation/mapless_navigation/mapless_nav/scripts/TorchModels/experiments/train_20261027T171546_788731Z/training/checkpoint_check.json

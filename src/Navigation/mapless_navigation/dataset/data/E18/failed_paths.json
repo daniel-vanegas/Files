@@ -1,9 +1,47 @@
 {
   "scenario": "E18",
-  "generated_at": "2026-10-17T10:04:17",
-  "total_target": 200,
-  "total_recorded": 164,
+  "generated_at": "2026-10-26T12:38:58",
+  "class_quotas": {
+    "straight": 25,
+    "semi_complex": 25,
+    "complex": 25,
+    "v_complex": 25
+  },
+  "class_counts": {
+    "straight": 0,
+    "semi_complex": 0,
+    "complex": 0,
+    "v_complex": 0
+  },
   "entries": [
+    {
+      "path_id": 15,
+      "class": "v_complex",
+      "attempts": 3,
+      "last_status": "failed",
+      "start": [
+        -4.075,
+        -1.755
+      ],
+      "goal": [
+        -0.525,
+        -1.505
+      ]
+    },
+    {
+      "path_id": 42,
+      "class": "straight",
+      "attempts": 3,
+      "last_status": "collision",
+      "start": [
+        0.075,
+        -0.255
+      ],
+      "goal": [
+        -2.125,
+        -0.205
+      ]
+    },
     {
       "path_id": 61,
       "class": "v_complex",
@@ -16,6 +54,62 @@
       "goal": [
         -0.675,
         -1.155
+      ]
+    },
+    {
+      "path_id": 81,
+      "class": "v_complex",
+      "attempts": 3,
+      "last_status": "failed",
+      "start": [
+        -3.325,
+        -1.905
+      ],
+      "goal": [
+        -0.425,
+        -1.655
+      ]
+    },
+    {
+      "path_id": 113,
+      "class": "v_complex",
+      "attempts": 3,
+      "last_status": "failed",
+      "start": [
+        1.475,
+        -0.355
+      ],
+      "goal": [
+        0.325,
+        -3.405
+      ]
+    },
+    {
+      "path_id": 122,
+      "class": "v_complex",
+      "attempts": 3,
+      "last_status": "failed",
+      "start": [
+        0.925,
+        1.195
+      ],
+      "goal": [
+        0.225,
+        -1.705
+      ]
+    },
+    {
+      "path_id": 126,
+      "class": "v_complex",
+      "attempts": 3,
+      "last_status": "failed",
+      "start": [
+        0.825,
+        1.245
+      ],
+      "goal": [
+        0.525,
+        -1.405
       ]
     },
     {
@@ -47,48 +141,6 @@
       ]
     },
     {
-      "path_id": 113,
-      "class": "v_complex",
-      "attempts": 3,
-      "last_status": "failed",
-      "start": [
-        1.475,
-        -0.355
-      ],
-      "goal": [
-        0.325,
-        -3.405
-      ]
-    },
-    {
-      "path_id": 81,
-      "class": "v_complex",
-      "attempts": 3,
-      "last_status": "failed",
-      "start": [
-        -3.325,
-        -1.905
-      ],
-      "goal": [
-        -0.425,
-        -1.655
-      ]
-    },
-    {
-      "path_id": 122,
-      "class": "v_complex",
-      "attempts": 3,
-      "last_status": "failed",
-      "start": [
-        0.925,
-        1.195
-      ],
-      "goal": [
-        0.225,
-        -1.705
-      ]
-    },
-    {
       "path_id": 164,
       "class": "v_complex",
       "attempts": 3,
@@ -100,48 +152,6 @@
       "goal": [
         0.175,
         -1.955
-      ]
-    },
-    {
-      "path_id": 126,
-      "class": "v_complex",
-      "attempts": 3,
-      "last_status": "failed",
-      "start": [
-        0.825,
-        1.245
-      ],
-      "goal": [
-        0.525,
-        -1.405
-      ]
-    },
-    {
-      "path_id": 42,
-      "class": "straight",
-      "attempts": 3,
-      "last_status": "collision",
-      "start": [
-        0.075,
-        -0.255
-      ],
-      "goal": [
-        -2.125,
-        -0.205
-      ]
-    },
-    {
-      "path_id": 15,
-      "class": "v_complex",
-      "attempts": 3,
-      "last_status": "failed",
-      "start": [
-        -4.075,
-        -1.755
-      ],
-      "goal": [
-        -0.525,
-        -1.505
       ]
     }
   ]

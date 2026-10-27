@@ -26,15 +26,16 @@
 % Title
 \Title{Comparison of Convolutional and Recurrent Neural Networks for Mapless Navigation in Domestic Service Robots}
 % Authors
-\Author{}
+\Author{Daniel Vanegas $^{1,*}$, Marco Negrete $^{1}$ and Jesus Savage $^{1}$}
 % Author metadata
-\AuthorNames{}
+\AuthorNames{Daniel Vanegas, Marco Negrete and Jesus Savage}
 % Affiliations
 \address{%
-
+$^{1}$ \quad Biorobotics Laboratory, School of Engineering, National Autonomous University of Mexico, CDMX, Mexico;
+ing.danielvanegas@gmail.com (D.V.); marco.negrete@ingenieria.unam.edu (M.N.); savage@unam.mx (J.S.)
 }
 
-\corres{}
+\corres{Correspondence: ing.danielvanegas@gmail.com}
 
 % Abstract 
 \abstract{Domestic service robot navigation traditionally relies on geometric maps, localization techniques such as Kalman or Particle Filters, path planning algorithms such as A\textsuperscript{*} or RRT, and obstacle avoidance methods. While these approaches have demonstrated high effectiveness, they often struggle in dynamic and unstructured environments where the layout changes due to moved furniture or newly introduced objects, requiring re-mapping or system recalibration. In contrast, mapless navigation avoids the need for an explicit representation of the environment. Recent advances in Deep Neural Networks (DNNs) and Reinforcement Learning (RL) have made mapless navigation a promising alternative for robust robot navigation. In this paper, we propose two DNN-based navigation architectures, a convolutional neural network (CNN) and a recurrent neural network (RNN), that generate navigation commands directly from observations encoded in a Local Obstacle Matrix (LOM) \textcolor{red}{without requiring a global geometric map or a global path planner}. The proposed models are compared with three traditional approaches: the Pumas Navigation System (PNS), which combines A$^*$ path planning, Monte Carlo Localization, and Potential Fields; a Finite State Machine (FSM) controller; and Artificial Potential Fields (PF). Experiments were conducted in both known and unknown environments. The results show that the PNS outperforms deep neural networks in known environments. However, it fails to generalize to unknown environments, even when they have similar shapes and layouts. In contrast, the proposed architectures achieve superior performance in unknown environments without retraining or parameter adjustment, and generalize effectively across different robot platforms.}
@@ -78,7 +79,7 @@ Each approach offers distinct advantages, including robust generalization across
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=0.55\textwidth]{images/input_matrix.png}
-\caption{Local environment signals: Local Obstacle Perception Matrix (bottom left) and relative position vector of the target (bottom right).}\label{fig:input_signal}
+\caption{Local environment signals: Local Obstacle Matrix (bottom left) and relative position vector of the target (bottom right).}\label{fig:input_signal}
 \end{figure}
 
 We aim to build a navigation system where the robot requires only information about free and occupied space in its immediate surroundings. The Local Obstacle Matrix (LOM) is a small occupancy grid obtained from the LiDAR sensor and a 2D projection of a point cloud, which are used to generate a representation of the perceived obstacles (see Subsection~\ref{subsec:inputs}); the LOM covers a square area in front of the robot. The target vector $(d, \theta)$ represents the relative position of the goal with respect to the robot's frame. These variables are the distance and angle in polar coordinates of the goal point. In Figure~\ref{fig:input_signal}, the target vector and the LOM generation process are shown. Both serve as inputs to the proposed neural network architectures, and the outputs consist of velocity commands in the form $(v_x, v_y, \omega)$, where $v_x$ and $v_y$ are the linear velocities along the robot's $x$ and $y$ axes, respectively, and $\omega$ is the angular velocity around the robot's vertical axis. In Figure~\ref{fig:gen_sch} a general scheme of the navigation behavior system is presented.
@@ -349,7 +350,7 @@ PF Constant Tuning         &     &  x  &     &     &     &     \\
 \hline
 FSM Parameter Selection    &     &     &     &  x  &     &     \\
 \hline
-PNS Parameter Selection &  x  &     &     &     &     &     \\
+\textcolor{red}{PNS Reference / Parameter Selection} &  x  &     &     &     &     &     \\
 \hline
 CNN Testing                &  x  &  x  &  x  &  x  &  x  &  x  \\
 \hline
@@ -359,19 +360,19 @@ PF Testing                 &  x  &  x  &  x  &  x  &  x  &  x  \\
 \hline
 FSM Testing                &  x  &  x  &  x  &  x  &  x  &  x  \\
 \hline
-PNS Testing          &     &     &     &  x  &     &     \\
+\textcolor{red}{PNS Mismatched (map E1 in E4)} &     &     &     &  x  &     &     \\
 \hline
 \end{tabular}
 \vspace{2.5pt}
-\caption{Usage of environments for training (or configuring/tuning) and testing. An \texttt{x} indicates that the environment was used for that purpose. For the neural network models (CNN and RNN), environments E1–E3 are \textit{known} (used for training), while E4–E6 are \textit{unknown} (not seen during training).}
+\caption{Usage of environments for training (or configuring/tuning) and testing. An \texttt{x} indicates that the environment was used for that purpose. For the neural network models (CNN and RNN), environments E1–E3 are \textit{known} (used for training), while E4–E6 are \textit{unknown} (not seen during training). \textcolor{red}{For the PNS, E1 is the reference case with the correct map, and E4 is the mismatched-map case, where the map from E1 is used in E4.}}
 \label{tab:map_tasks}
 \end{table}
 
-\subsection{Test of the Pumas Navigation System (PNS) in Known and Unknown Environments}
+\subsection{Test of the Pumas Navigation System (PNS) in Known and Unknown Environments}\label{subsec:pns_test}
 
 Traditional map-based navigation systems have been shown to outperform many mapless navigation techniques in previously known environments, where an updated map is provided. However, they lack the ability to generalize navigation when the environment suffers significant changes. This limitation is proven in the following experiment.
 
-We start with environment E1 to navigate with our map-based PNS, using the corresponding map E1. As expected, the navigation performance was very high. In a second stage, we deployed our robot in environment E4, but using the map from E1 instead. Considering some similarity in space between E1 and E4, and even though the PNS employs potential fields to obstacle avoidance, navigation performance drops drastically, and was unable to successfully navigate to a new target provided. The experiment highlights the need to remap every new unseen environment. The results are summarized in Table \ref{tab:nav_system}.
+We start with environment E1 to navigate with our map-based PNS, using the corresponding map E1; this is the reference case, where the map matches the environment. As expected, the navigation performance was very high. In a second stage, we deployed our robot in environment E4, but using the map from E1 instead; this is the mismatched-map case, where the environment is unknown to the PNS and the available map is outdated. Considering some similarity in space between E1 and E4, and even though the PNS employs potential fields to obstacle avoidance, navigation performance drops drastically, and was unable to successfully navigate to a new target provided. The experiment highlights the need to remap every new unseen environment. The results are summarized in Table \ref{tab:nav_system}.
 
 \begin{table}[htbp]
 \centering
@@ -381,12 +382,12 @@ We start with environment E1 to navigate with our map-based PNS, using the corre
     Collisions & 0 & 26 \\ \hline
 \end{tabular}
 \vspace{2.5pt}
-\caption{PNS tested in known (E1) and unknown (E4) environments.}\label{tab:nav_system}
+\caption{PNS tested in the known environment E1 with the correct map (reference case), and in the unknown environment E4 with the outdated map from E1 (mismatched-map case).}\label{tab:nav_system}
 \end{table}
 
 \subsection{Mapless Navigation Techniques Comparison}
 
-All environments generated (see Subsection~\ref{subsec:random_map}) were used to test the navigation performance of each methodology, except for the map-based navigation system, which was tested only in E4 environment. For the neural network models, E1, E2, and E3 were used to collect the dataset; thus, they are considered previously known environments, while E4, E5, and E6 are considered unknown. The finite state machine (FSM) was configured in advance in environment E4 to test its performance, whereas the parameters of the potential fields (PF) were tuned in E2. Consequently, E4 and E2 are considered previously known environments for the FSM and PF baselines, respectively.
+All environments generated (see Subsection~\ref{subsec:random_map}) were used to test the navigation performance of each methodology, except for the map-based navigation system. \textcolor{red}{The PNS was evaluated in two conditions: E1 with the correct map (reference case) and E4 with the outdated map from E1 (mismatched-map case), as described in Subsection~\ref{subsec:pns_test}.} For the neural network models, E1, E2, and E3 were used to collect the dataset; thus, they are considered previously known environments, while E4, E5, and E6 are considered unknown. The finite state machine (FSM) was configured in advance in environment E4 to test its performance, whereas the parameters of the potential fields (PF) were tuned in E2. Consequently, E4 and E2 are considered previously known environments for the FSM and PF baselines, respectively.
 
 \begin{figure}[htbp]
 \centering
@@ -470,11 +471,11 @@ In contrast to the rule-based FSM, the potential fields (PF) baseline follows th
             \State Stop
         \Else
             \State $\mathbf{F}_{attr} \gets$ attractive force to goal
-            \State $\mathbf{F}_{rej} \gets$ repulsive force from obstacles
-            \State $\mathbf{F} \gets \mathbf{F}_{attr} + \mathbf{F}_{rej}$
+            \State $\mathbf{F}_{rep} \gets$ repulsive force from obstacles
+            \State $\mathbf{F} \gets \mathbf{F}_{attr} + \mathbf{F}_{rep}$
 
-            \State Compute $v$, $w$ from $\mathbf{F}$
-            \State Publish $(v, w)$
+            \State Compute $v_{\text{lin}}$, $\omega$ from $\mathbf{F}$
+            \State Publish $(v_{\text{lin}}, \omega)$
 
             \If{speed near zero $> 6$ seconds}
                 \State Increase repulsive gain temporarily
@@ -497,24 +498,24 @@ In contrast to the rule-based FSM, the potential fields (PF) baseline follows th
 
 \Function{RepulsiveForce}{laser, occupancy}
     \State $\mathbf{F} \gets (0,0)$
-    \For{each laser reading with $d_i < d_0$}
-        \State $f \gets \zeta \sqrt{1/d_i - 1/d_0}$
-        \State $\mathbf{F} \gets \mathbf{F} + f \cdot (\cos\theta_i, \sin\theta_i)$
+    \For{each laser reading $r_i$ with $r_i < d_{\text{inf}}$}
+        \State $f \gets \zeta \sqrt{1/r_i - 1/d_{\text{inf}}}$
+        \State $\mathbf{F} \gets \mathbf{F} + f \cdot (\cos\phi_i, \sin\phi_i)$
     \EndFor
-    \State Add occupancy contribution scaled by $\gamma$
+    \State Add occupancy contribution scaled by $\gamma_{\text{occ}}$
     \State \Return $\mathbf{F}$
 \EndFunction
 
 \end{algorithmic}
 \end{algorithm}
 
-At each iteration, the attractive force $\mathbf{F}_{attr}$ is computed as a unit vector pointing from the robot to the goal, scaled by $\eta = 1.5$. For each laser reading within $d_0 = 0.5$ m, a repulsive force $\mathbf{F}_{rej}$ is calculated as $f = \zeta \sqrt{1/d_i - 1/d_0}$ with $\zeta = 8.5$, and summed over all readings. The total force $\mathbf{F} = \mathbf{F}_{attr} + \mathbf{F}_{rej}$ defines the desired motion direction.
+At each iteration, the attractive force $\mathbf{F}_{attr}$ is computed as a unit vector pointing from the robot to the goal, scaled by $\eta = 1.5$. For each laser reading $r_i$ within the influence distance $d_{\text{inf}} = 0.5$ m, a repulsive force $\mathbf{F}_{rep}$ is calculated as $f = \zeta \sqrt{1/r_i - 1/d_{\text{inf}}}$ with $\zeta = 8.5$, and summed over all readings. The total force $\mathbf{F} = \mathbf{F}_{attr} + \mathbf{F}_{rep}$ defines the desired motion direction.
 
-By processing the local occupancy grid, we estimate an extra repulsive component for dynamic obstacles, scaled by $\gamma = 0.4$. The linear and angular velocities are then derived from the orientation error between the robot's current heading and the desired force direction. Linear velocity follows $v = v_{max} \cdot e^{-\text{error}^2 / \alpha}$ with $\alpha = 0.8$ and $v_{max} = 0.4$ m/s, while angular velocity follows $w = w_{max} \cdot \left(\frac{2}{1 + e^{-\text{error}/\beta}} + 1\right)$ with $\beta = 0.2$ and $w_{max} = 0.8$ rad/s, ensuring smooth turning.
+By processing the local occupancy grid, we estimate an extra repulsive component for dynamic obstacles, scaled by $\gamma_{\text{occ}} = 0.4$. The linear and angular velocities are then derived from the orientation error $\theta_{\text{err}}$ between the robot's current heading and the desired force direction. The scalar linear velocity follows $v_{\text{lin}} = v_{\max} \cdot e^{-\theta_{\text{err}}^2 / \alpha}$ with $\alpha = 0.8$ and $v_{\max} = 0.4$ m/s, while the angular velocity follows $\omega = \omega_{\max} \cdot \left(\frac{2}{1 + e^{-\theta_{\text{err}}/\beta}} + 1\right)$ with $\beta = 0.2$ and $\omega_{\max} = 0.8$ rad/s, ensuring smooth turning.
 
 An escape mechanism is included to handle situations where the robot becomes trapped in local minima, a known limitation of potential fields methods. If the robot's linear speed remains near zero for more than six seconds, it is considered stuck. The repulsive force gain is temporarily increased to 100, a value empirically determined to force the robot to reverse away from the obstacle, this high gain creates a strong evasion force that overcomes the local minimum. After a brief window of 1.5 seconds, sufficient for the robot to move away from the obstacle, the gain resets to its nominal value, allowing the robot to resume goal-directed navigation.
 
-Both the PF implementation and the rule-based FSM serve as reactive baselines, contrasting with the learning-based CNN and RNN architectures. The parameters for both baseline methods were empirically tuned to ensure fair comparison with the proposed learning-based architectures. For the FSM, the front obstacle threshold and evasion timing were configured in environment E4,  which was selected because it is small yet sufficiently complex (narrow passages) to rapidly detect and tune collision evasion behavior without requiring extensive testing cycles. For the PF method, the attractive gain $\eta$, repulsive gain $\zeta$, and influence distance $d_0$ were tuned in environment E2 through systematic trials. The tuning process prioritized a balance between responsiveness to obstacles and smooth convergence to the goal, avoiding excessive oscillations or local minima entrapment.
+Both the PF implementation and the rule-based FSM serve as reactive baselines, contrasting with the learning-based CNN and RNN architectures. The parameters for both baseline methods were empirically tuned to ensure fair comparison with the proposed learning-based architectures. For the FSM, the front obstacle threshold and evasion timing were configured in environment E4,  which was selected because it is small yet sufficiently complex (narrow passages) to rapidly detect and tune collision evasion behavior without requiring extensive testing cycles. For the PF method, the attractive gain $\eta$, repulsive gain $\zeta$, and influence distance $d_{\text{inf}}$ were tuned in environment E2 through systematic trials. The tuning process prioritized a balance between responsiveness to obstacles and smooth convergence to the goal, avoiding excessive oscillations or local minima entrapment.
 
 Each test was executed by a script that generates 100 random navigation goals, each within a radius of 3 meters from the robot's current position. Goals located inside walls or on top of furniture are not valid. A time limit of 60 seconds per goal was set, meaning that if the robot does not reach the target on time, it is considered a failure. Once the robot reaches a goal within the valid time, it is considered a success. After a success or failure, a new goal is generated.
 
@@ -582,7 +583,7 @@ Our experiments evaluated all methods in both previously known and unknown envir
 
 A key challenge remains in heuristically generating a suitable dataset that maximizes performance across diverse environments. Nevertheless, the results indicate that learning-based navigation strategies offer a reliable, scalable, and flexible alternative to traditional rule-based methods, particularly in scenarios where prior knowledge of the environment is limited or unavailable.
 
-\authorcontributions{}
+\authorcontributions{D. Vanegas: conceptualization, methodology, software, writing – original draft. M. Negrete: validation, formal analysis, writing – review \& editing. J. Savage: writing and methodology review, supervision.}
 
 \funding{This work was partially supported by UNAM-DGAPA under grant IN118226.}
 

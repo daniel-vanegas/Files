@@ -1,0 +1,121 @@
+{
+  "environment_set": "T0",
+  "dataset": "D3",
+  "train_pairs": 0,
+  "validation_pairs": 2384,
+  "validation_sha256": "7853f44a77dafa6f03836eeb1eab1a94bb613699e22d33658ba9bd390530d65c",
+  "source_train_pairs": 9463,
+  "selected_fraction_of_training": 0.0,
+  "checks": {
+    "validation_manifest": {
+      "status": "passed",
+      "pairs": 2384,
+      "observations": 4768,
+      "episodes": 111,
+      "scenarios": 3,
+      "role": "validation",
+      "duplicate_pairs": 0,
+      "overlapping_observations": 0,
+      "label_source": "second observation",
+      "sha256": "7853f44a77dafa6f03836eeb1eab1a94bb613699e22d33658ba9bd390530d65c"
+    }
+  },
+  "coverage": {},
+  "status": "needs_annotations",
+  "deficits": [
+    "B0: no reviewed pairs",
+    "B1/right: insufficient distinct reviewed episodes",
+    "B2/right: insufficient distinct reviewed episodes",
+    "B3/left: insufficient distinct reviewed episodes",
+    "B3/right: insufficient distinct reviewed episodes",
+    "B4/left: insufficient distinct reviewed episodes",
+    "B4/right: insufficient distinct reviewed episodes"
+  ],
+  "support": {
+    "B0": {
+      "neutral": {
+        "pairs": 0,
+        "episodes": 0,
+        "scenarios": 0
+      },
+      "left": {
+        "pairs": 0,
+        "episodes": 0,
+        "scenarios": 0
+      },
+      "right": {
+        "pairs": 0,
+        "episodes": 0,
+        "scenarios": 0
+      }
+    },
+    "B1": {
+      "neutral": {
+        "pairs": 0,
+        "episodes": 0,
+        "scenarios": 0
+      },
+      "left": {
+        "pairs": 57,
+        "episodes": 3,
+        "scenarios": 3
+      },
+      "right": {
+        "pairs": 9,
+        "episodes": 1,
+        "scenarios": 1
+      }
+    },
+    "B2": {
+      "neutral": {
+        "pairs": 0,
+        "episodes": 0,
+        "scenarios": 0
+      },
+      "left": {
+        "pairs": 24,
+        "episodes": 3,
+        "scenarios": 3
+      },
+      "right": {
+        "pairs": 0,
+        "episodes": 0,
+        "scenarios": 0
+      }
+    },
+    "B3": {
+      "neutral": {
+        "pairs": 0,
+        "episodes": 0,
+        "scenarios": 0
+      },
+      "left": {
+        "pairs": 0,
+        "episodes": 0,
+        "scenarios": 0
+      },
+      "right": {
+        "pairs": 0,
+        "episodes": 0,
+        "scenarios": 0
+      }
+    },
+    "B4": {
+      "neutral": {
+        "pairs": 0,
+        "episodes": 0,
+        "scenarios": 0
+      },
+      "left": {
+        "pairs": 0,
+        "episodes": 0,
+        "scenarios": 0
+      },
+      "right": {
+        "pairs": 0,
+        "episodes": 0,
+        "scenarios": 0
+      }
+    }
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "status": "passed",
+  "input_shape": [
+    2,
+    82,
+    80
+  ],
+  "input_arrays_equal": true,
+  "prediction_max_absolute_difference": 0.0,
+  "strict_checkpoint_load": true,
+  "action_denormalization": "passed",
+  "architecture": "ros1_legacy",
+  "hidden_size": 350,
+  "num_layers": 4,
+  "recurrent_input_size": 736,
+  "scope": "offline model and preprocessing compatibility"
+}
