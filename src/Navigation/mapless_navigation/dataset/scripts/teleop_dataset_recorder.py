@@ -10,9 +10,9 @@ Modes:
 
 Buttons:
     B  -> toggle recording
-    Y  -> discard current pair, generate new one
-    X  -> emergency teleport (to current path start in pool mode,
-          to unexplored room otherwise)
+    Y  -> discard current path, generate a new one
+    X  -> teleport to current path start with random yaw and retry
+          (in non-pool mode: teleport to unexplored room)
 """
 
 import csv
@@ -94,7 +94,11 @@ def resolve_output_dir(output_dir):
 
 
 def count_goals_in_csv(csv_path):
+    # Count episode transitions: a new episode_id on a row different from
+    # the previous row marks a new episode. Falls back to is_episode_start
+    # when the episode_id column is missing.
     total = 0
+    prev_eid = None
     try:
         with open(csv_path, 'r', newline='') as f:
             sample = f.readline()
@@ -105,14 +109,22 @@ def count_goals_in_csv(csv_path):
             reader = csv.DictReader(f, delimiter=delimiter)
             if reader.fieldnames is None:
                 return 0
-            if 'is_episode_start' not in reader.fieldnames:
+            has_eid = 'episode_id' in reader.fieldnames
+            has_flag = 'is_episode_start' in reader.fieldnames
+            if not has_eid and not has_flag:
                 return 0
             for row in reader:
-                try:
-                    if int(row.get('is_episode_start', '0')) == 1:
+                if has_eid:
+                    eid = row.get('episode_id', '')
+                    if eid and eid != prev_eid:
                         total += 1
-                except (ValueError, TypeError):
-                    continue
+                        prev_eid = eid
+                else:
+                    try:
+                        if int(row.get('is_episode_start', '0')) == 1:
+                            total += 1
+                    except (ValueError, TypeError):
+                        continue
     except (OSError, UnicodeDecodeError):
         return 0
     return total
@@ -137,6 +149,17 @@ def count_goals_in_scenario(scenario_dir):
             continue
         total += count_goals_in_csv(csv_path)
     return total
+
+
+def count_goals_from_metadata(scenario_dir):
+    meta_path = os.path.join(scenario_dir, 'episode_metadata.jsonl')
+    if not os.path.isfile(meta_path):
+        return 0
+    try:
+        with open(meta_path, 'r') as f:
+            return sum(1 for line in f if line.strip())
+    except OSError:
+        return 0
 
 
 def read_world_offsets(png_path):
@@ -340,15 +363,13 @@ class TeleopDatasetRecorder(Node):
         self.current_goal = None
         self.goal_start_time = 0.0
 
-        self.flag_collision = False
         self.flag_button_b = False
         self.flag_button_x = False
         self.flag_button_y = False
 
         self.collision_now = False
-        self._collision_prev = False
-        self._collision_since = None
         self.episode_had_collision = False
+        self._collision_grace_until = 0.0
 
         self.teleport_in_progress = False
         self._teleport_thread = None
@@ -405,10 +426,13 @@ class TeleopDatasetRecorder(Node):
                 f'yaw={self.off_yaw:.3f}')
 
         self.dbg.send(
-            f'total_saved={self.goals_saved_total} current_saved=0',
+            f'total_saved={self.goals_saved_total} current_saved=0 '
+            f'csv={getattr(self, "_csv_count_diag", -1)} '
+            f'meta={getattr(self, "_meta_count_diag", -1)} '
+            f'exists={os.path.isdir(self.scenario_dir)} '
+            f'scenario={self.scenario}',
             'RECORDED', 'info', -1.0)
 
-        # Try to load existing pool.
         if self.use_path_pool:
             pool_path = os.path.join(
                 self.output_dir, self.scenario, 'path_pool.json')
@@ -435,6 +459,15 @@ class TeleopDatasetRecorder(Node):
                 self.get_logger().error(
                     'use_path_pool=true but no pool and '
                     'auto_generate_pool=false.')
+
+        self.dbg.send('goals_saved=0', 'INFO', 'info', -1.0)
+        if self.use_path_pool:
+            with self._class_lock:
+                counts = dict(self.class_counts)
+                quotas = dict(self.class_quotas)
+            self.dbg.send(
+                ' '.join(f'{n}={counts[n]}/{quotas[n]}' for n in CLASS_NAMES),
+                'CLASSES', 'info', -1.0)
 
         threading.Thread(
             target=self.build_rooms_worker, daemon=True).start()
@@ -507,15 +540,15 @@ class TeleopDatasetRecorder(Node):
 
         self.declare_parameter('head_pan_offset', 0.0)
         self.declare_parameter('head_tilt_offset', -0.5)
+        self.declare_parameter('lock_head', True)
 
-        self.declare_parameter('collision_stuck_s', 2.0)
         self.declare_parameter('auto_world_offset', True)
 
         # Path pool mode
         self.declare_parameter('use_path_pool', True)
         self.declare_parameter('num_goals', 100)
         self.declare_parameter('class_mix', '')
-        self.declare_parameter('path_max_attempts', 3)
+        self.declare_parameter('path_max_attempts', 0)
 
         # Auto-generate pool
         self.declare_parameter('auto_generate_pool', True)
@@ -597,9 +630,8 @@ class TeleopDatasetRecorder(Node):
             'head_pan_offset').value
         self.head_tilt_offset = self.get_parameter(
             'head_tilt_offset').value
+        self.lock_head = bool(self.get_parameter('lock_head').value)
 
-        self.collision_stuck_s = self.get_parameter(
-            'collision_stuck_s').value
         self.auto_world_offset = self.get_parameter(
             'auto_world_offset').value
 
@@ -609,8 +641,9 @@ class TeleopDatasetRecorder(Node):
             self.get_parameter('class_mix').value).strip()
         self.path_max_attempts = int(
             self.get_parameter('path_max_attempts').value)
-        if self.path_max_attempts < 1:
-            self.path_max_attempts = 1
+        if self.path_max_attempts < 0:
+            self.path_max_attempts = 0
+        # 0 means unlimited retries (manual mode)
 
         self.auto_generate_pool = bool(
             self.get_parameter('auto_generate_pool').value)
@@ -636,14 +669,6 @@ class TeleopDatasetRecorder(Node):
     #  Pool: parsing and loading
 
     def _parse_class_mix(self, mix_str):
-        """Return dict class_name -> quota, or None if mix_str empty.
-
-        Formats:
-          - "10_10_15_20" or "10,10,15,20": integer quotas.
-            If sum != num_goals, scaled proportionally.
-          - "0.4,0.3,0.2,0.1": proportions.
-          - "": returns None.
-        """
         s = mix_str.strip()
         if not s:
             return None
@@ -676,7 +701,6 @@ class TeleopDatasetRecorder(Node):
         return quotas
 
     def _resolve_quotas_for_generation(self):
-        """Integer per-class quotas for passing to generate_path_pool.py."""
         parsed = self._parse_class_mix(self.class_mix_str)
         if parsed is not None:
             return parsed
@@ -685,10 +709,6 @@ class TeleopDatasetRecorder(Node):
                 for i, k in enumerate(CLASS_NAMES)}
 
     def _load_used_endpoints(self):
-        """Read episode_metadata.jsonl and failed_paths.json to collect
-        start/goal endpoint pairs that were already used in prior sessions.
-        Uses endpoint proximity instead of path_id because a regenerated
-        pool restarts IDs from 0 with different coordinates."""
         used = []
         meta_path = os.path.join(
             self.output_dir, self.scenario, 'episode_metadata.jsonl')
@@ -731,8 +751,6 @@ class TeleopDatasetRecorder(Node):
         return used
 
     def _endpoint_matches(self, path, used, tol=0.30):
-        """True if path start/goal matches any used endpoint pair
-        within tolerance (meters)."""
         ps = (path['start'][0], path['start'][1])
         pg = (path['goal'][0], path['goal'][1])
         for us, ug in used:
@@ -742,7 +760,6 @@ class TeleopDatasetRecorder(Node):
         return False
 
     def _pool_ready(self):
-        """True when pool is loaded and has enough fresh paths for quotas."""
         if not self.path_pool_loaded:
             return False
         return sum(self._pool_deficits.values()) == 0
@@ -837,7 +854,6 @@ class TeleopDatasetRecorder(Node):
                 f'Pool contained zero usable paths (skipped={skipped}).')
             return False
 
-        # Filter out endpoints already recorded in previous sessions.
         used = self._load_used_endpoints()
         filtered_counts = {cls: 0 for cls in CLASS_NAMES}
         if used:
@@ -880,7 +896,6 @@ class TeleopDatasetRecorder(Node):
         return True
 
     def _ensure_path_pool(self):
-        # Already loaded and has enough fresh paths.
         if self._pool_ready():
             return True
 
@@ -892,12 +907,10 @@ class TeleopDatasetRecorder(Node):
             os.path.isfile(pool_path)
             and os.path.isfile(poses_path))
 
-        # Existing pool: try to load.
         if pool_exists and not self.path_pool_loaded:
             if not self._load_path_pool():
                 return False
 
-        # If still not ready after loading, we need to regenerate.
         if self.path_pool_loaded and self._pool_ready():
             return True
 
@@ -911,7 +924,6 @@ class TeleopDatasetRecorder(Node):
                 f'delete {pool_path}.')
             return False
 
-        # Compute regeneration quotas: base quota + deficit + 1 buffer.
         with self._class_lock:
             base = dict(self.class_quotas)
             deficits = dict(self._pool_deficits)
@@ -925,7 +937,6 @@ class TeleopDatasetRecorder(Node):
             f'Regenerating pool with fresh paths: '
             f'deficits={deficits} -> new_quotas={new_quotas}')
 
-        # Force reload after generation overwrites the flat pool.
         self.path_pool_loaded = False
         return self._generate_pool_subprocess(new_quotas)
 
@@ -1055,8 +1066,6 @@ class TeleopDatasetRecorder(Node):
             return paths.pop()
 
     def _should_stop_recording(self):
-        """True when all quotas are met OR no class still has both
-        remaining quota and remaining pool paths."""
         with self._class_lock:
             for name in CLASS_NAMES:
                 if self.class_counts[name] < self.class_quotas[name]:
@@ -1071,16 +1080,8 @@ class TeleopDatasetRecorder(Node):
 
     def on_collision(self, msg):
         now = bool(msg.data)
-        if now:
-            if self._collision_since is None:
-                self._collision_since = time.time()
-            if not self._collision_prev and not self.teleport_in_progress:
-                self.flag_collision = True
-            if self.state == STATE_RECORDING:
-                self.episode_had_collision = True
-        else:
-            self._collision_since = None
-        self._collision_prev = now
+        if now and self.state == STATE_RECORDING:
+            self.episode_had_collision = True
         self.collision_now = now
 
     def on_teleport_done(self, msg):
@@ -1098,22 +1099,34 @@ class TeleopDatasetRecorder(Node):
 
     def on_head_pan_raw(self, msg):
         out = Float64()
-        out.data = float(msg.data) + self.head_pan_offset
+        if self.lock_head:
+            out.data = float(self.head_pan_offset)
+        else:
+            out.data = float(msg.data) + self.head_pan_offset
         self.pub_head_pan.publish(out)
 
     def on_head_tilt_raw(self, msg):
         out = Float64()
-        out.data = float(msg.data) + self.head_tilt_offset
+        if self.lock_head:
+            out.data = float(self.head_tilt_offset)
+        else:
+            out.data = float(msg.data) + self.head_tilt_offset
         self.pub_head_tilt.publish(out)
 
     def on_head_pose_raw(self, msg):
         if len(msg.data) < 2:
             return
         out = Float64MultiArray()
-        out.data = [
-            float(msg.data[0]) + self.head_pan_offset,
-            float(msg.data[1]) + self.head_tilt_offset,
-        ]
+        if self.lock_head:
+            out.data = [
+                float(self.head_pan_offset),
+                float(self.head_tilt_offset),
+            ]
+        else:
+            out.data = [
+                float(msg.data[0]) + self.head_pan_offset,
+                float(msg.data[1]) + self.head_tilt_offset,
+            ]
         self.pub_head_pose.publish(out)
 
     def on_joy(self, msg):
@@ -1237,17 +1250,48 @@ class TeleopDatasetRecorder(Node):
     def load_goal_counter(self):
         if not self.count_existing_goals:
             self.goals_saved_total = 0
+            self._csv_count_diag = 0
+            self._meta_count_diag = 0
+            self.get_logger().info(
+                'count_existing_goals=false; starting at 0')
             return
+        csv_count = 0
+        meta_count = 0
         try:
-            self.goals_saved_total = count_goals_in_scenario(
-                self.scenario_dir)
+            csv_count = count_goals_in_scenario(self.scenario_dir)
         except Exception as exc:
-            self.get_logger().warn(
-                f'could not count existing goals: {exc}')
-            self.goals_saved_total = 0
+            self.get_logger().warn(f'csv goal count failed: {exc}')
+        try:
+            meta_count = count_goals_from_metadata(self.scenario_dir)
+        except Exception as exc:
+            self.get_logger().warn(f'meta goal count failed: {exc}')
+        self.goals_saved_total = max(csv_count, meta_count)
+        self._csv_count_diag = csv_count
+        self._meta_count_diag = meta_count
+        meta_path = os.path.join(
+            self.scenario_dir, 'episode_metadata.jsonl')
+        meta_size = 0
+        if os.path.isfile(meta_path):
+            try:
+                meta_size = os.path.getsize(meta_path)
+            except Exception:
+                pass
+        exists = os.path.isdir(self.scenario_dir)
+        entries = []
+        if exists:
+            try:
+                entries = sorted(os.listdir(self.scenario_dir))
+            except Exception:
+                pass
         self.get_logger().info(
             f'loaded goal counter: total={self.goals_saved_total} '
-            f'from {self.scenario_dir}')
+            f'(csv={csv_count} meta={meta_count} meta_bytes={meta_size}) '
+            f'output_dir={self.output_dir} '
+            f'scenario_dir={self.scenario_dir} '
+            f'exists={exists} entries={entries[:10]}')
+        if exists and self.goals_saved_total == 0 and entries:
+            self.get_logger().warn(
+                f'zero goals but scenario_dir has entries: {entries}')
 
     def update_info_channel(self):
         self.dbg.send(
@@ -1587,13 +1631,10 @@ class TeleopDatasetRecorder(Node):
             self.wait_for_amcl_stable()
             if self.post_teleport_settle_s > 0:
                 time.sleep(self.post_teleport_settle_s)
+            # ignore collision flags briefly after teleport
+            self._collision_grace_until = time.time() + 1.0
             return True
         finally:
-            self._collision_prev = self.collision_now
-            if self.collision_now:
-                self._collision_since = time.time()
-            else:
-                self._collision_since = None
             self.paused_pub.publish(Bool(data=False))
             time.sleep(0.1)
 
@@ -1601,27 +1642,30 @@ class TeleopDatasetRecorder(Node):
 
     def verify_saved(self, episode_id):
         time.sleep(1.5)
-        # Launch may be shutting down by now (max_goals reached in C++).
-        # rclpy.ok() returns False after rclpy.shutdown(), so skip all
-        # rclpy calls (dbg.send, get_logger) to avoid Destroyable errors.
         if not rclpy.ok():
             return
         try:
-            count = count_goals_in_scenario(self.scenario_dir)
-            if count > self.last_saved_count:
+            csv_count = count_goals_in_scenario(self.scenario_dir)
+            meta_count = count_goals_from_metadata(self.scenario_dir)
+            count = max(csv_count, meta_count)
+            expected = (
+                self.goals_saved_total_at_start + self.goals_saved_session)
+            if count < expected:
+                self.dbg.send(
+                    f'ep {episode_id} not confirmed: '
+                    f'csv={csv_count} meta={meta_count} '
+                    f'expected={expected}',
+                    'NODE_STATUS', 'err', -1.0)
+                self.get_logger().warn(
+                    f'episode {episode_id} not confirmed: '
+                    f'csv={csv_count} meta={meta_count} '
+                    f'expected={expected}')
+            elif count > self.last_saved_count:
                 self.last_saved_count = count
                 self.goals_saved_total = count
-                self.goals_saved_session = (
-                    self.goals_saved_total - self.goals_saved_total_at_start)
                 self.update_info_channel()
                 self.dbg.send(
                     f'ep {episode_id} saved', 'INFO', 'info', 3.0)
-            else:
-                self.dbg.send(
-                    f'ep {episode_id} not saved by recorder',
-                    'NODE_STATUS', 'err', -1.0)
-                self.get_logger().warn(
-                    f'episode {episode_id} not confirmed')
         except Exception as exc:
             if rclpy.ok():
                 self.get_logger().warn(f'verify_saved failed: {exc}')
@@ -1799,9 +1843,6 @@ class TeleopDatasetRecorder(Node):
         self.generate_new_pair()
 
     def stop_recording(self):
-        # Return current path to pool whenever we stop, regardless of state.
-        # B during WAITING_FOR_START used to lose the path because the
-        # previous condition only handled STATE_RECORDING.
         if (self.use_path_pool
                 and self.current_path is not None
                 and self.current_class):
@@ -1873,6 +1914,7 @@ class TeleopDatasetRecorder(Node):
             self.current_goal = (
                 float(path['goal'][0]), float(path['goal'][1]))
             self.goal_start_time = 0.0
+            self.episode_had_collision = False
 
             self.pub_episode_class.publish(
                 String(data=self.current_class))
@@ -1911,6 +1953,7 @@ class TeleopDatasetRecorder(Node):
         self.current_start = start
         self.current_goal = goal
         self.goal_start_time = 0.0
+        self.episode_had_collision = False
         self.publish_start_goal()
         self.state = STATE_WAITING_FOR_START
 
@@ -1925,11 +1968,14 @@ class TeleopDatasetRecorder(Node):
             'INFO', 'info', 5.0)
 
     def begin_episode_at_start(self):
-        # Publish episode_id right before goal_active so the C++ recorder
-        # marks is_episode_start=1 on the first sample.
+        if (self.collision_now
+                and time.time() >= self._collision_grace_until):
+            self.get_logger().warn(
+                'not starting episode: robot in collision at start')
+            return
+
         self.episode_id += 1
         self.pub_episode.publish(Int32(data=self.episode_id))
-        # Reset per-episode collision tracker.
         self.episode_had_collision = False
 
         if self.current_path is None:
@@ -1938,6 +1984,8 @@ class TeleopDatasetRecorder(Node):
             self.path_attempts += 1
 
         self.pub_episode_tries.publish(Int32(data=self.path_attempts))
+        # give the C++ recorder time to see the new id before active
+        time.sleep(0.05)
         self.pub_active.publish(Bool(data=True))
         self.goal_start_time = time.time()
         self.last_active_time = time.time()
@@ -1954,7 +2002,6 @@ class TeleopDatasetRecorder(Node):
             'INFO', 'info', 5.0)
 
     def finish_episode(self, success, reason):
-        # Collision during episode cancels the save even if goal reached.
         if success and self.episode_had_collision:
             self.get_logger().warn(
                 f'episode {self.episode_id}: collision during episode, '
@@ -1964,7 +2011,6 @@ class TeleopDatasetRecorder(Node):
 
         if success and self.current_goal is not None:
             gx, gy = self.current_goal
-            
             self.recent_goals.append((gx, gy))
             self.recent_goal_rooms.append(self.room_of(gx, gy))
             self.recent_zones.append(self.zone_key(gx, gy))
@@ -1982,8 +2028,6 @@ class TeleopDatasetRecorder(Node):
             'INFO', 'info' if success else 'warn', 5.0)
 
         if success:
-            # Log metadata only when the episode actually committed,
-            # so failed attempts do not pollute the used-endpoint filter.
             if (self.use_path_pool
                     and self.current_path is not None
                     and self.current_start is not None
@@ -1999,36 +2043,55 @@ class TeleopDatasetRecorder(Node):
                              float(self.current_goal[1])],
                     'attempt': self.path_attempts,
                 })
+            self.goals_saved_session += 1
+            self.goals_saved_total = (
+                self.goals_saved_total_at_start + self.goals_saved_session)
+            if self.use_path_pool and self.current_class:
+                with self._class_lock:
+                    self.class_counts[self.current_class] += 1
+            self.update_info_channel()
             threading.Thread(
                 target=self.verify_saved,
                 args=(self.episode_id,),
                 daemon=True).start()
-            if self.use_path_pool and self.current_class:
-                with self._class_lock:
-                    self.class_counts[self.current_class] += 1
-                self.update_info_channel()
             self.current_path = None
 
-        # Failure with retries remaining -> retry same path.
-        if (not success and self.use_path_pool
-                and self.current_path is not None):
-            if self.path_attempts < self.path_max_attempts:
-                self.get_logger().warn(
-                    f'path id={self.current_path["id"]} failed '
-                    f'(reason={reason}, attempt={self.path_attempts}/'
-                    f'{self.path_max_attempts}). '
-                    f'Drive to start to retry, or press Y to skip.')
-                # Keep current_path, current_start, current_goal.
-                # Keep episode_id (retries share the same id).
-                self.state = STATE_WAITING_FOR_START
-                self.goal_start_time = 0.0
+        # Failure in manual mode: operator decides via X (retry) or Y (skip).
+        if not success:
+            if (self.use_path_pool and self.current_path is not None
+                    and self.path_max_attempts > 0
+                    and self.path_attempts >= self.path_max_attempts):
+                self._record_failed_path(
+                    self.current_path, reason, self.path_attempts)
+                self.current_path = None
+                self.current_start = None
+                self.current_goal = None
+                self.state = STATE_IDLE
+                if self.recording:
+                    time.sleep(self.goal_pause_s)
+                    self.generate_new_pair()
                 return
-            # Retries exhausted -> mark failed.
-            self._record_failed_path(
-                self.current_path, reason, self.path_attempts)
-            self.current_path = None
+            if reason == 'collision':
+                self.get_logger().warn(
+                    f'episode {self.episode_id} failed '
+                    f'(reason=collision, attempt={self.path_attempts}). '
+                    f'Auto-teleporting to start; Y=skip to abandon.')
+                self.dbg.send(
+                    f'collision. Auto-teleporting to start; Y=skip.',
+                    'STATUS', 'err', -1.0)
+            else:
+                self.get_logger().warn(
+                    f'episode {self.episode_id} failed '
+                    f'(reason={reason}, attempt={self.path_attempts}). '
+                    f'X=teleport to start and retry, Y=skip.')
+                self.dbg.send(
+                    f'failed: {reason}. X=retry, Y=skip',
+                    'STATUS', 'err', -1.0)
+            self.state = STATE_WAITING_FOR_START
+            self.goal_start_time = 0.0
+            return
 
-        # Success or retries exhausted: move on.
+        # Success: move on.
         self.current_start = None
         self.current_goal = None
         self.state = STATE_IDLE
@@ -2065,7 +2128,8 @@ class TeleopDatasetRecorder(Node):
                 self.pub_active.publish(Bool(data=False))
                 self.get_logger().info(
                     f'discarding ep {self.episode_id} for teleport')
-                if self.use_path_pool and self.current_path is not None:
+                if (self.use_path_pool and self.current_path is not None
+                        and self.path_max_attempts > 0):
                     self.path_attempts += 1
                     if self.path_attempts >= self.path_max_attempts:
                         self._record_failed_path(
@@ -2074,16 +2138,10 @@ class TeleopDatasetRecorder(Node):
                             self.path_attempts)
                         self.current_path = None
 
-            # Prefer teleporting to current_start if in pool mode.
-            if (self.use_path_pool
-                    and self.current_path is not None
-                    and self.current_start is not None):
+            # Teleport to current_start with random yaw when a path is active.
+            if self.current_start is not None:
                 sx, sy = self.current_start
-                pose = self.get_robot_pose()
-                if pose is not None:
-                    yaw = math.atan2(sy - pose[1], sx - pose[0])
-                else:
-                    yaw = 0.0
+                yaw = random.uniform(-math.pi, math.pi)
                 spawn = (sx, sy, yaw)
             else:
                 spawn = self.sample_spawn_unexplored()
@@ -2099,9 +2157,9 @@ class TeleopDatasetRecorder(Node):
 
             self.dbg.send('teleport done', 'INFO', 'info', 5.0)
 
-            if self.current_path is not None:
-                # We're back on the same path; remain in WAITING_FOR_START.
+            if self.current_start is not None and self.current_goal is not None:
                 self.state = STATE_WAITING_FOR_START
+                self.episode_had_collision = False
                 self.clear_markers()
                 self.publish_start_goal()
             elif self.recording:
@@ -2125,15 +2183,12 @@ class TeleopDatasetRecorder(Node):
 
     def _tick_impl(self):
         if self._generating_pool:
-            # Ignore button presses while a pool is being generated.
             self.flag_button_b = False
             self.flag_button_x = False
             self.flag_button_y = False
-            self.flag_collision = False
             return
 
         if self.teleport_in_progress:
-            self.flag_collision = False
             return
 
         if self.flag_button_b:
@@ -2160,24 +2215,24 @@ class TeleopDatasetRecorder(Node):
                         max(1, self.path_attempts))
                 self.current_path = None
                 self.path_attempts = 0
+                self.episode_had_collision = False
                 self.generate_new_pair()
             return
 
-        if self.flag_collision:
-            self.flag_collision = False
-            self.get_logger().info('tick: consuming flag_collision')
-            self.request_teleport('collision')
-            return
-
-        if (self.collision_now
-                and self._collision_since is not None
-                and time.time() - self._collision_since
-                > self.collision_stuck_s):
-            self._collision_since = None
-            self.request_teleport('stuck collision')
-            return
-
         if not self.recording:
+            return
+
+        # Collision interrupts the active episode (data not saved) and
+        # auto-teleports back to the current path start for a new attempt.
+        if (self.state == STATE_RECORDING
+                and self.current_goal is not None
+                and self.collision_now
+                and time.time() >= self._collision_grace_until):
+            self.get_logger().warn(
+                f'episode {self.episode_id} collision, '
+                f'interrupting and teleporting')
+            self.finish_episode(False, 'collision')
+            self.request_teleport('collision')
             return
 
         if self.state == STATE_WAITING_FOR_START:

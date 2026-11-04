@@ -71,11 +71,6 @@ install(TARGETS get_goal_point
 install(
   PROGRAMS
     scripts/reactives/pot_fields.py
-  DESTINATION lib/${PROJECT_NAME}
-)
-
-install(
-  PROGRAMS
     scripts/reactives/bt_navigation.py
   DESTINATION lib/${PROJECT_NAME}
 )
@@ -84,15 +79,25 @@ install(
 install(
   PROGRAMS
     scripts/RNN_mapless.py
+    scripts/evaluate_navigation.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
-# ===== Install TorchModels Python module =====
+install(
+  FILES
+    scripts/experiment_tools/calibrate_routes.py
+    scripts/experiment_tools/campaign_manager.py
+    scripts/experiment_tools/experiment_control.py
+  DESTINATION lib/${PROJECT_NAME}/experiment_tools
+)
+
+# ===== Install TorchModels =====
 install(
   DIRECTORY
     scripts/TorchModels
   DESTINATION lib/${PROJECT_NAME}
   PATTERN "__pycache__" EXCLUDE
+  PATTERN "experiments" EXCLUDE
 )
 
 install(

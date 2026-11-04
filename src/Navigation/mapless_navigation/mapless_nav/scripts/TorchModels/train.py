@@ -23,8 +23,14 @@ import torch
 from torch.utils.data import DataLoader, TensorDataset
 
 SCRIPT_DIR = Path(__file__).resolve().parent
+EXPERIMENT_TOOLS_DIR = SCRIPT_DIR.parent / "experiment_tools"
+EXPERIMENTS_ROOT = SCRIPT_DIR.parents[5] / "experiments"
+
 if str(SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPT_DIR))
+
+if str(EXPERIMENT_TOOLS_DIR) not in sys.path:
+    sys.path.insert(0, str(EXPERIMENT_TOOLS_DIR))
 
 from dataset_utils import (
     SequenceDataset,
@@ -271,7 +277,7 @@ def check_inference_contract(model, config: dict, dataset, device) -> dict:
     model.eval()
     try:
         expected, _ = dataset[0]
-        actual = np.stack([module.prepare_observation(np.rot90(grid, -1), target[0], target[1], settings)
+        actual = np.stack([module.prepare_observation(np.rot90(np.fliplr(grid), -1), target[0], target[1], settings)
                            for grid, target, _ in dataset.raw_pair(0)])
         np.testing.assert_array_equal(actual, expected)
         x = torch.as_tensor(expected[None], dtype=torch.float32, device=device)
@@ -476,7 +482,11 @@ def main() -> int:
     device = torch.device("cuda:0" if args.device == "cuda" or (args.device == "auto" and torch.cuda.is_available()) else "cpu")
 
     stamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
-    out_dir = (args.output_dir.expanduser().resolve() if args.output_dir else (script_dir / "experiments" / f"unified_{data_format}_{stamp}").resolve())
+    out_dir = (
+        args.output_dir.expanduser().resolve()
+        if args.output_dir
+        else (EXPERIMENTS_ROOT / f"unified_{data_format}_{stamp}").resolve()
+    )
     out_dir.mkdir(parents=True, exist_ok=False)
 
     if args.datasets_dir:
@@ -494,6 +504,8 @@ def main() -> int:
     optimizer = torch.optim.Adam(model.parameters(), lr=args.learning_rate, weight_decay=args.weight_decay)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode="min", factor=0.5, patience=max(1, min(5, args.patience)))
     history = []
+    best_gap = float("inf")
+    interrupted = False
     best_val = float("inf")
     best_epoch = -1
     stale_epochs = 0
@@ -525,6 +537,7 @@ def main() -> int:
         "data_root": data_root.name,
         "split": split_info,
     }
+    config["campaign_checkpoint_policy"] = "min_validation_and_min_absolute_gap"
     if args.datasets_dir:
         from experiment_control import file_hash
         config.update(format_version=3, preprocessing=split_info["preprocessing"],
@@ -566,6 +579,20 @@ def main() -> int:
             }
             history.append(row)
             print(f"epoch {epoch:03d}/{args.epochs} train={train_loss:.7f} val={val_loss:.7f} lr={row['learning_rate']:.3g} t={row['epoch_seconds']:.2f}s")
+            if not np.isfinite(train_loss) or not np.isfinite(val_loss):
+                raise ValueError("Training produced a nonfinite loss")
+            gap = abs(val_loss - train_loss)
+            row["absolute_generalization_gap"] = gap
+            if gap < best_gap:
+                best_gap = gap
+                torch.save({"model_state_dict": model.state_dict(),
+                    "optimizer_state_dict": optimizer.state_dict(),
+                    "epoch": epoch, "train_loss": train_loss,
+                    "validation_loss": val_loss, "absolute_generalization_gap": gap,
+                    "selection_criterion": "minimum_absolute_train_validation_gap",
+                    "architecture": args.architecture, "data_format": data_format,
+                    "config": config}, out_dir / "best_gap.pth")
+            (out_dir / "history.json").write_text(json.dumps(history, indent=2))
             if np.isfinite(val_loss) and val_loss < best_val:
                 previous_best = best_val
                 best_val, best_epoch, stale_epochs = val_loss, epoch, 0
@@ -596,6 +623,7 @@ def main() -> int:
                     print(f"Early stopping after {stale_epochs} epochs without validation improvement.")
                     break
     except KeyboardInterrupt:
+        interrupted = True
         print("\nTraining interrupted; artifacts from completed epochs will be preserved.")
 
     (out_dir / "history.json").write_text(json.dumps(history, indent=2))
@@ -613,7 +641,19 @@ def main() -> int:
         checked.update(checkpoint=checkpoint_path.name, epoch=checkpoint["epoch"])
         (out_dir / "checkpoint_check.json").write_text(json.dumps(checked, indent=2))
         print(f"Checkpoint reload passed: {out_dir / 'checkpoint_check.json'}")
-    return 0 if best_epoch > 0 else 2
+    if args.datasets_dir and best_epoch > 0:
+        checks = {}
+        for saved in (checkpoint_path, out_dir / "best_gap.pth"):
+            try:
+                item = torch.load(saved, map_location=device, weights_only=False)
+            except TypeError:
+                item = torch.load(saved, map_location=device)
+            model.load_state_dict(item["model_state_dict"], strict=True)
+            checked = check_inference_contract(model, item["config"], train_loader.dataset, device)
+            checked.update(checkpoint=saved.name, epoch=item["epoch"])
+            checks[saved.name] = checked
+        (out_dir / "checkpoint_checks.json").write_text(json.dumps(checks, indent=2))
+    return 130 if interrupted else 0 if best_epoch > 0 else 2
 
 
 if __name__ == "__main__":

@@ -5,6 +5,7 @@
 #include <std_msgs/msg/float32_multi_array.hpp>
 #include <std_msgs/msg/bool.hpp>
 #include <std_msgs/msg/int32.hpp>
+#include <std_msgs/msg/string.hpp>
 
 #include <tf2_ros/buffer.h>
 #include <tf2_ros/transform_listener.h>
@@ -292,7 +293,9 @@ public:
 
 private:
     struct Sample {
-        std::array<uint8_t, 80 * 80> lom;
+        std::vector<uint8_t> lom;
+        int lom_width;
+        int lom_height;
         double ts;
         int    episode_id;
         int    is_start;
@@ -358,10 +361,18 @@ private:
           << "map_frame: "   << map_frame_ << "\n"
           << "base_frame: "  << base_frame_ << "\n"
           << "max_goals: "   << max_goals_ << "\n"
-          << "lom_width: 80\n"
-          << "lom_height: 80\n"
+          << "lom_width: 120\n"
+          << "lom_height: 140\n"
           << "lom_resolution: 0.05\n"
           << "lom_encoding: raw_0_100\n"
+          << "lom_min_x: -1.0\n"
+          << "lom_max_x: 6.0\n"
+          << "lom_min_y: -3.0\n"
+          << "lom_max_y: 3.0\n"
+          << "lom_rotation: 90_ccw_flip_horizontal\n"
+          << "lom_layout: ros2_robot_forward_up_left_left\n"
+          << "lom_policy_crop_rows: [40, 120]\n"
+          << "lom_policy_crop_cols: [20, 100]\n"
           << "min_cmd_magnitude: " << min_cmd_magnitude_ << "\n"
           << "collision_topic: "   << collision_topic_ << "\n"
           << "stuck_window_s: "    << stuck_window_s_ << "\n"
@@ -554,7 +565,8 @@ private:
         std::error_code ec;
         fs::create_directories(lom_path.parent_path(), ec);
 
-        cv::Mat lom(80, 80, CV_8UC1, const_cast<uint8_t *>(s.lom.data()));
+        cv::Mat lom(s.lom_height, s.lom_width,
+            CV_8UC1, const_cast<uint8_t *>(s.lom.data()));
         if (!cv::imwrite(lom_path.string(), lom)) {
             RCLCPP_WARN(get_logger(), "Failed to write %s", lom_path.c_str());
             return;
@@ -585,12 +597,25 @@ private:
     {
         const int w = static_cast<int>(grid->info.width);
         const int h = static_cast<int>(grid->info.height);
+
+        // Validate grid dimensions and data size.
+        if (w <= 0 || h <= 0 ||
+            grid->data.size() != static_cast<size_t>(w) * h) {
+            RCLCPP_WARN(get_logger(), "Invalid LOM dimensions or data size");
+            return cv::Mat();
+        }
+
         cv::Mat out(h, w, CV_8UC1);
+
         for (int i = 0; i < w * h; ++i) {
             const int8_t v = grid->data[i];
             out.data[i] = (v >= 50) ? 100 : 0;
         }
+
+        // ROS grid rows are +Y (left); after CCW they appear on the image right.
+        // Mirror once so the robot left is at image left and +X faces up.
         cv::rotate(out, out, cv::ROTATE_90_COUNTERCLOCKWISE);
+        cv::flip(out, out, 1);
         return out;
     }
 
@@ -736,7 +761,17 @@ private:
 
         Sample s;
         cv::Mat lom = costmapToLom(costmap);
-        std::memcpy(s.lom.data(), lom.data, 80 * 80);
+
+        // Skip invalid or empty occupancy grids.
+        if (lom.empty()) {
+            RCLCPP_WARN(get_logger(), "Skipping empty LOM");
+            return;
+        }
+
+        s.lom_width = lom.cols;
+        s.lom_height = lom.rows;
+
+        s.lom.assign(lom.datastart, lom.dataend);
         s.ts          = now_s;
         s.episode_id  = episode;
         s.is_start    = just_changed ? 1 : 0;

@@ -29,6 +29,12 @@ except ModuleNotFoundError as exc:
     rclpy, Node = None, object
 
 
+EXPERIMENT_TOOLS_DIR = Path(__file__).resolve().parent / "experiment_tools"
+
+if str(EXPERIMENT_TOOLS_DIR) not in sys.path:
+    sys.path.insert(0, str(EXPERIMENT_TOOLS_DIR))
+
+
 # LOM255_REEVALUATION_FIX_V1
 def scale_occupancy_grid(occupancy, normalize_occupancy: bool, occupancy_max: float = 100.0):
     """Convert the incoming ROS 0..100 grid to the checkpoint's input scale."""
@@ -45,7 +51,10 @@ def prepare_observation(grid, distance: float, theta: float, settings: dict) -> 
     if settings.get("preprocessing") is not None:
         from experiment_control import policy_frame
         return policy_frame(grid, [distance, theta], source="ros_occupancy_grid")
-    values = np.rot90(np.flip(np.asarray(grid, dtype=np.float32), axis=0))
+    source = np.asarray(grid, dtype=np.float32)
+    if source.shape != (120, 140) or not np.isfinite(source).all():
+        raise ValueError(f"Expected full ROS LOM (120,140), got {source.shape}")
+    values = np.fliplr(np.rot90(source))[40:120, 20:100]
     occ = scale_occupancy_grid(values, settings["normalize_occupancy"], settings["occupancy_max"])
     maximum = settings.get("distance_max")
     target_distance = float(np.clip(distance / float(maximum), 0, 1)) if maximum is not None and float(maximum) > 0 else distance
@@ -100,14 +109,18 @@ def detect_architecture(state: dict, checkpoint: Any) -> str:
 
 def find_checkpoint(models_dir: Path, checkpoint_name: str) -> Path:
     requested = Path(checkpoint_name).expanduser()
+    workspace_root = models_dir.parents[5]
+
     candidates = [requested] if requested.is_absolute() else [
         models_dir / requested,
-        models_dir / "experiments" / requested,
+        workspace_root / "experiments" / requested,
         models_dir / "ROS1_train" / requested,
     ]
+
     for candidate in candidates:
         if candidate.is_file():
             return candidate.resolve()
+
     attempted = "\n  - ".join(str(path) for path in candidates)
     raise FileNotFoundError(f"Checkpoint {checkpoint_name!r} was not found. Tried:\n  - {attempted}")
 
@@ -388,9 +401,16 @@ class RNNMapless(Node):
 
     def occ_callback(self, msg: OccupancyGrid):
         height, width = int(msg.info.height), int(msg.info.width)
-        if (height, width) != (80, 80):
+        if (height, width) != (120, 140):
             self.stop_command()
-            self.get_logger().warning(f"Expected 80x80 local grid; received {height}x{width}; stopping")
+            self.get_logger().warning(f"Expected 120x140 ROS local grid; received {height}x{width}; stopping")
+            return
+        if (abs(float(msg.info.resolution) - 0.05) > 1e-5
+                or abs(float(msg.info.origin.position.x) + 1.0) > 1e-4
+                or abs(float(msg.info.origin.position.y) + 3.0) > 1e-4
+                or len(msg.data) != height * width):
+            self.stop_command()
+            self.get_logger().warning("Unexpected LOM geometry or data length; stopping")
             return
         self.last_grid_walltime = time.monotonic()
         if not self.goal_active:

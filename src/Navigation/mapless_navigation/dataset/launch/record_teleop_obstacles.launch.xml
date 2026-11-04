@@ -38,6 +38,7 @@
     <arg name="start_reached_radius_m" default="0.5"/>
     <arg name="head_pan_offset" default="0.0"/>
     <arg name="head_tilt_offset" default="-0.5"/>
+    <arg name="lock_head" default="true"/>
 
     <arg name="room_radius_m" default="0.45"/>
     <arg name="min_room_area_m2" default="0.5"/>
@@ -134,14 +135,14 @@
         <param name="use_sim_time" value="true"/>
         <param name="frame_id" value="base_link"/>
         <param name="map_topic" value="/mapless/local_occ_grid"/>
-        <param name="min_x" value="0.0"/>
-        <param name="max_x" value="4.0"/>
-        <param name="min_y" value="-2.0"/>
-        <param name="max_y" value="2.0"/>
+        <param name="min_x" value="-1.0"/>
+        <param name="max_x" value="6.0"/>
+        <param name="min_y" value="-3.0"/>
+        <param name="max_y" value="3.0"/>
         <param name="min_z" value="0.06"/>
         <param name="max_z" value="2.0"/>
         <param name="resolution" value="0.05"/>
-        <param name="lidar_downsample" value="2"/>
+        <param name="lidar_downsample" value="1"/>
         <param name="cloud_downsample" value="2"/>
         <param name="use_lidar" value="true"/>
         <param name="use_cloud" value="true"/>
@@ -233,6 +234,7 @@
         <param name="start_reached_radius_m" value="$(var start_reached_radius_m)"/>
         <param name="head_pan_offset" value="$(var head_pan_offset)"/>
         <param name="head_tilt_offset" value="$(var head_tilt_offset)"/>
+        <param name="lock_head" value="$(var lock_head)"/>
         <param name="room_radius_m" value="$(var room_radius_m)"/>
         <param name="min_room_area_m2" value="$(var min_room_area_m2)"/>
         <param name="zone_bin_m" value="$(var zone_bin_m)"/>

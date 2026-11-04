@@ -67,11 +67,42 @@ def _anchors_from_csv(csv_path):
     return anchors
 
 
-def _match_committed_ids(scenario_dir, pool_entries, tol):
+def _match_committed_ids(scenario_dir, pool_entries, tol, run_dir_glob="run_*_classic_nav"):
     committed = set()
     if not pool_entries:
         return committed
-    for run_dir in sorted(scenario_dir.glob("run_*_classic_nav")):
+    pool_ids = {p["id"] for p in pool_entries}
+
+    # exact match on path_id from recorder metadata and failed paths
+    meta_path = scenario_dir / "episode_metadata.jsonl"
+    if meta_path.is_file():
+        try:
+            for line in meta_path.read_text().splitlines():
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    e = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+                pid = e.get("path_id")
+                if pid in pool_ids:
+                    committed.add(pid)
+        except OSError:
+            pass
+
+    failed_path = scenario_dir / "failed_paths.json"
+    if failed_path.is_file():
+        try:
+            for e in json.loads(failed_path.read_text()).get("entries", []):
+                pid = e.get("path_id")
+                if pid in pool_ids:
+                    committed.add(pid)
+        except Exception:
+            pass
+
+    # fallback for sessions that did not write episode_metadata (classic_nav)
+    for run_dir in sorted(scenario_dir.glob(run_dir_glob)):
         csv_path = run_dir / "data.csv"
         if not csv_path.exists():
             continue
@@ -80,12 +111,15 @@ def _match_committed_ids(scenario_dir, pool_entries, tol):
             best_id = None
             best_score = float("inf")
             for p in pool_entries:
+                if p["id"] in committed:
+                    continue
                 score = math.dist(pose, p["start"]) + math.dist(goal, p["goal"])
                 if score < best_score:
                     best_score = score
                     best_id = p["id"]
             if best_id is not None and best_score <= tol:
                 committed.add(best_id)
+
     return committed
 
 
@@ -126,18 +160,25 @@ def _stage_generation(scenario, need, args):
                    "--output-dir", str(stage_root), "--run-name", run_name,
                    "--seed", str(seed),
                    "--hard-clearance-m", str(args.hard_clearance_m),
+                   "--endpoint-obstacle-band-m", str(args.endpoint_obstacle_band_m),
+                   "--obstacle-influence-m", str(args.obstacle_influence_m),
                    "--min-goal-distance-m", str(args.min_goal_distance_m),
                    "--max-goal-distance-m", str(args.max_goal_distance_m),
                    "--max-path-length-m", str(args.max_path_length_m),
                    "--v-max-goal-distance-m", str(args.v_max_goal_distance_m),
                    "--v-max-path-length-m", str(args.v_max_path_length_m),
                    "--max-length-ratio", str(args.max_length_ratio),
+                   "--v-goal-candidates", str(args.v_goal_candidates),
+                   "--v-plan-candidates", str(args.v_plan_candidates),
+                   "--v-hotspot-probability", str(args.v_hotspot_probability),
+                   "--v-hotspot-radius-m", str(args.v_hotspot_radius_m),
                    "--plan-cell-factor", str(args.plan_cell_factor),
-                   "--progress-interval-seconds", str(args.progress_interval_seconds),
-                   "--n-goals", str(need), "--balance-class"]
+                   "--progress-interval-seconds", str(args.progress_interval_seconds)]
+        # rejected in main() because _build_filtered_quota cannot honor them.
+        command += ["--n-goals", str(need), "--balance-class"]
         if args.max_attempts is not None: command.extend(["--max-attempts", str(args.max_attempts)])
         if args.timeout_seconds is not None: command.extend(["--timeout-seconds", str(args.timeout_seconds)])
-        process = subprocess.run(command, check=False)
+        subprocess.run(command, check=False)
         stage_run = stage_root / scenario / run_name
         pool_file = stage_run / "path_pool.json"
         poses_file = stage_run / "path_pool_poses.json"
@@ -156,11 +197,23 @@ def run_incremental(args) -> int:
     active_poses = scenario_dir / "path_pool_poses.json"
 
     if history_file.exists():
+        if not history_poses_file.exists():
+            print(f"ERROR: {history_file.name} exists but {history_poses_file.name} "
+                  f"is missing; cannot resume incrementally. "
+                  f"Regenerate the pool or restore the poses file.",
+                  file=sys.stderr)
+            return 2
         history = json.loads(history_file.read_text())
-        history_poses = json.loads(history_poses_file.read_text()) if history_poses_file.exists() else {}
+        history_poses = json.loads(history_poses_file.read_text())
     elif active_pool.exists():
+        if not active_poses.exists():
+            print(f"ERROR: {active_pool.name} exists but {active_poses.name} "
+                  f"is missing; cannot resume incrementally. "
+                  f"Regenerate the pool or restore the poses file.",
+                  file=sys.stderr)
+            return 2
         history = json.loads(active_pool.read_text())
-        history_poses = json.loads(active_poses.read_text()) if active_poses.exists() else {}
+        history_poses = json.loads(active_poses.read_text())
         print(f"initialized history from existing pool ({len(history.get('paths', []))} paths)")
     else:
         history = {"pool_version": 5, "scenario": args.scenario,
@@ -171,7 +224,7 @@ def run_incremental(args) -> int:
     entries = history.get("paths", [])
     pool_ids = {p["id"] for p in entries}
 
-    committed_ids = _match_committed_ids(scenario_dir, entries, args.match_tol) & pool_ids
+    committed_ids = _match_committed_ids(scenario_dir, entries, args.match_tol, args.run_dir_glob) & pool_ids
 
     failed_ids = set()
     failed_path = scenario_dir / "failed_paths.json"
@@ -212,26 +265,54 @@ def run_incremental(args) -> int:
 
     if len(live_ids) < gap:
         need = gap - len(live_ids)
-        print(f"generating {need} new paths (live={len(live_ids)} gap={gap})")
-        new_pool, new_poses = _stage_generation(args.scenario, need, args)
+        need_margin = int(need * 1.2) + 5
+        print(f"generating {need_margin} (need={need}, margin for dedup) "
+              f"new paths (live={len(live_ids)} gap={gap})")
+        new_pool, new_poses = _stage_generation(args.scenario, need_margin, args)
         if new_pool is not None:
+            existing_pairs = [
+                (tuple(p["start"]), tuple(p["goal"])) for p in history["paths"]
+            ]
+            dropped_dup = 0
+            dropped_pose = 0
             max_id = max(pool_ids) if pool_ids else -1
             for p in new_pool.get("paths", []):
+                ns, ng = tuple(p["start"]), tuple(p["goal"])
+                dup = any(
+                    (math.dist(ns, es) < args.match_tol and math.dist(ng, eg) < args.match_tol) or
+                    (math.dist(ns, eg) < args.match_tol and math.dist(ng, es) < args.match_tol)
+                    for es, eg in existing_pairs)
+                if dup:
+                    dropped_dup += 1
+                    continue
                 old_id = p["id"]
+                if str(old_id) not in new_poses:
+                    dropped_pose += 1
+                    continue
                 max_id += 1
                 p["id"] = max_id
                 history["paths"].append(p)
-                if str(old_id) in new_poses:
-                    history_poses[str(max_id)] = new_poses[str(old_id)]
+                history_poses[str(max_id)] = new_poses[str(old_id)]
+                existing_pairs.append((ns, ng))
+            if dropped_dup or dropped_pose:
+                print(f"incremental: dropped {dropped_dup} duplicate(s), "
+                      f"{dropped_pose} missing-pose path(s) against existing history")
             history["num_paths"] = len(history["paths"])
             pool_ids = {p["id"] for p in history["paths"]}
             live_ids = pool_ids - committed_ids - failed_ids
-            print(f"merged {len(new_pool.get('paths', []))} new paths, live={len(live_ids)}")
+            merged = len(new_pool.get("paths", [])) - dropped_dup - dropped_pose
+            print(f"merged {merged} new paths "
+                  f"(dropped_dup={dropped_dup}, dropped_pose={dropped_pose}), "
+                  f"live={len(live_ids)}")
         else:
             print("generation failed, using existing live paths")
 
     want = min(gap, len(live_ids))
     if want <= 0:
+        print("WARNING: no live paths after filtering "
+              "(all pool entries are committed or failed). "
+              "Regenerate the pool from scratch or clear failed_paths.json.",
+              flush=True)
         filtered = dict(history)
         filtered["paths"] = []
         filtered["num_paths"] = 0
@@ -277,6 +358,10 @@ def run_incremental(args) -> int:
         "target_add": args.target,
     }, indent=2))
 
+    if want < gap:
+        print(f"WARNING: post-dedup coverage below target "
+              f"(want={want}, gap={gap}, committed={len(committed_ids)}); "
+              f"re-run --incremental to fill the shortfall.", flush=True)
     print(f"filtered pool: {len(selected_paths)} paths to record "
           f"(quota={quota})")
     print(f"paths_to_record={sum(quota.values())}")
@@ -296,6 +381,8 @@ def main() -> int:
                         help="Total committed goals target (required with --incremental)")
     parser.add_argument("--match-tol", type=float, default=0.30,
                         help="Matching tolerance for committed detection (incremental)")
+    parser.add_argument("--run-dir-glob", default="run_*_classic_nav",
+                        help="Glob for run dirs scanned for committed paths (incremental only)")
     parser.add_argument("--output-dir", default=str(DEFAULT_DATA))
     parser.add_argument("--maps-root", default=str(DEFAULT_MAPS))
     parser.add_argument("--seed", type=int, default=None)
@@ -309,12 +396,22 @@ def main() -> int:
     parser.add_argument("--v-max-goal-distance-m", type=float, default=3.6)
     parser.add_argument("--v-max-path-length-m", type=float, default=4.2)
     parser.add_argument("--max-length-ratio", type=float, default=1.18)
+    parser.add_argument("--endpoint-obstacle-band-m", type=float, default=0.65)
+    parser.add_argument("--obstacle-influence-m", type=float, default=0.80)
+    parser.add_argument("--v-goal-candidates", type=int, default=10)
+    parser.add_argument("--v-plan-candidates", type=int, default=3)
+    parser.add_argument("--v-hotspot-probability", type=float, default=0.80)
+    parser.add_argument("--v-hotspot-radius-m", type=float, default=0.35)
     parser.add_argument("--plan-cell-factor", type=int, default=5)
     args = parser.parse_args()
 
     if args.incremental:
         if args.target is None or args.target < 1:
             parser.error("--incremental requires --target N (N >= 1)")
+        if args.st_sem_cmp_vc is not None or args.per_class is not None:
+            parser.error("--incremental does not honor --st_sem_cmp_vc or --per-class "
+                         "(filtered pool is always balanced). Run a fresh generation "
+                         "or drop those flags to resume with balanced quotas.")
         return run_incremental(args)
 
     targets = resolve_targets(parser, args)
@@ -324,6 +421,11 @@ def main() -> int:
     if args.hard_clearance_m <= 0 or args.max_length_ratio < 1: parser.error("hard clearance must be positive and length ratio >= 1")
     if not (0 < args.min_goal_distance_m <= args.max_goal_distance_m <= args.v_max_goal_distance_m): parser.error("inconsistent goal distance limits")
     if not 1 <= args.plan_cell_factor <= 20: parser.error("--plan-cell-factor must be between 1 and 20")
+    if args.endpoint_obstacle_band_m <= 0: parser.error("--endpoint-obstacle-band-m must be positive")
+    if args.obstacle_influence_m <= 0: parser.error("--obstacle-influence-m must be positive")
+    if args.v_goal_candidates < 1 or args.v_plan_candidates < 1: parser.error("--v-goal-candidates and --v-plan-candidates must be positive")
+    if not 0.0 <= args.v_hotspot_probability <= 1.0: parser.error("--v-hotspot-probability must be in [0, 1]")
+    if args.v_hotspot_radius_m < 0: parser.error("--v-hotspot-radius-m must be non-negative")
     seed = args.seed if args.seed is not None else stable_seed(args.scenario)
     output_root = Path(args.output_dir).expanduser().resolve()
     maps_root = Path(args.maps_root).expanduser().resolve()
@@ -335,12 +437,18 @@ def main() -> int:
         command = [sys.executable, str(generator), "--scenario", args.scenario, "--maps-root", str(maps_root),
                    "--output-dir", str(stage_root), "--run-name", run_name, "--seed", str(seed),
                    "--hard-clearance-m", str(args.hard_clearance_m),
+                   "--endpoint-obstacle-band-m", str(args.endpoint_obstacle_band_m),
+                   "--obstacle-influence-m", str(args.obstacle_influence_m),
                    "--min-goal-distance-m", str(args.min_goal_distance_m),
                    "--max-goal-distance-m", str(args.max_goal_distance_m),
                    "--max-path-length-m", str(args.max_path_length_m),
                    "--v-max-goal-distance-m", str(args.v_max_goal_distance_m),
                    "--v-max-path-length-m", str(args.v_max_path_length_m),
                    "--max-length-ratio", str(args.max_length_ratio),
+                   "--v-goal-candidates", str(args.v_goal_candidates),
+                   "--v-plan-candidates", str(args.v_plan_candidates),
+                   "--v-hotspot-probability", str(args.v_hotspot_probability),
+                   "--v-hotspot-radius-m", str(args.v_hotspot_radius_m),
                    "--plan-cell-factor", str(args.plan_cell_factor),
                    "--progress-interval-seconds", str(args.progress_interval_seconds)]
         if args.st_sem_cmp_vc is not None: command.extend(["--st_sem_cmp_vc", args.st_sem_cmp_vc])

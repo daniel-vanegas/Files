@@ -8,6 +8,7 @@
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 #include <sensor_msgs/point_cloud2_iterator.hpp>
 #include <Eigen/Dense>
+#include <algorithm>
 #include <cmath>
 
 #include "debugger/debug_client.hpp"
@@ -151,9 +152,21 @@ private:
             size_t idx = 0;
             for (; ix != ix.end(); ++ix, ++iy, ++iz, ++idx) {
                 if (idx % cloud_downsample_ != 0) continue;
-                if (*iz < min_z_ || *iz > max_z_) continue;
+
+                // Reject invalid points.
+                if (!std::isfinite(*ix) ||
+                    !std::isfinite(*iy) ||
+                    !std::isfinite(*iz)) {
+                    continue;
+                }
+
+                // Transform points to the robot frame.
                 Eigen::Vector3d p(*ix, *iy, *iz);
                 p = tf * p;
+
+                // Filter height in base_link coordinates.
+                if (p.z() < min_z_ || p.z() > max_z_) continue;
+
                 markCell(p.x(), p.y(), 100);
             }
         } catch (...) {

@@ -19,6 +19,8 @@ N_GOALS=4
 CLASS_QUOTAS=""
 EXPLICIT_SEED=""
 RECORD_ONLY=0
+INCREMENTAL=0
+POOL_ONLY=0
 PURGE_DATA=0
 ASSUME_YES=0
 ENDPOINT_TOL_M=0.30
@@ -45,6 +47,7 @@ PLAN_CELL_FACTOR=5
 
 # Recording
 GOAL_POSITION_TOLERANCE_M=0.40
+LOCK_HEAD=true
 EXTRA_ARGS=()
 
 PKG=mapless_dataset
@@ -64,6 +67,12 @@ Scenarios:
   --st_sem_cmp_vc S_S_C_V      explicit quotas (overrides --n-goals)
   --seed N                     base seed for pool generation
   --record-only                skip pool prep, use existing pool as-is
+  --pool-only                  prepare pools for all scenarios and exit
+                               without launching the simulation
+  --incremental                resume from an existing valid pool: filter out
+                               already-recorded/failed paths and only generate
+                               the missing ones. Requires data/<scenario>/
+                               path_pool.json to exist.
   --replace                    delete DATA_ROOT before running (needs --yes)
   --purge-data                 delete DATA_ROOT before running (needs --yes)
   --yes                        confirm --purge-data/--replace
@@ -80,6 +89,8 @@ Generation limits:
 Recording safety:
   --goal-position-tolerance-m  sampler/controller tolerance (default: 0.40)
   --stall-timeout SEC          stop if log stalls (default: 600; 0=off)
+  --unlock-head                allow left joystick to move head
+                               (default: head is locked during collection)
 
 Geometry passed to path_generator.py:
   --hard-clearance-m, --endpoint-obstacle-band-m, --obstacle-influence-m,
@@ -99,6 +110,8 @@ while (($#)); do
     --st_sem_cmp_vc|--st-sem-cmp-vc) (($# >= 2)) || { echo "ERROR: $1 needs a value" >&2; exit 2; }; CLASS_QUOTAS="$2"; shift 2 ;;
     --seed|--seed-base) (($# >= 2)) || { echo "ERROR: $1 needs a value" >&2; exit 2; }; EXPLICIT_SEED="$2"; shift 2 ;;
     --record-only) RECORD_ONLY=1; shift ;;
+    --incremental) INCREMENTAL=1; shift ;;
+    --pool-only) POOL_ONLY=1; shift ;;
     --replace|--purge-data) PURGE_DATA=1; shift ;;
     --yes) ASSUME_YES=1; shift ;;
     --endpoint-tolerance-m) (($# >= 2)) || { echo "ERROR: $1 needs a value" >&2; exit 2; }; ENDPOINT_TOL_M="$2"; shift 2 ;;
@@ -107,6 +120,7 @@ while (($#)); do
     --max-attempts) (($# >= 2)) || { echo "ERROR: $1 needs a value" >&2; exit 2; }; MAX_ATTEMPTS="$2"; shift 2 ;;
     --progress-interval-seconds) (($# >= 2)) || { echo "ERROR: $1 needs a value" >&2; exit 2; }; PROGRESS_INTERVAL_SECONDS="$2"; shift 2 ;;
     --goal-position-tolerance-m) (($# >= 2)) || { echo "ERROR: $1 needs a value" >&2; exit 2; }; GOAL_POSITION_TOLERANCE_M="$2"; shift 2 ;;
+    --unlock-head) LOCK_HEAD=false; shift ;;
     --hard-clearance-m) (($# >= 2)) || { echo "ERROR: $1 needs a value" >&2; exit 2; }; HARD_CLEARANCE_M="$2"; shift 2 ;;
     --endpoint-obstacle-band-m) (($# >= 2)) || { echo "ERROR: $1 needs a value" >&2; exit 2; }; ENDPOINT_OBSTACLE_BAND_M="$2"; shift 2 ;;
     --obstacle-influence-m) (($# >= 2)) || { echo "ERROR: $1 needs a value" >&2; exit 2; }; OBSTACLE_INFLUENCE_M="$2"; shift 2 ;;
@@ -187,6 +201,20 @@ echo "Endpoint tolerance: ${ENDPOINT_TOL_M} m"
 echo "Logs: $LOG_DIR"
 : > "$LOG_DIR/teleop_batch.log"
 
+# Incompatible modes
+if ((INCREMENTAL && RECORD_ONLY)); then
+  echo "ERROR: --incremental and --record-only are mutually exclusive" >&2
+  exit 2
+fi
+if ((POOL_ONLY && RECORD_ONLY)); then
+  echo "ERROR: --pool-only and --record-only are mutually exclusive" >&2
+  exit 2
+fi
+if ((INCREMENTAL && PURGE_DATA)); then
+  echo "ERROR: --incremental cannot be combined with --replace/--purge-data" >&2
+  exit 2
+fi
+
 # Validate scenario list
 read -r -a SCENARIOS <<< "$SCENARIOS_TEXT"
 ((${#SCENARIOS[@]})) || { echo "ERROR: empty scenario list" >&2; exit 2; }
@@ -220,6 +248,48 @@ for _sc in "${SCENARIOS[@]}"; do
       echo "[$_sc] record-only: pool missing, skipping" >&2
     fi
     continue
+  fi
+
+  if ((INCREMENTAL)); then
+    if [[ ! -s "$_pool" || ! -s "$_poses" ]]; then
+      echo "[$_sc] incremental: no valid pool at $_sdir; falling back to fresh generation" >&2
+    else
+      echo "[$_sc] incremental: resuming from existing pool"
+      _inc_seed_args=()
+      if [[ -n "$EXPLICIT_SEED" ]]; then
+        _inc_seed_args=(--seed $((EXPLICIT_SEED + _scnum)))
+      fi
+      _inc_opt_args=()
+      if [[ -n "$MAX_ATTEMPTS" ]]; then _inc_opt_args+=(--max-attempts "$MAX_ATTEMPTS"); fi
+      if [[ -n "$TIMEOUT_SECONDS" ]]; then _inc_opt_args+=(--timeout-seconds "$TIMEOUT_SECONDS"); fi
+      if python3 "$SCRIPT_DIR/generate_path_pool.py" \
+            --scenario "$_sc" \
+            --incremental \
+            --target "$N_GOALS" \
+            --output-dir "$DATA_ROOT" \
+            --maps-root "$MAPS_ROOT" \
+            --match-tol "$ENDPOINT_TOL_M" \
+            --run-dir-glob 'run_*' \
+            --hard-clearance-m "$HARD_CLEARANCE_M" \
+            --min-goal-distance-m "$MIN_GOAL_DISTANCE_M" \
+            --max-goal-distance-m "$MAX_GOAL_DISTANCE_M" \
+            --max-path-length-m "$MAX_PATH_LENGTH_M" \
+            --v-max-goal-distance-m "$V_MAX_GOAL_DISTANCE_M" \
+            --v-max-path-length-m "$V_MAX_PATH_LENGTH_M" \
+            --max-length-ratio "$MAX_LENGTH_RATIO" \
+            --plan-cell-factor "$PLAN_CELL_FACTOR" \
+            --progress-interval-seconds "$PROGRESS_INTERVAL_SECONDS" \
+            "${_inc_seed_args[@]}" "${_inc_opt_args[@]}"; then
+        if [[ -s "$_pool" && -s "$_poses" ]]; then
+          RUN_READY[$_sc]=1
+          echo "[$_sc] incremental complete: $_pool"
+          continue
+        fi
+        echo "[$_sc] incremental produced no pool" >&2
+      else
+        echo "[$_sc] incremental failed; falling back to fresh generation" >&2
+      fi
+    fi
   fi
 
   if [[ -n "$EXPLICIT_SEED" ]]; then
@@ -311,10 +381,24 @@ for run_dir in sorted(scen_dir.glob("run_*")):
     try:
         with csv_path.open("r", newline="") as f:
             reader = _csv.DictReader(f)
+            prev_eid = None
+            has_flag = reader.fieldnames and "is_episode_start" in reader.fieldnames
+            has_eid = reader.fieldnames and "episode_id" in reader.fieldnames
             for row in reader:
+                is_start = False
+                if has_eid:
+                    eid = row.get("episode_id", "")
+                    if eid and eid != prev_eid:
+                        is_start = True
+                        prev_eid = eid
+                elif has_flag:
+                    try:
+                        is_start = int(row.get("is_episode_start", "0")) == 1
+                    except (ValueError, TypeError):
+                        is_start = False
+                if not is_start:
+                    continue
                 try:
-                    if int(row.get("is_episode_start", "0")) != 1:
-                        continue
                     sx = float(row["pose_x"]); sy = float(row["pose_y"])
                     gx = float(row["goal_x"]); gy = float(row["goal_y"])
                 except (KeyError, ValueError, TypeError):
@@ -401,9 +485,16 @@ if timeout_s:
     cmd += ["--timeout-seconds", timeout_s]
 
 rc = subprocess.run(cmd).returncode
-if rc != 0:
-    print(f"[prep] generator failed rc={rc}", file=sys.stderr)
+run_dir = scen_dir / run_name
+gp = run_dir / "path_pool.json"
+gpp = run_dir / "path_pool_poses.json"
+if rc != 0 and not (gp.is_file() and gpp.is_file()):
+    print(f"[prep] generator failed rc={rc} and no partial pool",
+          file=sys.stderr)
     sys.exit(3)
+if rc == 1:
+    print(f"[prep] generator ended partial (rc=1); using available pool",
+          flush=True)
 
 run_dir = scen_dir / run_name
 gp = run_dir / "path_pool.json"
@@ -442,6 +533,15 @@ PYEOF
     gen_status=1
   fi
 done
+
+if ((POOL_ONLY)); then
+  if ((gen_status != 0)); then
+    echo "Pool preparation finished with issues; inspect $LOG_DIR." >&2
+    exit 1
+  fi
+  echo "Pool preparation complete for all scenarios."
+  exit 0
+fi
 
 if ! ros2 pkg prefix "$PKG" >/dev/null 2>&1; then
   echo "ERROR: ROS 2 package '$PKG' not found." >&2
@@ -516,29 +616,20 @@ count_recorded_samples() {
 }
 
 count_committed_goals() {
-  local scen="$1"
-  local before_list="$2"
-  local parent="$DATA_ROOT/$scen"
-  local total=0 d n
-  shopt -s nullglob
-  for d in "$parent"/run_*; do
-    [[ -d "$d" ]] || continue
-    if [[ -n "$before_list" ]] \
-        && printf '%s\n' "$before_list" | grep -qxF "$d"; then
-      continue
-    fi
-    if [[ -f "$d/episode_tries.json" ]]; then
-      n=$(python3 -c "import json,sys
-try:
-    print(len(json.load(open(sys.argv[1])).get('entries', [])))
-except Exception:
-    print(0)
-" "$d/episode_tries.json" 2>/dev/null || echo 0)
-      total=$((total + n))
-    fi
-  done
-  shopt -u nullglob
-  echo "$total"
+  local log_file="$1"
+  local n
+  if [[ -z "$log_file" || ! -f "$log_file" ]]; then
+    echo 0
+    return
+  fi
+  n=$(grep -oP 'Episode \S+ committed:.*goals=\K[0-9]+' "$log_file" 2>/dev/null | tail -n 1)
+  if [[ -z "$n" ]]; then
+    n=$(grep -oP 'goals_saved=\K[0-9]+' "$log_file" 2>/dev/null | tail -n 1)
+  fi
+  if [[ -z "$n" ]]; then
+    n=0
+  fi
+  echo "$n"
 }
 
 
@@ -589,6 +680,7 @@ for _sc in "${SCENARIOS[@]}"; do
       world:="$_sc" scenario:="$_sc" num_goals:="$N_GOALS" \
       output_dir:="$DATA_ROOT" \
       goal_position_tolerance_m:="$GOAL_POSITION_TOLERANCE_M" \
+      lock_head:="$LOCK_HEAD" \
       "${_targs[@]}" "${EXTRA_ARGS[@]}" >"$_log" 2>&1 &
     _pid=$!
     CURRENT_PGID="$(ps -o pgid= -p "$_pid" 2>/dev/null | tr -d ' ' || true)"
@@ -644,12 +736,14 @@ for _sc in "${SCENARIOS[@]}"; do
   [[ -n "$_pid" ]] && wait "$_pid" 2>/dev/null || true
 
   _n_samples="$(count_recorded_samples "$_sc" "$_before")"
-  _n_goals="$(count_committed_goals "$_sc" "$_before")"
+  _n_goals="$(count_committed_goals "$_last_log")"
 
   if (( _launch_ok == 0 )); then
     _reason="world_start_failed"
   elif (( _n_samples == 0 )); then
     _reason="recording_failed_no_data"
+  elif (( _n_goals < N_GOALS )); then
+    _reason="teleop_partial"
   fi
 
   _log_for_status="$_last_log"

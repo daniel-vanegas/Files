@@ -391,11 +391,14 @@ def build_input_frame(
 
     height, width = lom.shape
 
-    if height != 80 or width != 80:
-        raise ValueError(f"Expected 80x80 LOM, got {height}x{width}")
+    if (height, width) != (140, 120):
+        raise ValueError(f"Expected canonical 140x120 stored LOM, got {height}x{width}")
 
-    # Descriptor says raw_0_100.
-    # Convert to [0, 1].
+    # Crop X=[0,4] m, Y=[-2,2] m without resampling or changing orientation.
+    lom = lom[40:120, 20:100]
+    width = lom.shape[1]
+
+    # The direct ROS 2 trainer uses normalized [0,1] occupancy.
     lom = np.clip(lom / 100.0, 0.0, 1.0)
 
     distance = float(sample["features"]["target"][0])
@@ -477,7 +480,8 @@ class SequenceDataset(Dataset):
                 frames.append(frame)
                 labels.append(label)
 
-            for start in range(len(frames) - sequence_length + 1):
+            # Non-overlapping pairs/windows, as used by the frozen campaign.
+            for start in range(0, len(frames) - sequence_length + 1, sequence_length):
                 end = start + sequence_length
 
                 self.samples.append(
