@@ -32,6 +32,17 @@ ament_target_dependencies(local_occ_grid_node
 )
 target_include_directories(local_occ_grid_node PRIVATE ${debugger_INCLUDE_DIRS})
 
+add_executable(temporal_occ_grid_node src/temporal_occ_grid_node.cpp)
+ament_target_dependencies(temporal_occ_grid_node
+  rclcpp
+  nav_msgs
+  sensor_msgs
+  geometry_msgs
+  tf2
+  tf2_ros
+  tf2_geometry_msgs
+)
+
 add_executable(get_goal_point src/get_goal_point.cpp)
 ament_target_dependencies(get_goal_point
   rclcpp
@@ -42,30 +53,18 @@ ament_target_dependencies(get_goal_point
 )
 target_include_directories(get_goal_point PRIVATE ${debugger_INCLUDE_DIRS})
 
-# add_executable(tf_goal_point src/tf_goal_point.cpp)
-
-# ament_target_dependencies(tf_goal_point
-#   rclcpp
-#   std_msgs
-#   tf2
-#   tf2_ros
-#   tf2_geometry_msgs
-# )
-
-#target_include_directories(tf_goal_point PRIVATE ${debugger_INCLUDE_DIRS})
-
 # ===== Install =====
 install(TARGETS local_occ_grid_node
+  DESTINATION lib/${PROJECT_NAME}
+)
+
+install(TARGETS temporal_occ_grid_node
   DESTINATION lib/${PROJECT_NAME}
 )
 
 install(TARGETS get_goal_point
   DESTINATION lib/${PROJECT_NAME}
 )
-
-# install(TARGETS tf_goal_point
-#   DESTINATION lib/${PROJECT_NAME}
-# )
 
 # ===== Install Python scripts =====
 install(

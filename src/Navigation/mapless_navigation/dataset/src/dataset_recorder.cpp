@@ -65,6 +65,7 @@ public:
         stabilization_s_   = declare_parameter<double>("stabilization_time_sec", 3.0);
 
         costmap_topic_      = declare_parameter<std::string>("costmap_topic", "/mapless/local_occ_grid");
+        temporal_costmap_topic_ = declare_parameter<std::string>("temporal_costmap_topic", "/mapless/temporal_occ_grid");
         cmd_vel_topic_      = declare_parameter<std::string>("cmd_vel_topic", "/hardware/base/cmd_vel");
         nn_goal_topic_      = declare_parameter<std::string>("nn_goal_topic", "/NN_goal");
         current_goal_topic_ = declare_parameter<std::string>("current_goal_topic", "/mapless_nav/current_goal");
@@ -98,6 +99,13 @@ public:
             [this](nav_msgs::msg::OccupancyGrid::SharedPtr m) {
                 std::lock_guard<std::mutex> l(mtx_);
                 last_costmap_ = m;
+            });
+
+        sub_temporal_costmap_ = create_subscription<nav_msgs::msg::OccupancyGrid>(
+            temporal_costmap_topic_, sensor_qos,
+            [this](nav_msgs::msg::OccupancyGrid::SharedPtr m) {
+                std::lock_guard<std::mutex> l(mtx_);
+                last_temporal_costmap_ = m;
             });
 
         sub_cmd_ = create_subscription<geometry_msgs::msg::Twist>(
@@ -296,6 +304,9 @@ private:
         std::vector<uint8_t> lom;
         int lom_width;
         int lom_height;
+        std::vector<uint8_t> tlom;
+        int tlom_width;
+        int tlom_height;
         double ts;
         int    episode_id;
         int    is_start;
@@ -333,6 +344,7 @@ private:
         run_dir_ = fs::path(output_dir_) / scenario_ / run_name_;
         fs::create_directories(run_dir_);
         fs::create_directories(run_dir_ / "lom");
+        fs::create_directories(run_dir_ / "tlom");
     }
 
     void openCsv()
@@ -347,7 +359,7 @@ private:
         csv_stream_
             << "timestamp,episode_id,is_episode_start,"
                "d,theta,vx,vy,wz,"
-               "pose_x,pose_y,pose_yaw,goal_x,goal_y,lom_file,"
+               "pose_x,pose_y,pose_yaw,goal_x,goal_y,lom_file,tlom_file,"
                "collision_flag,stuck_flag\n";
     }
 
@@ -560,16 +572,28 @@ private:
     {
         std::ostringstream fname;
         fname << std::setw(7) << std::setfill('0') << committed_idx_.load() << ".png";
+        
         fs::path lom_path = run_dir_ / "lom" / fname.str();
+        fs::path tlom_path = run_dir_ / "tlom" / fname.str();
 
         std::error_code ec;
         fs::create_directories(lom_path.parent_path(), ec);
+        fs::create_directories(tlom_path.parent_path(), ec);
 
         cv::Mat lom(s.lom_height, s.lom_width,
             CV_8UC1, const_cast<uint8_t *>(s.lom.data()));
         if (!cv::imwrite(lom_path.string(), lom)) {
             RCLCPP_WARN(get_logger(), "Failed to write %s", lom_path.c_str());
             return;
+        }
+
+        // Save T-LOM
+        if (!s.tlom.empty()) {
+            cv::Mat tlom(s.tlom_height, s.tlom_width,
+                CV_8UC1, const_cast<uint8_t *>(s.tlom.data()));
+            if (!cv::imwrite(tlom_path.string(), tlom)) {
+                RCLCPP_WARN(get_logger(), "Failed to write %s", tlom_path.c_str());
+            }
         }
 
         csv_stream_ << std::fixed << std::setprecision(6)
@@ -586,6 +610,7 @@ private:
                     << s.pose_yaw      << ","
                     << s.goal_x        << ","
                     << s.goal_y        << ","
+                    << fname.str()     << ","
                     << fname.str()     << ","
                     << s.collision_flag << ","
                     << s.stuck_flag    << "\n";
@@ -709,6 +734,7 @@ private:
         const double pyaw = tf2::getYaw(tf.transform.rotation);
 
         nav_msgs::msg::OccupancyGrid::SharedPtr costmap;
+        nav_msgs::msg::OccupancyGrid::SharedPtr temporal_costmap;
         geometry_msgs::msg::Twist cmd;
         double d, theta;
         geometry_msgs::msg::PointStamped goal;
@@ -717,8 +743,9 @@ private:
         int episode;
         {
             std::lock_guard<std::mutex> l(mtx_);
-            costmap      = last_costmap_;
-            cmd          = last_cmd_;
+            costmap         = last_costmap_;
+            temporal_costmap = last_temporal_costmap_;
+            cmd             = last_cmd_;
             d            = last_d_;
             theta        = last_theta_;
             goal         = last_goal_;
@@ -770,8 +797,17 @@ private:
 
         s.lom_width = lom.cols;
         s.lom_height = lom.rows;
-
         s.lom.assign(lom.datastart, lom.dataend);
+
+        // Process T-LOM
+        if (temporal_costmap) {
+            cv::Mat tlom = costmapToLom(temporal_costmap);
+            if (!tlom.empty()) {
+                s.tlom_width = tlom.cols;
+                s.tlom_height = tlom.rows;
+                s.tlom.assign(tlom.datastart, tlom.dataend);
+            }
+        }
         s.ts          = now_s;
         s.episode_id  = episode;
         s.is_start    = just_changed ? 1 : 0;
@@ -862,6 +898,7 @@ private:
 
     std::string output_dir_, scenario_, teacher_, map_frame_, base_frame_;
     std::string costmap_topic_, cmd_vel_topic_, nn_goal_topic_;
+    std::string temporal_costmap_topic_;
     std::string current_goal_topic_, goal_active_topic_, episode_id_topic_;
     std::string goal_success_topic_, collision_topic_;
     std::string run_name_, csv_path_, descriptor_path_;
@@ -897,6 +934,7 @@ private:
 
     std::mutex mtx_;
     nav_msgs::msg::OccupancyGrid::SharedPtr last_costmap_;
+    nav_msgs::msg::OccupancyGrid::SharedPtr last_temporal_costmap_;
     geometry_msgs::msg::Twist last_cmd_{};
     double last_d_{0.0}, last_theta_{0.0};
     geometry_msgs::msg::PointStamped last_goal_;
@@ -928,6 +966,7 @@ private:
     std::shared_ptr<tf2_ros::Buffer> tf_buffer_;
     std::shared_ptr<tf2_ros::TransformListener> tf_listener_;
     rclcpp::Subscription<nav_msgs::msg::OccupancyGrid>::SharedPtr sub_costmap_;
+    rclcpp::Subscription<nav_msgs::msg::OccupancyGrid>::SharedPtr sub_temporal_costmap_;
     rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr sub_cmd_;
     rclcpp::Subscription<std_msgs::msg::Float32MultiArray>::SharedPtr sub_nn_goal_;
     rclcpp::Subscription<geometry_msgs::msg::PointStamped>::SharedPtr sub_goal_;

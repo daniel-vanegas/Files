@@ -43,16 +43,22 @@ install(TARGETS dataset_recorder DESTINATION lib/${PROJECT_NAME})
 # Python scripts
 install(PROGRAMS
   scripts/random_goal_sampler.py
-  scripts/generate_npz_data.py
-  scripts/generate_path_pool.py
   scripts/Nav2_map_relay.py
   scripts/prohibition_map_publisher.py
   scripts/teleop_dataset_recorder.py
   scripts/dataset_obstacles_control.py
-  scripts/make_dataset_split.py
   scripts/path_generator.py
-  scripts/data_analiysis.py
   DESTINATION lib/${PROJECT_NAME}
+)
+
+# Python scripts
+install(PROGRAMS
+  scripts/data_analysis/analyze_pools.py
+  scripts/data_analysis/data_analysis.py
+  scripts/data_analysis/generate_npz_data.py
+  scripts/data_analysis/generate_path_pool.py
+  scripts/data_analysis/make_dataset_split.py
+  DESTINATION lib/${PROJECT_NAME}/data_analysis
 )
 
 install(DIRECTORY launch config

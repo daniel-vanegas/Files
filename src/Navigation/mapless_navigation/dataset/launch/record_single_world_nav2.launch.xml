@@ -27,7 +27,7 @@
     <arg name="post_teleport_settle_s" default="1.5"/>
     <arg name="record_hz" default="5.0"/>
     <arg name="teleport_at_start" default="true"/>
-    <arg name="output_dir" default="$(env HOME)/GIT/mapless/src/Navigation/mapless_navigation/dataset/data"/>
+    <arg name="output_dir" default="src/Navigation/mapless_navigation/dataset/data"/>
     <arg name="rviz" default="true"/>
 
     <arg name="room_radius_m" default="0.35"/>

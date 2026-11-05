@@ -59,7 +59,7 @@ CLASS_COLORS = {
 }
 
 _THIS_DIR = os.path.dirname(os.path.abspath(__file__))
-DEFAULT_DATA_ROOT = os.path.normpath(os.path.join(_THIS_DIR, "..", "data"))
+DEFAULT_DATA_ROOT = os.path.normpath(os.path.join(_THIS_DIR, "..", "..", "data"))
 
 
 # Discovery

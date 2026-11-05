@@ -296,7 +296,7 @@ class TorsoHardware:
         if self.torso_sensor:
             self.torso_sensor.enable(time_step)
 
-        self.target_position = 0.301
+        self.target_position = 0.0 #max 0.301
 
     def set_target_position(self, pos):
         self.target_position = pos

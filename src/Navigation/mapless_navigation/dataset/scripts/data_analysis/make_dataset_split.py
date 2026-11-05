@@ -9,7 +9,7 @@ import sys
 import numpy as np
 
 _THIS_DIR = os.path.dirname(os.path.abspath(__file__))
-_DEFAULT_DATA_ROOT = os.path.normpath(os.path.join(_THIS_DIR, "..", "data"))
+_DEFAULT_DATA_ROOT = os.path.normpath(os.path.join(_THIS_DIR, "..", "..", "data"))
 
 
 def resolve_path(arg):

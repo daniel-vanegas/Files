@@ -15,7 +15,6 @@ train/validation splits.
 
 Run all commands from the repository root:
 
-    cd ~/GIT/mapless
     source install/setup.bash
 
 ## Directory layout
@@ -35,16 +34,19 @@ Run all commands from the repository root:
     ├── scripts/
     │   ├── collect_dataset_batch_classic_nav.sh
     │   ├── collect_dataset_batch_nav2.sh
-    │   ├── generate_path_pool.py
+    │   ├── collect_dataset_teleop.sh
     │   ├── path_generator.py
     │   ├── random_goal_sampler.py
     │   ├── dataset_obstacles_control.py
     │   ├── teleop_dataset_recorder.py
     │   ├── Nav2_map_relay.py
     │   ├── prohibition_map_publisher.py
-    │   ├── generate_npz_data.py
-    │   ├── make_dataset_split.py
-    │   ├── data_analiysis.py
+    │   ├── data_analysis/
+    │   │   ├── analyze_pools.py
+    │   │   ├── data_analysis.py
+    │   │   ├── generate_npz_data.py
+    │   │   ├── generate_path_pool.py
+    │   │   └── make_dataset_split.py
     │   └── README.md
     ├── src/
     │   └── dataset_recorder.cpp
@@ -101,10 +103,10 @@ Full pipeline from zero for the classic_nav teacher:
         --seed 42
 
     # 2. Convert all runs to NPZ
-    python3 src/Navigation/mapless_navigation/dataset/scripts/generate_npz_data.py
+    python3 src/Navigation/mapless_navigation/dataset/scripts/data_analysis/generate_npz_data.py
 
     # 3. Split into train / validation A / validation B
-    python3 src/Navigation/mapless_navigation/dataset/scripts/make_dataset_split.py
+    python3 src/Navigation/mapless_navigation/dataset/scripts/data_analysis/make_dataset_split.py
 
 For the Nav2 teacher, replace step 1 with:
 
@@ -340,26 +342,26 @@ Structure:
 
 Convert all runs under data/:
 
-    python3 src/Navigation/mapless_navigation/dataset/scripts/generate_npz_data.py
+    python3 src/Navigation/mapless_navigation/dataset/scripts/data_analysis/generate_npz_data.py
 
 Convert specific scenarios only:
 
-    python3 src/Navigation/mapless_navigation/dataset/scripts/generate_npz_data.py \
+    python3 src/Navigation/mapless_navigation/dataset/scripts/data_analysis/generate_npz_data.py \
         --scenarios E01 E03
 
 Limit episodes per scenario (keeps the first N by episode_id):
 
-    python3 src/Navigation/mapless_navigation/dataset/scripts/generate_npz_data.py \
+    python3 src/Navigation/mapless_navigation/dataset/scripts/data_analysis/generate_npz_data.py \
         --goals-per-scene 50
 
 Random sample before cutting:
 
-    python3 src/Navigation/mapless_navigation/dataset/scripts/generate_npz_data.py \
+    python3 src/Navigation/mapless_navigation/dataset/scripts/data_analysis/generate_npz_data.py \
         --goals-per-scene 50 --shuffle --seed 42
 
 Per-class quotas (requires class in episode_tries.json):
 
-    python3 src/Navigation/mapless_navigation/dataset/scripts/generate_npz_data.py \
+    python3 src/Navigation/mapless_navigation/dataset/scripts/data_analysis/generate_npz_data.py \
         --st-sem-cmp-vc 20_20_20_20
 
 Default behavior with no filters: keep every episode of every run.
@@ -368,7 +370,7 @@ Default behavior with no filters: keep every episode of every run.
 
 Produce `data/dataset_split.json`:
 
-    python3 src/Navigation/mapless_navigation/dataset/scripts/make_dataset_split.py
+    python3 src/Navigation/mapless_navigation/dataset/scripts/data_analysis/make_dataset_split.py
 
 Options:
 
@@ -393,13 +395,13 @@ Adding a scenario changes the assignment.
 
 ## Analysis tools
 
-`data_analiysis.py` (sic) inspects one or more runs and produces summary
+`data_analysis.py` (sic) inspects one or more runs and produces summary
 statistics: episodes per class, samples per episode, velocity distribution,
 collision and stuck counts, and per-scenario coverage. Use it after a
 recording campaign to detect classes with too few samples or scenarios that
 failed silently.
 
-    python3 src/Navigation/mapless_navigation/dataset/scripts/data_analiysis.py \
+    python3 src/Navigation/mapless_navigation/dataset/scripts/data_analysis/data_analysis.py \
         --data-root data \
         --output reports/analysis_$(date +%Y%m%d).md
 

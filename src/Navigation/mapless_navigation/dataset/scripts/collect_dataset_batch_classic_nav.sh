@@ -17,6 +17,7 @@ CLASS_QUOTAS=""
 SEED_BASE=""
 EXPLICIT_SEED=""
 INCREMENTAL=0
+POOL_ONLY=0
 SKIP_GENERATION=0
 TIMEOUT_SECONDS=""
 MAX_ATTEMPTS=""
@@ -60,6 +61,7 @@ Scenario and class targets:
   --st_sem_cmp_vc S_S_C_V          explicit quotas: straight_semi_complex_complex_v_complex
   --seed N, --seed-base N          explicit seed or base seed
   --incremental                    reuse existing pools and append/complete missing quotas if needed
+  --pool-only                      prepare pools for all scenarios and exit
   --record-only                    skip pool generation, run recorder with existing pools
   --replace                        delete DATA_ROOT before running (alias for --purge-data)
   --maps-root DIR                  map directory root
@@ -100,6 +102,7 @@ while (($#)); do
     --st_sem_cmp_vc|--st-sem-cmp-vc) (($# >= 2)) || { echo "ERROR: $1 needs a value" >&2; exit 2; }; CLASS_QUOTAS="$2"; shift 2 ;;
     --seed|--seed-base|--base-seed) (($# >= 2)) || { echo "ERROR: $1 needs a value" >&2; exit 2; }; EXPLICIT_SEED="$2"; shift 2 ;;
     --incremental) INCREMENTAL=1; shift ;;
+    --pool-only) POOL_ONLY=1; shift ;;
     --record-only|--skip-generation) SKIP_GENERATION=1; shift ;;
     --replace) PURGE_DATA=1; shift ;;
     --timeout-seconds) (($# >= 2)) || { echo "ERROR: --timeout-seconds needs a value" >&2; exit 2; }; TIMEOUT_SECONDS="$2"; shift 2 ;;
@@ -285,6 +288,11 @@ PY
   echo "[$scenario] pool ready (partial or complete): $scenario_dir/path_pool*.json"
 done
 
+if ((POOL_ONLY)); then
+  echo "Pool preparation complete for all scenarios."
+  exit 0
+fi
+
 if ! ros2 pkg prefix "$PKG" >/dev/null 2>&1; then
   echo "ERROR: ROS 2 package '$PKG' not found." >&2
   exit 2
@@ -406,7 +414,7 @@ for scenario in "${SCENARIOS[@]}"; do
   fi
 
   if ((INCREMENTAL)); then
-    inc_cmd=(python3 "$SCRIPT_DIR/generate_path_pool.py"
+    inc_cmd=(python3 "$SCRIPT_DIR/data_analysis/generate_path_pool.py"
       --scenario "$scenario"
       --incremental
       --target "$N_GOALS"

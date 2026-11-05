@@ -7,7 +7,7 @@ Este directorio contiene dos orquestadores de recolección de datasets basados e
 
 Ambos scripts llaman a `path_generator.py`, validan cuotas y archivos de poses, publican el pool activo en `data/<escenario>/path_pool*.json` y lanzan ROS 2/Webots. No se necesitan scripts auxiliares de orquestación.
 
-`generate_path_pool.py` se usa únicamente en modo `--incremental` de `collect_dataset_teleop.sh`; el script automatizado invoca siempre `path_generator.py` directamente.
+`data_analysis/generate_path_pool.py` se usa únicamente en modo `--incremental` de `collect_dataset_teleop.sh`; el script automatizado invoca siempre `path_generator.py` directamente.
 
 ## Prerrequisitos
 
@@ -160,7 +160,7 @@ Reanuda desde un pool existente sin regenerar lo que ya está grabado:
 bash collect_dataset_teleop.sh --scenarios "E01" --n-goals 100 --incremental
 ```
 
-Internamente llama a `generate_path_pool.py --incremental --run-dir-glob 'run_*'`, que:
+Internamente llama a `data_analysis/generate_path_pool.py --incremental --run-dir-glob 'run_*'`, que:
 
 1. Carga `path_pool_history.json` (o `path_pool.json` si no hay history).
 2. Detecta `committed_ids` vía `path_id` exacto desde `episode_metadata.jsonl` + fallback CSV con tolerancia 0.30 m.
@@ -220,7 +220,7 @@ Las rutas cuyo par `start`/`goal` coincide (dentro de `--endpoint-tolerance-m`, 
 
 Este filtro corre **siempre**, incluso con `--record-only`. Es el que garantiza que grabar en chunks no repite start/goal. Combina `episode_metadata.jsonl` + `failed_paths.json` con tolerancia 0.30 m en ambas direcciones (mismo sentido e invertido start↔goal).
 
-**En modo `--incremental`** se usa además `_match_committed_ids` de `generate_path_pool.py`, que prefiere el match exacto por `path_id` desde `episode_metadata.jsonl`, con fallback a CSV por endpoint a 0.30 m.
+**En modo `--incremental`** se usa además `_match_committed_ids` de `data_analysis/generate_path_pool.py`, que prefiere el match exacto por `path_id` desde `episode_metadata.jsonl`, con fallback a CSV por endpoint a 0.30 m.
 
 No existe un flag para desactivar el filtrado de nivel 2. Para forzar la grabación de un path previamente usado, hay que borrar manualmente la línea correspondiente en `episode_metadata.jsonl` o en `failed_paths.json`.
 
@@ -275,7 +275,7 @@ Estas carpetas son autocontenidas y pueden borrarse sin afectar el pool activo. 
 
 ### Modo `--incremental` — archivos de estado
 
-Cuando se usa `--incremental`, `generate_path_pool.py` mantiene:
+Cuando se usa `--incremental`, `data_analysis/generate_path_pool.py` mantiene:
 
 - `path_pool_history.json` / `path_pool_history_poses.json` — pool acumulado histórico (todas las rutas generadas, incluidas las ya grabadas).
 - `incremental_state.json` — `{committed_before, add, total_after, target_add}` con los contadores de la última ejecución.

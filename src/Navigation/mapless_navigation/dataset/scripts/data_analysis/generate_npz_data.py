@@ -12,7 +12,7 @@ import yaml
 from PIL import Image
 
 _THIS_DIR = os.path.dirname(os.path.abspath(__file__))
-_DEFAULT_DATA_ROOT = os.path.normpath(os.path.join(_THIS_DIR, "..", "data"))
+_DEFAULT_DATA_ROOT = os.path.normpath(os.path.join(_THIS_DIR, "..", "..", "data"))
 _DEFAULT_PLOT_OUT = os.path.join(_DEFAULT_DATA_ROOT, "npz_balance.png")
 CLASS_NAMES = ("straight", "semi_complex", "complex", "v_complex")
 
@@ -21,12 +21,9 @@ if _THIS_DIR not in sys.path:
 
 try:
     import data_analysis
-except ImportError:
-    try:
-        import data_analiysis as data_analysis
-    except Exception as exc:
-        print(f"DEBUG: Could not import data_analysis because: {exc}", file=sys.stderr)
-        data_analysis = None
+except ImportError as exc:
+    print(f"DEBUG: Could not import data_analysis because: {exc}", file=sys.stderr)
+    data_analysis = None
 
 def _load_run(run_dir):
     csv_path = os.path.join(run_dir, "data.csv")
