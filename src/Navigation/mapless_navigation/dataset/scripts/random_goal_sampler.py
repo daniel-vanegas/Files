@@ -59,6 +59,7 @@ class RandomGoalSampler(Node):
         self.declare_parameter('scenario', 'E01')
         self.declare_parameter('output_dir', 'src/Navigation/mapless_navigation/dataset/data')
         self.declare_parameter('use_path_pool', True)
+        self.declare_parameter('new_pools', 0)
         self.declare_parameter('pool_min_clearance_m', 0.15)
         self.declare_parameter('pool_max_retries', 3)
 
@@ -323,7 +324,10 @@ class RandomGoalSampler(Node):
         self.path_pool_by_class = {name: [] for name in self.class_names}
         self.path_pool_loaded = False
         self.pool_size_loaded = 0
+        self.new_pools_requested = max(0, int(self.get_parameter('new_pools').value))
+        self.new_pools_loaded = 0
         self.incremental_committed_before = None
+        self.episodes_saved_prior = self._prior_recorded_episodes()
 
         self._costmap_clients = []
         if self.post_teleport_clear_costmap and _HAVE_CLEAR_SVC:
@@ -367,7 +371,7 @@ class RandomGoalSampler(Node):
 
         self.dbg = DebugClient(self, verbose=True)
         self.dbg.send('Node initialized and ready.', 'NODE_STATUS', 'info', -1.0)
-        self.dbg.send(self._format_totals(0), 'TOTALS', 'info', -1.0)
+        self._publish_totals(0)
         self._publish_class_counts()
 
         self.episode_id = 0
@@ -383,21 +387,45 @@ class RandomGoalSampler(Node):
         self.create_timer(3.0, self._launch_worker_once)
         self.heartbeat_timer = self.create_timer(1.0, self._heartbeat)
 
+    def _prior_recorded_episodes(self) -> int:
+        """Count previously committed episodes for this scenario."""
+        scenario_dir = os.path.join(self.output_dir, self.scenario)
+        total = 0
+
+        try:
+            entries = os.scandir(scenario_dir)
+        except OSError:
+            return 0
+
+        with entries:
+            for entry in entries:
+                if not entry.is_dir() or not entry.name.startswith("run_"):
+                    continue
+
+                metadata = os.path.join(entry.path, "episode_tries.json")
+
+                try:
+                    with open(metadata) as f:
+                        data = json.load(f)
+                    total += len(data.get("entries", []))
+                except (OSError, ValueError, TypeError):
+                    continue
+
+        return total
+
     def _format_totals(self, completed: int) -> str:
-        if self.incremental_committed_before is not None:
-            failed = len(self.failed_paths)
-            stored = self.incremental_committed_before
-            total = stored + completed
-            return (f'completed={completed}/{self.num_goals} '
-                    f'stored={stored} failed={failed} total={total}')
-        if self.pool_size_loaded > 0:
-            failed = len(self.failed_paths)
-            total = self.pool_size_loaded + completed
-            return (f'completed={completed}/{self.num_goals} '
-                    f'stored={self.pool_size_loaded} '
-                    f'failed={failed} total={total}')
+        prior = self.episodes_saved_prior
         return (f'completed={completed}/{self.num_goals} '
-                f'stored=? failed=0 total={self.num_goals}')
+                f'stored={prior} failed={len(self.failed_paths)} total={prior + completed}')
+
+    def _format_pools(self) -> str:
+        total = self.pool_size_loaded
+        new = self.new_pools_loaded
+        return f'new_pools={new} stored={total - new} total={total}'
+
+    def _publish_totals(self, completed: int):
+        self.dbg.send(self._format_totals(completed), 'TOTALS', 'info', -1.0)
+        self.dbg.send(self._format_pools(), 'POOLS', 'info', -1.0)
 
     def _heartbeat(self):
         if not hasattr(self, 'dbg'):
@@ -405,7 +433,7 @@ class RandomGoalSampler(Node):
         self.dbg.send('Node initialized and ready.', 'NODE_STATUS', 'info', -1.0)
         with self._class_lock:
             completed = sum(self.class_counts.values())
-        self.dbg.send(self._format_totals(completed), 'TOTALS', 'info', -1.0)
+        self._publish_totals(completed)
 
     def _on_map(self, msg):
         first_map = self.map_msg is None
@@ -1022,6 +1050,7 @@ class RandomGoalSampler(Node):
 
         loaded_total = sum(candidate_counts.values())
         self.pool_size_loaded = loaded_total
+        self.new_pools_loaded = min(self.new_pools_requested, loaded_total)
         self.incremental_committed_before = None
         state_path = os.path.join(
             self.output_dir, self.scenario, "incremental_state.json")
@@ -1432,7 +1461,7 @@ class RandomGoalSampler(Node):
             f'Ready to sample goals. rooms={len(self.valid_rooms)} '
             f'free_cells={len(self.free_cells)} pool_loaded={self.path_pool_loaded}',
             'SAMPLER_STATUS', 'info', -1.0)
-        self.dbg.send(self._format_totals(0), 'TOTALS', 'info', -1.0)
+        self._publish_totals(0)
         if self.teleport_at_start and not self.use_path_pool:
             self.dbg.send('stage=initial_spawn_selection', 'WORKER_STAGE', 'info', -1.0)
             spawn = self._sample_spawn_away_from(None)
@@ -1621,7 +1650,7 @@ class RandomGoalSampler(Node):
                 self.recent_goals.append(goal)
                 self.recent_goal_rooms.append(goal_room)
                 self.recent_zones.append(self._zone_key(goal[0], goal[1]))
-                self.dbg.send(self._format_totals(completed), 'TOTALS', 'info', -1.0)
+                self._publish_totals(completed)
                 self._publish_class_counts()
                 self.dbg.send(
                     f'accepted={target_class} completed={completed}/{self.num_goals} '

@@ -234,7 +234,7 @@ public:
         start_time_ = now();
         dbg_ = std::make_shared<debugger::DebugClient>(this, true);
         dbg_->send("Recorder ready", "NODE_STATUS", "info", -1.0f);
-        dbg_->send("committed=0 discarded=0", "TOTALS", "info", -1.0f);
+        dbg_->send("samples_saved=0 episodes_saved=0 discarded_static=0", "TOTALS", "info", -1.0f);
 
         sendCollisionStatus(0, 0);
 
@@ -285,9 +285,9 @@ public:
         if (dbg_) {
             char buf[200];
             std::snprintf(buf, sizeof(buf),
-                "committed=%zu discarded=%zu coll_fr=%zu coll_ev=%zu "
+                "samples_saved=%zu episodes_saved=%d discarded=%zu coll_fr=%zu coll_ev=%zu "
                 "stuck=%zu e_stuck=%zu",
-                committed_idx_.load(), discarded_idx_.load(),
+                committed_idx_.load(), goals_completed_.load(), discarded_idx_.load(),
                 collision_frames_.load(), total_collision_events_.load(),
                 stuck_events_.load(), episodes_with_stuck_.load());
             dbg_->send(buf, "TOTALS", "info", -1.0f);
@@ -543,8 +543,8 @@ private:
             dbg_->send(buf, "RESULT", "info", 20.0f);
 
             std::snprintf(buf, sizeof(buf),
-                "committed=%zu discarded=%zu coll_fr=%zu stuck=%zu",
-                committed_idx_.load(), discarded_idx_.load(),
+                "samples_saved=%zu episodes_saved=%d discarded=%zu coll_fr=%zu stuck=%zu",
+                committed_idx_.load(), goals_completed_.load(), discarded_idx_.load(),
                 collision_frames_.load(), stuck_events_.load());
             dbg_->send(buf, "TOTALS", "info", -1.0f);
         } else {
@@ -561,8 +561,8 @@ private:
             dbg_->send(buf, "RESULT", "warn", 20.0f);
 
             std::snprintf(buf, sizeof(buf),
-                "committed=%zu discarded=%zu coll_fr=%zu stuck=%zu",
-                committed_idx_.load(), discarded_idx_.load(),
+                "samples_saved=%zu episodes_saved=%d discarded=%zu coll_fr=%zu stuck=%zu",
+                committed_idx_.load(), goals_completed_.load(), discarded_idx_.load(),
                 collision_frames_.load(), stuck_events_.load());
             dbg_->send(buf, "TOTALS", "info", -1.0f);
         }
@@ -886,8 +886,8 @@ private:
 
         char buf[200];
         std::snprintf(buf, sizeof(buf),
-            "buffered=%zu committed=%zu coll_fr=%zu stuck=%zu e_stuck=%zu",
-            buffered, committed_idx_.load(),
+            "buffered=%zu samples_saved=%zu episodes_saved=%d coll_fr=%zu stuck=%zu e_stuck=%zu",
+            buffered, committed_idx_.load(), goals_completed_.load(),
             collision_frames_.load(), stuck_events_.load(),
             episodes_with_stuck_.load());
         dbg_->send(buf, "NODE_STATUS", "info", -1.0f);

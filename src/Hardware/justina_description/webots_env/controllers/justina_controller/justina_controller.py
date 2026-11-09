@@ -1,17 +1,18 @@
 #!/usr/bin/env python3
-import math
 import array
+import math
 import os
+
 import rclpy
-from rclpy.node import Node
-from controller import Supervisor
-from geometry_msgs.msg import Twist, TransformStamped, Pose2D
-from nav_msgs.msg import Odometry
-from sensor_msgs.msg import JointState, LaserScan, Image, CameraInfo
-from std_msgs.msg import Float64, Float64MultiArray, Bool
-from tf2_ros import TransformBroadcaster
 from builtin_interfaces.msg import Time
+from controller import Supervisor
+from geometry_msgs.msg import Pose2D, TransformStamped, Twist
+from nav_msgs.msg import Odometry
+from rclpy.node import Node
 from rosgraph_msgs.msg import Clock
+from sensor_msgs.msg import CameraInfo, Image, JointState, LaserScan
+from std_msgs.msg import Bool, Float64, Float64MultiArray
+from tf2_ros import TransformBroadcaster
 
 
 def _env_float(name, default):
@@ -291,12 +292,12 @@ class TorsoHardware:
         self.torso_motor = robot.getDevice('torso_joint')
         self.torso_sensor = robot.getDevice('torso_joint_sensor')
         if self.torso_motor:
-            self.torso_motor.setPosition(0.3014)
+            self.torso_motor.setPosition(0.01)
             self.torso_motor.setVelocity(10)
         if self.torso_sensor:
             self.torso_sensor.enable(time_step)
 
-        self.target_position = 0.0 #max 0.301
+        self.target_position = 0.0 #max 0.3014
 
     def set_target_position(self, pos):
         self.target_position = pos

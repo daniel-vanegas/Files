@@ -22,6 +22,7 @@
     <arg name="teacher" default="classic_nav"/>
     <arg name="seed" default="-1"/>
     <arg name="num_goals" default="100"/>
+    <arg name="new_pools" default="0"/>
     <arg name="max_attempts_per_goal" default="2"/>
     <arg name="goal_timeout_s" default="60.0"/>
     <arg name="goal_position_tolerance_m" default="0.40"/>
@@ -214,6 +215,7 @@
         <param name="pool_min_clearance_m" value="0.15"/>
         <param name="pool_max_retries" value="$(var pool_max_retries)"/>
         <param name="num_goals" value="$(var num_goals)"/>
+        <param name="new_pools" value="$(var new_pools)"/>
         <param name="map_wait_timeout_s" value="20.0"/>
         <param name="max_attempts_per_goal" value="$(var max_attempts_per_goal)"/>
         <param name="goal_timeout_s" value="$(var goal_timeout_s)"/>

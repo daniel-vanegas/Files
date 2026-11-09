@@ -413,6 +413,17 @@ for scenario in "${SCENARIOS[@]}"; do
     continue
   fi
 
+  old_ids=""
+  if ((INCREMENTAL)); then
+    old_ids="$(python3 - "$DATA_ROOT/$scenario" <<'PYOLD'
+import json, pathlib, sys
+p = pathlib.Path(sys.argv[1]) / 'path_pool_history.json'
+if not p.exists(): p = p.parent / 'path_pool.json'
+if p.exists(): print(','.join(str(x['id']) for x in json.loads(p.read_text()).get('paths', [])))
+PYOLD
+)"
+  fi
+
   if ((INCREMENTAL)); then
     inc_cmd=(python3 "$SCRIPT_DIR/data_analysis/generate_path_pool.py"
       --scenario "$scenario"
@@ -489,6 +500,16 @@ except Exception:
 ")
   fi
 
+  NEW_POOLS_COUNT="$(python3 - "$pool_json" "$old_ids" "$SKIP_GENERATION" "$INCREMENTAL" <<'PYCOUNT'
+import json, sys
+paths = json.load(open(sys.argv[1])).get('paths', [])
+old = set(sys.argv[2].split(',')) if sys.argv[2] else set()
+if int(sys.argv[3]): print(0)
+elif int(sys.argv[4]): print(sum(str(p['id']) not in old for p in paths))
+else: print(len(paths))
+PYCOUNT
+)"
+
   if ((actual_goals <= 0)); then
     echo "[$scenario] SKIP: pool has zero paths"
     printf 'scenario=%s\nreason=empty_pool\n' "$scenario" > "$status_file"
@@ -522,6 +543,7 @@ except Exception:
 
     setsid ros2 launch "$PKG" "$LAUNCH_FILE" \
       world:="$scenario" scenario:="$scenario" num_goals:="$actual_goals" \
+      new_pools:="$NEW_POOLS_COUNT" \
       output_dir:="$DATA_ROOT" \
       goal_position_tolerance_m:="$GOAL_POSITION_TOLERANCE_M" "${EXTRA_ARGS[@]}" >"$log" 2>&1 &
     pid=$!
