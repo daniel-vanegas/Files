@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import argparse
 import importlib.util
+import hashlib
 import json
 import random
 import sys
@@ -34,6 +35,7 @@ if str(EXPERIMENT_TOOLS_DIR) not in sys.path:
 
 from dataset_utils import (
     SequenceDataset,
+    build_input_frame,
     build_legacy_tensors,
     discover_npz_files,
     load_episodes,
@@ -155,6 +157,111 @@ def make_ros1_loaders(args, root: Path, seed: int):
             "split": "random sample-level split after non-overlapping frame stacking (legacy semantics)",
         },
     )
+
+
+class ManifestPairs(torch.utils.data.Dataset):
+    """Load fixed pairs while keeping original episode indices."""
+
+    def __init__(self, root, entries, args):
+        self.samples = [None] * len(entries)
+        self.sequence_meta = entries
+        grouped = {}
+        for index, entry in enumerate(entries):
+            grouped.setdefault(entry["run_file"], []).append((index, entry))
+        for relative, selected in sorted(grouped.items()):
+            path = root / relative
+            episodes = load_episodes({Path(relative).parent.name: [str(path)]})
+            by_id = {episode.episode_id: episode for episode in episodes}
+            for index, entry in selected:
+                episode = by_id[entry["episode_id"]]
+                start = entry["start_index"]
+                pair = episode.samples[start:start + 2]
+                if len(pair) != 2 or any(not sample["meta"].get("tlom_consistent", True) for sample in pair):
+                    raise ValueError(f"Unavailable pair in {relative}, episode {episode.episode_id}, index {start}")
+                frames = [build_input_frame(sample, args.vmax, args.reverse_enable,
+                          args.distance_max, args.variant, args.representation) for sample in pair]
+                inputs = np.stack([item[0] for item in frames])
+                inputs[:, :-2, :] *= args.occupancy_max
+                self.samples[index] = (inputs, frames[-1][1])
+
+    def __len__(self):
+        return len(self.samples)
+
+    def __getitem__(self, index):
+        x, y = self.samples[index]
+        return torch.from_numpy(x).float(), torch.from_numpy(y).float()
+
+
+def make_pair_manifest_loaders(args, root, seed):
+    manifest_path = args.pair_manifest.expanduser().resolve()
+    spec = json.loads(manifest_path.read_text())
+    if (spec.get("version") != 1 or spec.get("variant") != args.variant
+            or args.sequence_length != 2 or args.data_format != "ros2_episode"):
+        raise ValueError("The pair manifest requires ROS 2 data, its saved variant and C=2")
+    if any((args.train_scenarios, args.validation_scenarios, args.test_scenarios, args.datasets_dir)):
+        raise ValueError("Use the saved manifest split without additional scenario selectors")
+    selected_files = {row["run_file"] for split in ("train", "validation") for row in spec[split]}
+    if selected_files != set(spec["sources"]):
+        raise ValueError("Every selected NPZ must have a saved source hash")
+    for relative, expected in spec["sources"].items():
+        path = (root / relative).resolve()
+        if not path.is_relative_to(root.resolve()):
+            raise ValueError("A manifest source is outside data-root")
+        digest = hashlib.sha256()
+        with path.open("rb") as stream:
+            for block in iter(lambda: stream.read(1024 * 1024), b""):
+                digest.update(block)
+        if digest.hexdigest() != expected:
+            raise ValueError(f"Dataset source changed: {relative}")
+    train_ids = {(r["run_file"], r["episode_id"]) for r in spec["train"]}
+    val_ids = {(r["run_file"], r["episode_id"]) for r in spec["validation"]}
+    if train_ids & val_ids or not train_ids or not val_ids:
+        raise ValueError("The manifest must have nonempty, disjoint episode partitions")
+    for split in ("train", "validation"):
+        ids = [(r["run_file"], r["episode_id"], r["start_index"]) for r in spec[split]]
+        if len(ids) != len(set(ids)) or any(start < 0 or start % 2 for _, _, start in ids):
+            raise ValueError("Manifest pairs must be distinct, non-overlapping original pairs")
+    train_set = ManifestPairs(root, spec["train"], args)
+    val_set = ManifestPairs(root, spec["validation"], args)
+    generator = torch.Generator().manual_seed(seed)
+    pin = torch.cuda.is_available()
+    return (
+        DataLoader(train_set, batch_size=args.batch_size, shuffle=True, generator=generator, pin_memory=pin),
+        DataLoader(val_set, batch_size=args.batch_size, shuffle=False, pin_memory=pin),
+        {"dataset_format": "ros2_episode", "environment_set": spec["environment_set"],
+         "train_sequences": len(train_set), "validation_sequences": len(val_set),
+         "pair_manifest_sha256": hashlib.sha256(manifest_path.read_bytes()).hexdigest(),
+         "split": "fixed episode partitions and fixed original pairs"},
+    )
+
+
+def audit_pair_actions(model, dataset, device, vmax):
+    """Compare decoded predictions with recorded actions on the same pairs."""
+    predictions = []
+    model.eval()
+    with torch.inference_mode():
+        for x, _ in DataLoader(dataset, batch_size=128, shuffle=False):
+            output = model(x.to(device))
+            predictions.append(output.detach().cpu().numpy())
+    predicted = np.concatenate(predictions, axis=0) * np.asarray(vmax)
+    demonstrated = np.asarray([row["action"] for row in dataset.sequence_meta], dtype=float)
+    categories = np.asarray([row["route_class"] for row in dataset.sequence_meta])
+    results = {}
+    for category in sorted(set(categories)):
+        metrics = {}
+        for axis, (name, deadband) in enumerate((("vx", 0.02), ("vy", 0.02), ("wz", 0.05))):
+            metrics[name] = {}
+            for label, sign in (("positive", 1), ("negative", -1)):
+                mask = (categories == category) & (sign * demonstrated[:, axis] > deadband)
+                expected = demonstrated[mask, axis]
+                actual = predicted[mask, axis]
+                metrics[name][label] = {
+                    "pairs": int(np.count_nonzero(mask)),
+                    "sign_accuracy": float(np.mean(sign * actual > 0)) if len(expected) else None,
+                    "median_amplitude_ratio": float(np.median(np.abs(actual / expected))) if len(expected) else None,
+                }
+        results[category] = metrics
+    return results
 
 
 def make_ros2_loaders(args, root: Path, seed: int):
@@ -323,7 +430,7 @@ def check_inference_contract(model, config: dict, dataset, device) -> dict:
             "recurrent_input_size": 736, "scope": "offline model and preprocessing compatibility"}
 
 
-def run_epoch(model, loader, optimizer, device, legacy_batch_mean=False):
+def run_epoch(model, loader, optimizer, device, legacy_batch_mean=False, action_weights=(1.0, 1.0, 1.0)):
     training = optimizer is not None
     model.train(training)
     batch_losses = []
@@ -339,14 +446,20 @@ def run_epoch(model, loader, optimizer, device, legacy_batch_mean=False):
                 pred = pred[0]
             if pred.ndim == 1:
                 pred = pred.unsqueeze(0)
-            loss = torch.nn.functional.mse_loss(pred, y)
+            mse = torch.nn.functional.mse_loss(pred, y)
+            if training and tuple(action_weights) != (1.0, 1.0, 1.0):
+                weights = pred.new_tensor(action_weights)
+                loss = ((pred - y).square() * weights).sum(dim=-1).mean() / weights.sum()
+            else:
+                loss = mse
             if training:
                 loss.backward()
                 if not legacy_batch_mean:
                     torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
                 optimizer.step()
-            batch_losses.append(float(loss.item()))
-            total += float(loss.item()) * len(x)
+            error = float(mse.item())
+            batch_losses.append(error)
+            total += error * len(x)
             count += len(x)
     if not count:
         return float("nan")
@@ -409,6 +522,9 @@ def save_curve(
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--data-root", type=Path, default=None)
+    parser.add_argument("--pair-manifest", type=Path, help="Fixed original pairs and episode partitions")
+    parser.add_argument("--action-weights", type=float, nargs=3, default=(1.0, 1.0, 1.0),
+                        metavar=("VX", "VY", "WZ"), help="Training loss weights; validation keeps ordinary MSE")
     parser.add_argument("--data-format", choices=("auto", "ros1_legacy", "ros2_episode"), default="auto")
     parser.add_argument("--architecture", choices=("ros1_legacy", "ros2"), default="ros1_legacy", help="Model layout; defaults to the historical ROS 1 layout for both data formats.")
     parser.add_argument("--train-split", type=float, default=None, help="Scenario split fraction for ROS2; sample split fraction for legacy ROS1.")
@@ -428,6 +544,8 @@ def main() -> int:
         "--representation", choices=("lom", "tlom"), default="lom",
         help="Use the instantaneous LOM or the temporal T-LOM.",
     )
+    parser.add_argument("--occupancy-max", type=int, choices=(1, 100), default=1,
+                        help="Occupied cell value for training with --pair-manifest.")
     parser.add_argument("--batch-size", type=int, default=None)
     parser.add_argument("--epochs", type=int, default=None)
     parser.add_argument("--patience", type=int, default=None)
@@ -488,6 +606,12 @@ def main() -> int:
         parser.error("sequence length, batch size, epochs and patience must be positive")
     if args.hidden_size < 1 or args.num_layers < 1:
         parser.error("hidden size and number of recurrent layers must be positive")
+    if any(not np.isfinite(value) or value <= 0 for value in args.action_weights):
+        parser.error("action weights must be finite and positive")
+    if args.occupancy_max != 1 and not args.pair_manifest:
+        parser.error("--occupancy-max 100 requires --pair-manifest")
+    if args.pair_manifest and args.data_root is None:
+        parser.error("--pair-manifest requires --data-root")
     if args.learning_rate <= 0 or args.weight_decay < 0:
         parser.error("learning rate must be positive and weight decay cannot be negative")
     if not (0.0 <= args.dropout_1 < 1.0 and 0.0 <= args.dropout_2 < 1.0):
@@ -516,7 +640,10 @@ def main() -> int:
     )
     out_dir.mkdir(parents=True, exist_ok=False)
 
-    if args.datasets_dir:
+    if args.pair_manifest:
+        train_loader, val_loader, split_info = make_pair_manifest_loaders(args, data_root, seed)
+        default_checkpoint = "best_model.pth"
+    elif args.datasets_dir:
         train_loader, val_loader, split_info, data_root = make_manifest_loaders(args, seed)
         default_checkpoint = "best_model.pth"
     elif data_format == "ros1_legacy":
@@ -561,6 +688,7 @@ def main() -> int:
         "epochs_requested": args.epochs,
         "learning_rate_initial": args.learning_rate,
         "weight_decay": args.weight_decay,
+        "action_weights": list(args.action_weights),
         "train_split": args.train_split,
         "patience": args.patience,
         "seed": seed,
@@ -568,6 +696,8 @@ def main() -> int:
         "data_root": data_root.name,
         "split": split_info,
     }
+    if args.pair_manifest and args.occupancy_max == 100:
+        config.update(normalize_occupancy=False, occupancy_max=100.0)
     config["campaign_checkpoint_policy"] = "min_validation_and_min_absolute_gap"
     if args.datasets_dir:
         from experiment_control import file_hash
@@ -598,7 +728,7 @@ def main() -> int:
     try:
         for epoch in range(1, args.epochs + 1):
             epoch_start = time.monotonic()
-            train_loss = run_epoch(model, train_loader, optimizer, device, legacy_batch_mean=(data_format == "ros1_legacy" or bool(args.datasets_dir)))
+            train_loss = run_epoch(model, train_loader, optimizer, device, legacy_batch_mean=(data_format == "ros1_legacy" or bool(args.datasets_dir)), action_weights=args.action_weights)
             val_loss = run_epoch(model, val_loader, None, device, legacy_batch_mean=(data_format == "ros1_legacy" or bool(args.datasets_dir)))
             scheduler.step(val_loss)
             row = {
@@ -662,6 +792,17 @@ def main() -> int:
     print(f"Best epoch: {best_epoch}; best validation MSE: {best_val:.7f}")
     print(f"Checkpoint: {checkpoint_path}")
     print(f"Elapsed: {time.monotonic() - started:.1f} s")
+    if args.pair_manifest and best_epoch > 0 and not interrupted:
+        audits = {}
+        for path in (checkpoint_path, out_dir / "best_gap.pth"):
+            try:
+                checkpoint = torch.load(path, map_location=device, weights_only=False)
+            except TypeError:
+                checkpoint = torch.load(path, map_location=device)
+            model.load_state_dict(checkpoint["model_state_dict"], strict=True)
+            audits[path.name] = {"epoch": checkpoint["epoch"],
+                                 "by_class": audit_pair_actions(model, val_loader.dataset, device, args.vmax)}
+        (out_dir / "action_metrics.json").write_text(json.dumps(audits, indent=2, allow_nan=False) + "\n")
     if args.datasets_dir and best_epoch > 0:
         try:
             checkpoint = torch.load(checkpoint_path, map_location=device, weights_only=False)

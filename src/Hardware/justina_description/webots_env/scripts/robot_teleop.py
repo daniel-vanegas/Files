@@ -43,9 +43,9 @@ class JoystickTeleop(Node):
         self.tilt_max = 0.5
 
         # Torso control
-        self.declare_parameter('torso_initial_pos', 0.10)
+        self.declare_parameter('torso_initial_pos', 0.01)
         self.torso_target = self.get_parameter('torso_initial_pos').value
-        self.torso_min = 0.0
+        self.torso_min = 0.01
         self.torso_max = 0.3014
         self.torso_step = 0.01
 

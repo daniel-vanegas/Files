@@ -13,7 +13,7 @@
     <arg name="world_offset_x" default="0.0"/>
     <arg name="world_offset_y" default="0.0"/>
     <arg name="world_offset_yaw" default="0.0"/>
-    <arg name="torso_height" default="0.10"/>
+    <arg name="torso_height" default="0.01"/>
     <arg name="floor_z_m" default="0.25"/>
     <arg name="lom_min_z" default="0.20"/>
 

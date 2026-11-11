@@ -679,7 +679,7 @@ for _sc in "${SCENARIOS[@]}"; do
     setsid ros2 launch "$PKG" "$LAUNCH_FILE" \
       world:="$_sc" scenario:="$_sc" num_goals:="$N_GOALS" \
       output_dir:="$DATA_ROOT" \
-      goal_position_tolerance_m:="$GOAL_POSITION_TOLERANCE_M" \
+      goal_reached_radius_m:="$GOAL_POSITION_TOLERANCE_M" \
       lock_head:="$LOCK_HEAD" \
       "${_targs[@]}" "${EXTRA_ARGS[@]}" >"$_log" 2>&1 &
     _pid=$!

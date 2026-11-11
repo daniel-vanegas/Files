@@ -297,10 +297,10 @@ class TorsoHardware:
         if self.torso_sensor:
             self.torso_sensor.enable(time_step)
 
-        self.target_position = 0.0 #max 0.3014
+        self.target_position = 0.01 #max 0.3014
 
     def set_target_position(self, pos):
-        self.target_position = pos
+        self.target_position = max(0.01, min(0.3014, pos))
         if self.torso_motor:
             self.torso_motor.setPosition(self.target_position)
 
