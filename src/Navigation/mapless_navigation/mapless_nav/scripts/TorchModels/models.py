@@ -64,7 +64,8 @@ class RNN(nn.Module):
     def __init__(
         self,
         channels: int = 2,
-        img_size: int = 80,
+        img_h: int = 80,
+        img_w: int = 80,
         hidden_size: int = 350,
         num_layers: int = 4,
         bias: bool = True,
@@ -73,12 +74,17 @@ class RNN(nn.Module):
         architecture: str = "ros1_legacy",
         dropout_1: float = 0.20,
         dropout_2: float = 0.15,
+        img_size: int | None = None,
     ) -> None:
         super().__init__()
+        if img_size is not None:
+            # Legacy keyword retained for old checkpoints.
+            img_h = img_size
+            img_w = img_size
         if architecture not in self.ARCHITECTURES:
             raise ValueError(f"architecture must be one of {self.ARCHITECTURES}; got {architecture!r}")
-        if channels < 1 or img_size < 1 or hidden_size < 1 or num_layers < 1:
-            raise ValueError("channels, img_size, hidden_size and num_layers must be positive")
+        if channels < 1 or img_h < 1 or img_w < 1 or hidden_size < 1 or num_layers < 1:
+            raise ValueError("channels, img_h, img_w, hidden_size and num_layers must be positive")
         if not (0.0 <= dropout_1 < 1.0 and 0.0 <= dropout_2 < 1.0):
             raise ValueError("dropout rates must be in [0, 1)")
         if activation not in ("tanh", "relu"):
@@ -87,7 +93,8 @@ class RNN(nn.Module):
         self.name = "RNN"
         self.architecture = architecture
         self.channels = int(channels)
-        self.img_size = int(img_size)
+        self.img_h = int(img_h)
+        self.img_w = int(img_w)
         self.hidden_size = int(hidden_size)
         self.num_layers = int(num_layers)
         self.bias = bool(bias)
@@ -97,13 +104,15 @@ class RNN(nn.Module):
         self.dropout_2_rate = float(dropout_2)
         self.max_pool = nn.MaxPool2d(kernel_size=7, stride=3)
 
-        # 80x80 -> 78x78 after conv(k=3) -> 24x24 after max-pool(7,3).
-        conv_size = self.img_size - 2
-        pooled_size = ((conv_size - 7) // 3) + 1
-        if pooled_size <= 0:
-            raise ValueError(f"img_size={img_size} is too small for conv/pooling layers")
-        pooled_features = pooled_size * pooled_size
-        target_features = 2 * self.img_size
+        # Conv(k=3) then max-pool(7,3) applied independently on each axis.
+        conv_h = self.img_h - 2
+        conv_w = self.img_w - 2
+        pooled_h = ((conv_h - 7) // 3) + 1
+        pooled_w = ((conv_w - 7) // 3) + 1
+        if pooled_h <= 0 or pooled_w <= 0:
+            raise ValueError(f"img_h={img_h}, img_w={img_w} is too small for conv/pooling layers")
+        pooled_features = pooled_h * pooled_w
+        target_features = 2 * self.img_w
 
         if architecture == "ros1_legacy":
             # Original ROS 1 semantics: the stacked C maps become Conv2d input
@@ -163,7 +172,7 @@ class RNN(nn.Module):
         batch_size, sequence_length = x.shape[:2]
         target = torch.flatten(x[:, :, -2:, :], start_dim=2)
         image = x[:, :, :-2, :].reshape(
-            batch_size * sequence_length, 1, self.img_size, self.img_size
+            batch_size * sequence_length, 1, self.img_h, self.img_w
         )
         image = self.conv1(image)
         image = self.max_pool(image)
@@ -177,10 +186,10 @@ class RNN(nn.Module):
 
     def forward(self, x: torch.Tensor, hx=None) -> torch.Tensor:
         if x.ndim != 4:
-            raise ValueError(f"Expected input [batch, C, 82, 80], got {tuple(x.shape)}")
-        if x.shape[2:] != (self.img_size + 2, self.img_size):
+            raise ValueError(f"Expected input [batch, C, {self.img_h + 2}, {self.img_w}], got {tuple(x.shape)}")
+        if x.shape[2:] != (self.img_h + 2, self.img_w):
             raise ValueError(
-                f"Expected input spatial shape {(self.img_size + 2, self.img_size)}, got {tuple(x.shape[2:])}"
+                f"Expected input spatial shape {(self.img_h + 2, self.img_w)}, got {tuple(x.shape[2:])}"
             )
 
         features = self._legacy_features(x) if self.architecture == "ros1_legacy" else self._ros2_features(x)

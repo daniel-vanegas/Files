@@ -15,7 +15,10 @@ from collections import Counter
 from pathlib import Path
 
 SCRIPT_DIR = Path(__file__).resolve().parent
-REPO_ROOT = SCRIPT_DIR.parents[4] if len(SCRIPT_DIR.parents) > 4 else SCRIPT_DIR
+# generate_path_pool.py lives in scripts/data_analysis/; path_generator.py
+# lives one level up in scripts/. Compute the repo root from that location.
+GENERATOR_DIR = SCRIPT_DIR.parent
+REPO_ROOT = GENERATOR_DIR.parents[4] if len(GENERATOR_DIR.parents) > 4 else GENERATOR_DIR
 DEFAULT_MAPS = REPO_ROOT / "src/Hardware/justina_description/webots_env/environments/maps"
 DEFAULT_DATA = REPO_ROOT / "src/Navigation/mapless_navigation/dataset/data"
 CLASSES = ("straight", "semi_complex", "complex", "v_complex")
@@ -150,7 +153,7 @@ def _build_filtered_quota(live_paths, want):
 
 def _stage_generation(scenario, need, args):
     seed = args.seed if args.seed is not None else random.randint(100000, 999999)
-    generator = SCRIPT_DIR / "path_generator.py"
+    generator = GENERATOR_DIR / "path_generator.py"
     maps_root = Path(args.maps_root).expanduser().resolve()
     with tempfile.TemporaryDirectory(prefix=f"mapless_{scenario}_inc_") as tmp:
         stage_root = Path(tmp)
@@ -429,7 +432,7 @@ def main() -> int:
     seed = args.seed if args.seed is not None else stable_seed(args.scenario)
     output_root = Path(args.output_dir).expanduser().resolve()
     maps_root = Path(args.maps_root).expanduser().resolve()
-    generator = SCRIPT_DIR / "path_generator.py"
+    generator = GENERATOR_DIR / "path_generator.py"
     if not generator.is_file(): print(f"ERROR: path generator not found: {generator}", file=sys.stderr); return 2
     if not maps_root.is_dir(): print(f"ERROR: maps root not found: {maps_root}", file=sys.stderr); return 2
     with tempfile.TemporaryDirectory(prefix=f"mapless_{args.scenario}_pool_") as tmp:

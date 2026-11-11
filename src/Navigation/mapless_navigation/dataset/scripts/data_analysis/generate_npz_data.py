@@ -25,7 +25,7 @@ except ImportError as exc:
     print(f"DEBUG: Could not import data_analysis because: {exc}", file=sys.stderr)
     data_analysis = None
 
-def _load_run(run_dir):
+def _load_run(run_dir, with_tlom=False):
     csv_path = os.path.join(run_dir, "data.csv")
 
     if not os.path.isfile(csv_path):
@@ -53,14 +53,38 @@ def _load_run(run_dir):
                 print(f"  missing lom: {lom_path}", file=sys.stderr)
                 continue
 
+            tlom_path = None
+            if with_tlom:
+                tlom_file = row.get("tlom_file", "")
+                if tlom_file:
+                    tlom_path = os.path.join(run_dir, "tlom", tlom_file)
+                    if not os.path.isfile(tlom_path):
+                        print(f"  missing tlom: {tlom_path}", file=sys.stderr)
+                        continue
+
             try:
                 lom = np.array(Image.open(lom_path).convert("L"), dtype=np.uint8)
+                tlom = None
+                tlom_consistent = True
+                if tlom_path is not None:
+                    tlom = np.array(Image.open(tlom_path).convert("L"), dtype=np.uint8)
+                    if tlom.shape != lom.shape:
+                        print(f"  tlom shape mismatch at row {row_idx}", file=sys.stderr)
+                        continue
+                    # A cell present in the LOM must also be present in the T-LOM.
+                    # Missing cells indicate a recorder or alignment fault.
+                    if np.any((lom == 100) & (tlom == 0)):
+                        tlom_consistent = False
+
+                features = {
+                    "occ_grid": lom,
+                    "target": np.array([float(row["d"]), float(row["theta"])], dtype=np.float32),
+                }
+                if tlom is not None:
+                    features["tlom"] = tlom
 
                 sample = {
-                    "features": {
-                        "occ_grid": lom,
-                        "target": np.array([float(row["d"]), float(row["theta"])], dtype=np.float32),
-                    },
+                    "features": features,
                     "labels": np.array([float(row["vx"]), float(row["vy"]), float(row["wz"])], dtype=np.float32),
                     "meta": {
                         "pose": np.array([float(row["pose_x"]), float(row["pose_y"]), float(row["pose_yaw"])], dtype=np.float32),
@@ -70,6 +94,7 @@ def _load_run(run_dir):
                         "is_episode_start": int(row["is_episode_start"]),
                         "collision_flag": int(row.get("collision_flag", 0)),
                         "stuck_flag": int(row.get("stuck_flag", 0)),
+                        "tlom_consistent": tlom_consistent,
                     },
                 }
 
@@ -149,13 +174,13 @@ def _select_episodes(episode_classes, goals_per_scene, class_quotas, shuffle, se
     return set(all_ids)
 
 
-def _convert_run(run_dir, filter_cfg=None):
+def _convert_run(run_dir, filter_cfg=None, with_tlom=False):
     if filter_cfg is None:
         filter_cfg = {"active": False}
 
     print(f"  reading: {run_dir}")
 
-    samples = _load_run(run_dir)
+    samples = _load_run(run_dir, with_tlom=with_tlom)
 
     if samples is None or len(samples) == 0:
         print("  no samples", file=sys.stderr)
@@ -337,6 +362,10 @@ def main():
         "--no-plot", action="store_true",
         help="Skip class balance plot generation",
     )
+    parser.add_argument(
+        "--with-tlom", action="store_true",
+        help="Load the T-LOM alongside the LOM. Required to train with --representation tlom.",
+    )
 
     args = parser.parse_args()
     target = _resolve_path(args.path)
@@ -397,7 +426,7 @@ def main():
         print(f"[{rel}]")
 
         try:
-            if _convert_run(run, filter_cfg):
+            if _convert_run(run, filter_cfg, with_tlom=args.with_tlom):
                 ok += 1
         except Exception as exc:
             print(f"  ERROR: {exc}", file=sys.stderr)

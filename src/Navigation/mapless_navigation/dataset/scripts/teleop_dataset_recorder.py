@@ -15,41 +15,41 @@ Buttons:
           (in non-pool mode: teleport to unexplored room)
 """
 
+import atexit
 import csv
 import json
 import math
 import os
 import random
 import shutil
+import signal
 import subprocess
 import sys
 import threading
 import time
-import yaml
 from collections import deque
 
 import numpy as np
 import rclpy
 import rclpy.executors
-from rclpy.callback_groups import (ReentrantCallbackGroup,
-                                   MutuallyExclusiveCallbackGroup)
-from rclpy.node import Node
-from rclpy.qos import (QoSProfile, QoSDurabilityPolicy,
-                       QoSReliabilityPolicy, QoSHistoryPolicy)
+import yaml
 from ament_index_python.packages import get_package_share_directory
-from geometry_msgs.msg import (PointStamped, Pose2D,
-                               PoseWithCovarianceStamped, Twist)
+from debugger.utils import DebugClient
+from geometry_msgs.msg import PointStamped, Pose2D, PoseWithCovarianceStamped, Twist
 from nav_msgs.msg import OccupancyGrid
+from PIL import Image
+from rclpy.callback_groups import MutuallyExclusiveCallbackGroup, ReentrantCallbackGroup
+from rclpy.node import Node
+from rclpy.qos import (
+    QoSDurabilityPolicy,
+    QoSHistoryPolicy,
+    QoSProfile,
+    QoSReliabilityPolicy,
+)
 from sensor_msgs.msg import Joy
 from std_msgs.msg import Bool, Float64, Float64MultiArray, Int32, String
 from tf2_ros import Buffer, TransformListener
 from visualization_msgs.msg import Marker, MarkerArray
-from PIL import Image
-
-import atexit
-import signal
-
-from debugger.utils import DebugClient
 
 try:
     from scipy.ndimage import distance_transform_edt, label
@@ -653,6 +653,7 @@ class TeleopDatasetRecorder(Node):
         if not self.generator_script:
             self.generator_script = os.path.join(
                 os.path.dirname(os.path.abspath(__file__)),
+                'data_analysis',
                 'generate_path_pool.py')
 
         self.generator_maps_root = str(

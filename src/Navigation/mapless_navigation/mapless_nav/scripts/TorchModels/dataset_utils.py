@@ -359,47 +359,60 @@ def normalize_target(
     return float(distance), float(theta)
 
 
+# Slices over the canonical (140, 120) grid written by dataset_recorder.
+# Rows map to X and columns map to Y. Both include the cell edge at the low end.
+# 4x4: X [0, 4], Y [-2, 2]
+# 5x4: X [-1, 4], Y [-2, 2]
+# 7x6: X [-1, 6], Y [-3, 3]
+VARIANT_SLICES = {
+    "4x4": (slice(40, 120), slice(20, 100)),
+    "5x4": (slice(40, 140), slice(20, 100)),
+    "7x6": (slice(0, 140), slice(0, 120)),
+}
+
+
 def build_input_frame(
     sample: dict,
     vmax: tuple[float, float, float],
     reverse_enable: bool = False,
     distance_max: float | None = None,
+    variant: str = "4x4",
+    representation: str = "lom",
 ) -> tuple[np.ndarray, np.ndarray]:
     """
-    Build one frame.
+    Build one frame from a single sample.
+
+    variant selects the slice over the canonical 140x120 grid.
+    representation selects the instantaneous LOM or the temporal T-LOM.
 
     Returns:
-        input_frame: [82, 80]
+        input_frame: [H + 2, W]
         label:       [3]
-
-    Layout:
-
-        rows 0:80
-            LOM
-
-        rows 80:82
-            target replicated across width
-
-    The replication allows the existing model to receive
-    the complete tensor and separate the final two rows
-    internally.
     """
-    lom = np.asarray(sample["features"]["occ_grid"], dtype=np.float32)
+    if representation not in ("lom", "tlom"):
+        raise ValueError(f"representation must be 'lom' or 'tlom', got {representation!r}")
+    if variant not in VARIANT_SLICES:
+        raise ValueError(f"variant must be one of {list(VARIANT_SLICES)}, got {variant!r}")
 
-    if lom.ndim != 2:
-        raise ValueError(f"Expected 2D LOM, got {lom.shape}")
+    if representation == "lom":
+        grid = sample["features"]["occ_grid"]
+    else:
+        if "tlom" not in sample["features"]:
+            raise ValueError("T-LOM requested but not present in the sample")
+        grid = sample["features"]["tlom"]
 
-    height, width = lom.shape
+    grid = np.asarray(grid, dtype=np.float32)
+    if grid.ndim != 2:
+        raise ValueError(f"Expected 2D grid, got {grid.shape}")
+    if grid.shape != (140, 120):
+        raise ValueError(f"Expected canonical 140x120 stored grid, got {grid.shape}")
 
-    if (height, width) != (140, 120):
-        raise ValueError(f"Expected canonical 140x120 stored LOM, got {height}x{width}")
+    rows, cols = VARIANT_SLICES[variant]
+    grid = grid[rows, cols]
+    width = grid.shape[1]
 
-    # Crop X=[0,4] m, Y=[-2,2] m without resampling or changing orientation.
-    lom = lom[40:120, 20:100]
-    width = lom.shape[1]
-
-    # The direct ROS 2 trainer uses normalized [0,1] occupancy.
-    lom = np.clip(lom / 100.0, 0.0, 1.0)
+    # The direct ROS 2 trainer uses normalized [0, 1] occupancy.
+    grid = np.clip(grid / 100.0, 0.0, 1.0)
 
     distance = float(sample["features"]["target"][0])
     theta = float(sample["features"]["target"][1])
@@ -414,7 +427,7 @@ def build_input_frame(
     target[0, :] = distance
     target[1, :] = theta
 
-    input_frame = np.concatenate([lom, target], axis=0)
+    input_frame = np.concatenate([grid, target], axis=0)
 
     vx, vy, wz = (float(v) for v in sample["labels"])
 
@@ -450,6 +463,9 @@ class SequenceDataset(Dataset):
         vmax: tuple[float, float, float] = (0.5, 0.5, 1.0),
         reverse_enable: bool = False,
         distance_max: float | None = None,
+        variant: str = "4x4",
+        representation: str = "lom",
+        skip_inconsistent_tlom: bool = False,
     ):
         if sequence_length < 1:
             raise ValueError("sequence_length must be >= 1")
@@ -458,6 +474,9 @@ class SequenceDataset(Dataset):
         self.vmax = vmax
         self.reverse_enable = reverse_enable
         self.distance_max = distance_max
+        self.variant = variant
+        self.representation = representation
+        self.skip_inconsistent_tlom = skip_inconsistent_tlom
 
         self.samples = []
         self.sequence_meta = []
@@ -468,6 +487,7 @@ class SequenceDataset(Dataset):
 
             frames = []
             labels = []
+            consistent = []
 
             for sample in episode.samples:
                 frame, label = build_input_frame(
@@ -475,14 +495,27 @@ class SequenceDataset(Dataset):
                     vmax=vmax,
                     reverse_enable=reverse_enable,
                     distance_max=distance_max,
+                    variant=variant,
+                    representation=representation,
                 )
 
                 frames.append(frame)
                 labels.append(label)
 
+                if skip_inconsistent_tlom:
+                    # Paired comparison: exclude the same samples from LOM and T-LOM.
+                    # A sample with LOM cells missing in T-LOM is valid for LOM in isolation,
+                    # but keeping it in one representation and not the other breaks pairing.
+                    consistent.append(bool(sample.get("meta", {}).get("tlom_consistent", True)))
+                else:
+                    consistent.append(True)
+
             # Non-overlapping pairs/windows, as used by the frozen campaign.
             for start in range(0, len(frames) - sequence_length + 1, sequence_length):
                 end = start + sequence_length
+
+                if not all(consistent[start:end]):
+                    continue
 
                 self.samples.append(
                     (

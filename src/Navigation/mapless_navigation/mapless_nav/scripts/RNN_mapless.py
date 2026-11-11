@@ -17,6 +17,7 @@ from typing import Any
 
 import numpy as np
 import torch
+
 try:
     import rclpy
     from geometry_msgs.msg import PointStamped, Twist
@@ -35,30 +36,86 @@ if str(EXPERIMENT_TOOLS_DIR) not in sys.path:
     sys.path.insert(0, str(EXPERIMENT_TOOLS_DIR))
 
 
+# Slices and shapes for the three LOM variants. Same values as dataset_utils.
+VARIANT_SLICES = {
+    "4x4": (slice(40, 120), slice(20, 100)),
+    "5x4": (slice(40, 140), slice(20, 100)),
+    "7x6": (slice(0, 140), slice(0, 120)),
+}
+
+VARIANT_SHAPES = {
+    "4x4": (80, 80),
+    "5x4": (100, 80),
+    "7x6": (140, 120),
+}
+
+VARIANT_ORIGIN = {
+    "4x4": (0.0, -2.0),
+    "5x4": (-1.0, -2.0),
+    "7x6": (-1.0, -3.0),
+}
+
+
 # LOM255_REEVALUATION_FIX_V1
-def scale_occupancy_grid(occupancy, normalize_occupancy: bool, occupancy_max: float = 100.0):
+def scale_occupancy_grid(
+    occupancy,
+    normalize_occupancy: bool,
+    occupancy_max: float = 100.0,
+    representation: str = "lom",
+):
     """Convert the incoming ROS 0..100 grid to the checkpoint's input scale."""
     maximum = float(occupancy_max)
     if not math.isfinite(maximum) or maximum <= 0.0:
         raise ValueError(f"occupancy_max must be positive and finite; got {maximum}")
     values = np.asarray(occupancy, dtype=np.float32)
+    if representation == "tlom":
+        # The recorded T-LOM was binarized to 0/100 before saving. The runtime
+        # topic publishes 0/50/100, so collapse anything >= 50 to 100 to match
+        # the scale the model saw during training.
+        values = np.where(values >= 50.0, 100.0, 0.0).astype(np.float32)
     if normalize_occupancy:
         return np.clip(values / np.float32(100.0), 0.0, 1.0)
     return values * np.float32(maximum / 100.0)
+
+
+def source_grid_variant(shape, settings: dict):
+    variant = settings.get("variant", "4x4")
+    if shape == VARIANT_SHAPES[variant][::-1]:
+        return variant
+    if (shape == VARIANT_SHAPES["7x6"][::-1]
+            and settings.get("data_format") == "ros2_episode"
+            and settings.get("preprocessing") is None):
+        return "7x6"
+    return None
 
 
 def prepare_observation(grid, distance: float, theta: float, settings: dict) -> np.ndarray:
     if settings.get("preprocessing") is not None:
         from experiment_control import policy_frame
         return policy_frame(grid, [distance, theta], source="ros_occupancy_grid")
+    variant = settings.get("variant", "4x4")
+    if variant not in VARIANT_SHAPES:
+        raise ValueError(f"Unknown variant {variant!r}")
+    _, expected_w = VARIANT_SHAPES[variant]
     source = np.asarray(grid, dtype=np.float32)
-    if source.shape != (120, 140) or not np.isfinite(source).all():
-        raise ValueError(f"Expected full ROS LOM (120,140), got {source.shape}")
-    values = np.fliplr(np.rot90(source))[40:120, 20:100]
-    occ = scale_occupancy_grid(values, settings["normalize_occupancy"], settings["occupancy_max"])
+    grid_variant = source_grid_variant(source.shape, settings)
+    if grid_variant is None or not np.isfinite(source).all():
+        raise ValueError(
+            f"Unexpected ROS grid {source.shape} for variant {variant}"
+        )
+    rotated = np.fliplr(np.rot90(source))
+    if grid_variant == "7x6":
+        rows, cols = VARIANT_SLICES[variant]
+        rotated = rotated[rows, cols]
+    occ = scale_occupancy_grid(
+        rotated,
+        settings["normalize_occupancy"],
+        settings["occupancy_max"],
+        representation=settings.get("representation", "lom"),
+    )
     maximum = settings.get("distance_max")
     target_distance = float(np.clip(distance / float(maximum), 0, 1)) if maximum is not None and float(maximum) > 0 else distance
-    rows = np.empty((2, values.shape[1]), dtype=np.float32)
+    rows = np.empty((2, expected_w), dtype=np.float32)
     rows[0, :], rows[1, :] = target_distance, theta
     return np.vstack((occ, rows)).astype(np.float32, copy=False)
 
@@ -181,9 +238,12 @@ def make_model(architecture: str, state: dict, config: dict, sequence_length_ove
     dropout_1 = float(config.get("dropout_1", 0.20))
     dropout_2 = float(config.get("dropout_2", 0.15))
 
+    img_h = int(config.get("img_h", 80))
+    img_w = int(config.get("img_w", 80))
     model = RNN(
         channels=channels,
-        img_size=80,
+        img_h=img_h,
+        img_w=img_w,
         hidden_size=hidden_size,
         num_layers=num_layers,
         architecture=architecture,
@@ -209,6 +269,12 @@ def make_model(architecture: str, state: dict, config: dict, sequence_length_ove
         # Historical checkpoint has no saved preprocessing metadata; wz was raw.
         wz_normalized = False
 
+    variant = config.get("variant", "4x4")
+    representation = config.get("representation", "lom")
+    if variant not in VARIANT_SLICES:
+        raise ValueError(f"Unknown variant in checkpoint: {variant!r}")
+    if representation not in ("lom", "tlom"):
+        raise ValueError(f"Unknown representation in checkpoint: {representation!r}")
     settings = {
         "sequence_length": channels,
         "hidden_size": hidden_size,
@@ -220,6 +286,8 @@ def make_model(architecture: str, state: dict, config: dict, sequence_length_ove
         "reverse_enable": bool(config.get("reverse_enable", False)),
         "wz_normalized": wz_normalized,
         "data_format": data_format or ("ros1_legacy" if architecture == "ros1_legacy" else "ros2_episode"),
+        "variant": variant,
+        "representation": representation,
     }
     preprocessing = config.get("preprocessing")
     if int(config.get("format_version", 0)) >= 3 or preprocessing is not None:
@@ -292,6 +360,10 @@ class RNNMapless(Node):
         self.model.eval()
 
         self.sequence_length = int(self.model_settings["sequence_length"])
+        self.variant = self.model_settings.get("variant", "4x4")
+        self.representation = self.model_settings.get("representation", "lom")
+        if self.variant not in VARIANT_SHAPES:
+            raise ValueError(f"Unknown variant in checkpoint: {self.variant!r}")
         vmax_config = self.model_settings.get("vmax", (0.5, 0.5, 1.0))
         if not isinstance(vmax_config, (tuple, list)) or len(vmax_config) != 3:
             vmax_config = (
@@ -333,7 +405,10 @@ class RNNMapless(Node):
 
         goal_topic = str(self.get_parameter("goal_topic").value)
         point_topic = str(self.get_parameter("clicked_point_topic").value)
-        grid_topic = str(self.get_parameter("local_grid_topic").value)
+        if self.representation == "tlom":
+            grid_topic = "/mapless/temporal_occ_grid"
+        else:
+            grid_topic = str(self.get_parameter("local_grid_topic").value)
         cmd_topic = str(self.get_parameter("cmd_vel_topic").value)
         self.goal_sub = self.create_subscription(Float32MultiArray, goal_topic, self.goal_callback, 10)
         self.point_sub = self.create_subscription(PointStamped, point_topic, self.point_callback, 10)
@@ -401,16 +476,20 @@ class RNNMapless(Node):
 
     def occ_callback(self, msg: OccupancyGrid):
         height, width = int(msg.info.height), int(msg.info.width)
-        if (height, width) != (120, 140):
+        grid_variant = source_grid_variant((height, width), self.model_settings)
+        if grid_variant is None:
             self.stop_command()
-            self.get_logger().warning(f"Expected 120x140 ROS local grid; received {height}x{width}; stopping")
+            self.get_logger().warning(
+                f"Unexpected ROS grid {height}x{width} for variant {self.variant}; stopping"
+            )
             return
+        expected_x, expected_y = VARIANT_ORIGIN[grid_variant]
         if (abs(float(msg.info.resolution) - 0.05) > 1e-5
-                or abs(float(msg.info.origin.position.x) + 1.0) > 1e-4
-                or abs(float(msg.info.origin.position.y) + 3.0) > 1e-4
+                or abs(float(msg.info.origin.position.x) - expected_x) > 1e-4
+                or abs(float(msg.info.origin.position.y) - expected_y) > 1e-4
                 or len(msg.data) != height * width):
             self.stop_command()
-            self.get_logger().warning("Unexpected LOM geometry or data length; stopping")
+            self.get_logger().warning("Unexpected grid geometry or data length; stopping")
             return
         self.last_grid_walltime = time.monotonic()
         if not self.goal_active:

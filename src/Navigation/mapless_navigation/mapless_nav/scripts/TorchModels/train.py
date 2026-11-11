@@ -100,10 +100,20 @@ def resolve_defaults(args, data_format: str) -> None:
     args.vmax = tuple(args.vmax) if args.vmax else (0.5, 0.5, 1.0)
 
 
+# Image size for each variant after the slice is applied (rows, cols).
+VARIANT_SHAPES = {
+    "4x4": (80, 80),
+    "5x4": (100, 80),
+    "7x6": (140, 120),
+}
+
+
 def make_model(args):
+    img_h, img_w = VARIANT_SHAPES[args.variant]
     return RNN(
         channels=args.sequence_length,
-        img_size=80,
+        img_h=img_h,
+        img_w=img_w,
         hidden_size=args.hidden_size,
         num_layers=args.num_layers,
         architecture=args.architecture,
@@ -201,6 +211,9 @@ def make_ros2_loaders(args, root: Path, seed: int):
         vmax=args.vmax,
         reverse_enable=args.reverse_enable,
         distance_max=args.distance_max,
+        variant=args.variant,
+        representation=args.representation,
+        skip_inconsistent_tlom=True,
     )
     val_dataset = SequenceDataset(
         val_episodes,
@@ -208,6 +221,9 @@ def make_ros2_loaders(args, root: Path, seed: int):
         vmax=args.vmax,
         reverse_enable=args.reverse_enable,
         distance_max=args.distance_max,
+        variant=args.variant,
+        representation=args.representation,
+        skip_inconsistent_tlom=True,
     )
     if len(train_dataset) == 0:
         raise RuntimeError("ROS 2 train dataset contains zero sequences; check sequence length and train scenarios.")
@@ -217,8 +233,10 @@ def make_ros2_loaders(args, root: Path, seed: int):
             "ensure each train scenario has enough episodes for Validation A."
         )
     use_pin = torch.cuda.is_available()
+    generator = torch.Generator().manual_seed(seed)
     return (
-        DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=0, pin_memory=use_pin),
+        DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=0,
+                   pin_memory=use_pin, generator=generator),
         DataLoader(val_dataset, batch_size=args.batch_size, shuffle=False, num_workers=0, pin_memory=use_pin),
         {
             "dataset_format": "ros2_episode",
@@ -401,6 +419,15 @@ def main() -> int:
     parser.add_argument("--seed", type=int, default=None, help="If omitted, generate a random seed; specify --seed for reproducibility.")
     parser.add_argument("--sequence-length", "--C", dest="sequence_length", type=int, default=None)
     parser.add_argument("--occ-grid-meters", type=int, default=4)
+    parser.add_argument(
+        "--variant", choices=("4x4", "5x4", "7x6"), default="4x4",
+        help="LOM slice: 4x4 (X 0..4, Y -2..2), 5x4 (X -1..4, Y -2..2), "
+             "or 7x6 (X -1..6, Y -3..3).",
+    )
+    parser.add_argument(
+        "--representation", choices=("lom", "tlom"), default="lom",
+        help="Use the instantaneous LOM or the temporal T-LOM.",
+    )
     parser.add_argument("--batch-size", type=int, default=None)
     parser.add_argument("--epochs", type=int, default=None)
     parser.add_argument("--patience", type=int, default=None)
@@ -513,6 +540,10 @@ def main() -> int:
         "format_version": 2,
         "architecture": args.architecture,
         "data_format": data_format,
+        "variant": args.variant,
+        "representation": args.representation,
+        "img_h": VARIANT_SHAPES[args.variant][0],
+        "img_w": VARIANT_SHAPES[args.variant][1],
         "sequence_length": args.sequence_length,
         "stack_n_channels": args.sequence_length if data_format == "ros1_legacy" else None,
         "hidden_size": args.hidden_size,

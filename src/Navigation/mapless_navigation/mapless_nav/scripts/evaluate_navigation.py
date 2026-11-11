@@ -123,7 +123,67 @@ def launch_settings():
                               [source, hardware_launch, HARDWARE / "controllers/justina_controller/justina_controller.py"]}}
 
 
-def prepare_suite(args, out, seed, metadata):
+# Grid extent for each variant. Values match mapless.launch.xml and the
+# temporal_occ_grid_node configuration used during recording.
+VARIANT_GRID_EXTENT = {
+    "4x4": {"min_x": 0.0, "max_x": 4.0, "min_y": -2.0, "max_y": 2.0},
+    "5x4": {"min_x": -1.0, "max_x": 4.0, "min_y": -2.0, "max_y": 2.0},
+    "7x6": {"min_x": -1.0, "max_x": 6.0, "min_y": -3.0, "max_y": 3.0},
+}
+
+
+def evaluation_grid_variant(training_config):
+    variant = training_config.get("variant", "4x4")
+    if variant not in VARIANT_GRID_EXTENT:
+        raise ValueError(f"Unknown variant in checkpoint: {variant!r}")
+    if (training_config.get("data_format") == "ros2_episode"
+            and training_config.get("preprocessing") is None
+            and "variant" in training_config):
+        return "7x6"
+    return variant
+
+
+def evaluation_settings(grid_variant):
+    settings = launch_settings()
+    grid_extent = VARIANT_GRID_EXTENT[grid_variant]
+    new_grid_nodes = []
+    replaced = False
+    for node in settings["grid_nodes"]:
+        if node["name"] == "local_occ_grid_nav":
+            new_grid_nodes.append({
+                "package": "mapless_nav",
+                "executable": "temporal_occ_grid_node",
+                "name": "temporal_occ_grid_nav",
+                "parameters": {
+                    "use_sim_time": True,
+                    "base_frame": "base_link",
+                    "odom_frame": "odom",
+                    "map_topic": "/mapless/local_occ_grid",
+                    "temporal_map_topic": "/mapless/temporal_occ_grid",
+                    **grid_extent,
+                    "min_z": 0.20,
+                    "max_z": 2.0,
+                    "resolution": 0.05,
+                    "lidar_downsample": 1,
+                    "cloud_downsample": 2,
+                    "use_lidar": True,
+                    "use_cloud": True,
+                },
+                "remappings": [],
+            })
+            replaced = True
+        elif node["name"] == "local_occ_grid_rviz":
+            # Skip the preview grid; the temporal node publishes both topics.
+            continue
+        else:
+            new_grid_nodes.append(node)
+    if not replaced:
+        raise ValueError("launch_settings did not return a local_occ_grid_nav node")
+    settings["grid_nodes"] = new_grid_nodes
+    return settings
+
+
+def prepare_suite(args, out, seed, metadata, model):
     import yaml
 
     if args.scenario not in control.ALL_SCENARIOS:
@@ -138,7 +198,8 @@ def prepare_suite(args, out, seed, metadata):
     offsets = [float(map_metadata.get("world_offset_" + axis, 0)) for axis in ("x", "y", "yaw")]
     if not np.isfinite(offsets).all():
         raise ValueError("Map world offsets must be finite")
-    settings = launch_settings()
+    grid_variant = evaluation_grid_variant(model["training_config"])
+    settings = evaluation_settings(grid_variant)
     policy_overrides = {}
     if args.turn_help != "from-launch":
         policy_overrides["turn_help"] = args.turn_help
@@ -163,7 +224,7 @@ def prepare_suite(args, out, seed, metadata):
                 "Create a new suite without --suite to run with different overrides."
             )
     else:
-        generator = ROOT / "src/Navigation/mapless_navigation/dataset/scripts/generate_path_pool.py"
+        generator = ROOT / "src/Navigation/mapless_navigation/dataset/scripts/data_analysis/generate_path_pool.py"
         command = [sys.executable, "-u", str(generator), "--scenario", args.scenario,
                    "--output-dir", str(out / "generated_pool"), "--maps-root", str(HARDWARE / "environments/maps"),
                    "--per-class", "1", "--seed", str(seed), "--timeout-seconds", "120",
@@ -594,6 +655,10 @@ def run_session(cfg, launch_path, out, startup_timeout):
             self.last_theta = None
             self.can_command = False
             self.grid_count, self.grid_wall, self.scan_wall, self.cloud_wall = 0, 0.0, 0.0, 0.0
+            training_config = cfg["model"]["training_config"]
+            self.grid_variant = evaluation_grid_variant(training_config)
+            self.grid_topic = ("/mapless/temporal_occ_grid" if training_config.get("representation") == "tlom"
+                               else "/mapless/local_occ_grid")
             self.stream_messages = {name: {"messages": 0, "last_size": None, "stamp": None}
                                     for name in ("grid", "scan", "cloud")}
             self.last_marker_wall = 0.0
@@ -609,7 +674,7 @@ def run_session(cfg, launch_path, out, startup_timeout):
             self.create_subscription(String, "/evaluation/telemetry", self.on_packet, 20)
             self.create_subscription(Bool, "/maples_nav/goal_reached", self.on_reached, 10)
             self.create_subscription(Float32MultiArray, "/NN_goal", self.on_goal, 10)
-            self.create_subscription(OccupancyGrid, "/mapless/local_occ_grid", self.on_grid, qos_profile_sensor_data)
+            self.create_subscription(OccupancyGrid, self.grid_topic, self.on_grid, qos_profile_sensor_data)
             self.create_subscription(LaserScan, "/hardware/base/scan", self.on_scan, qos_profile_sensor_data)
             self.create_subscription(PointCloud2, "/hardware/camera/points", self.on_cloud, qos_profile_sensor_data)
             self.trajectory = (out / "trajectory.csv").open("w", newline="")
@@ -640,7 +705,7 @@ def run_session(cfg, launch_path, out, startup_timeout):
                 entry["stamp"] = float(stamp.sec) + float(stamp.nanosec) / 1e9
 
         def input_health(self, wall):
-            topics = {"grid": "/mapless/local_occ_grid", "scan": "/hardware/base/scan",
+            topics = {"grid": self.grid_topic, "scan": "/hardware/base/scan",
                       "cloud": "/hardware/camera/points"}
             health = {}
             for name, topic in topics.items():
@@ -681,13 +746,24 @@ def run_session(cfg, launch_path, out, startup_timeout):
         def on_grid(self, msg):
             if self.phase == "done":
                 return
-            if ((msg.info.height, msg.info.width) != (80, 80) or len(msg.data) != 6400
+            extent = VARIANT_GRID_EXTENT[self.grid_variant]
+            expected_w = int(round((extent["max_x"] - extent["min_x"]) / 0.05))
+            expected_h = int(round((extent["max_y"] - extent["min_y"]) / 0.05))
+            expected_cells = expected_w * expected_h
+            if ((msg.info.height, msg.info.width) != (expected_h, expected_w)
+                    or len(msg.data) != expected_cells
                     or not math.isclose(msg.info.resolution, 0.05, abs_tol=1e-6)
                     or msg.header.frame_id != "base_link"
-                    or not math.isclose(msg.info.origin.position.x, 0.0, abs_tol=1e-6)
-                    or not math.isclose(msg.info.origin.position.y, -2.0, abs_tol=1e-6)
+                    or not math.isclose(msg.info.origin.position.x, extent["min_x"], abs_tol=1e-6)
+                    or not math.isclose(msg.info.origin.position.y, extent["min_y"], abs_tol=1e-6)
                     or min(msg.data) < 0 or max(msg.data) > 100):
-                self.fail("The live navigation LOM does not match the recorded geometry and scale")
+                self.fail(
+                    f"The live navigation LOM does not match the recorded geometry "
+                    f"and scale on {self.grid_topic}; expected {expected_w}x{expected_h} "
+                    f"at origin ({extent['min_x']}, {extent['min_y']}), received "
+                    f"{msg.info.width}x{msg.info.height} at origin "
+                    f"({msg.info.origin.position.x:.3f}, {msg.info.origin.position.y:.3f})"
+                )
                 return
             self.grid_count += 1
             self.receive("grid", msg, len(msg.data))
@@ -732,7 +808,7 @@ def run_session(cfg, launch_path, out, startup_timeout):
             self.metrics.append(packet)
             health = self.input_health(time.monotonic())
             ages = {name: health[topic].get("age_wall_s") for name, topic in (
-                ("grid", "/mapless/local_occ_grid"),
+                ("grid", self.grid_topic),
                 ("scan", "/hardware/base/scan"),
                 ("cloud", "/hardware/camera/points"))}
             self.writer.writerow([self.task["id"], packet["time"], *packet["pose"], *packet["odom"],
@@ -976,7 +1052,7 @@ def main(argv=None):
         if not 0 <= domain <= 101:
             raise ValueError("ROS domain ID must be between 0 and 101")
         out = control.new_output(args.output_dir, "evaluation")
-        suite = prepare_suite(args, out, seed, metadata)
+        suite = prepare_suite(args, out, seed, metadata, model)
         config, launch = prepare_runtime(out, suite, model, args.limit, domain, args.route_class, args.rviz,
                                          args.preview_seconds, args.close_after_trial)
         print(f"Checkpoint: {model['path']}")
