@@ -288,6 +288,7 @@ def make_model(architecture: str, state: dict, config: dict, sequence_length_ove
         "data_format": data_format or ("ros1_legacy" if architecture == "ros1_legacy" else "ros2_episode"),
         "variant": variant,
         "representation": representation,
+        "require_full_sequence": bool(config.get("require_full_sequence", False)),
     }
     preprocessing = config.get("preprocessing")
     if int(config.get("format_version", 0)) >= 3 or preprocessing is not None:
@@ -513,7 +514,8 @@ class RNNMapless(Node):
         frame = prepare_observation(occ_source, distance, theta, self.model_settings)
         occ = frame[:-2]
         self.frames.append(frame)
-        if self.model_settings.get("preprocessing") is not None and len(self.frames) < self.sequence_length:
+        if ((self.model_settings.get("preprocessing") is not None or self.model_settings.get("require_full_sequence"))
+                and len(self.frames) < self.sequence_length):
             self.stop_command()
             return
         while len(self.frames) < self.sequence_length:
