@@ -175,8 +175,8 @@ class ManifestPairs(torch.utils.data.Dataset):
             for index, entry in selected:
                 episode = by_id[entry["episode_id"]]
                 start = entry["start_index"]
-                pair = episode.samples[start:start + 2]
-                if len(pair) != 2 or any(not sample["meta"].get("tlom_consistent", True) for sample in pair):
+                pair = episode.samples[start:start + args.sequence_length]
+                if len(pair) != args.sequence_length or any(not sample["meta"].get("tlom_consistent", True) for sample in pair):
                     raise ValueError(f"Unavailable pair in {relative}, episode {episode.episode_id}, index {start}")
                 frames = [build_input_frame(sample, args.vmax, args.reverse_enable,
                           args.distance_max, args.variant, args.representation) for sample in pair]
@@ -195,9 +195,11 @@ class ManifestPairs(torch.utils.data.Dataset):
 def make_pair_manifest_loaders(args, root, seed):
     manifest_path = args.pair_manifest.expanduser().resolve()
     spec = json.loads(manifest_path.read_text())
-    if (spec.get("version") != 1 or spec.get("variant") != args.variant
-            or args.sequence_length != 2 or args.data_format != "ros2_episode"):
-        raise ValueError("The pair manifest requires ROS 2 data, its saved variant and C=2")
+    version = spec.get("version")
+    channels = 2 if version == 1 else spec.get("sequence_length")
+    if (version not in (1, 2) or spec.get("variant") != args.variant
+            or channels != args.sequence_length or args.data_format != "ros2_episode"):
+        raise ValueError("The manifest requires ROS 2 data and its saved variant and sequence length")
     if any((args.train_scenarios, args.validation_scenarios, args.test_scenarios, args.datasets_dir)):
         raise ValueError("Use the saved manifest split without additional scenario selectors")
     selected_files = {row["run_file"] for split in ("train", "validation") for row in spec[split]}
@@ -219,8 +221,12 @@ def make_pair_manifest_loaders(args, root, seed):
         raise ValueError("The manifest must have nonempty, disjoint episode partitions")
     for split in ("train", "validation"):
         ids = [(r["run_file"], r["episode_id"], r["start_index"]) for r in spec[split]]
-        if len(ids) != len(set(ids)) or any(start < 0 or start % 2 for _, _, start in ids):
-            raise ValueError("Manifest pairs must be distinct, non-overlapping original pairs")
+        last_end = {}
+        for run, episode, start in sorted(ids):
+            key = (run, episode)
+            if start < last_end.get(key, 0) or (version == 1 and start % 2):
+                raise ValueError("Manifest windows must be distinct and non-overlapping within episodes")
+            last_end[key] = start + channels
     train_set = ManifestPairs(root, spec["train"], args)
     val_set = ManifestPairs(root, spec["validation"], args)
     generator = torch.Generator().manual_seed(seed)
@@ -231,7 +237,8 @@ def make_pair_manifest_loaders(args, root, seed):
         {"dataset_format": "ros2_episode", "environment_set": spec["environment_set"],
          "train_sequences": len(train_set), "validation_sequences": len(val_set),
          "pair_manifest_sha256": hashlib.sha256(manifest_path.read_bytes()).hexdigest(),
-         "split": "fixed episode partitions and fixed original pairs"},
+         "split": "fixed episode partitions and fixed original pairs",
+         **({"require_full_sequence": True} if version == 2 else {})},
     )
 
 
@@ -696,6 +703,8 @@ def main() -> int:
         "data_root": data_root.name,
         "split": split_info,
     }
+    if split_info.get("require_full_sequence"):
+        config["require_full_sequence"] = True
     if args.pair_manifest and args.occupancy_max == 100:
         config.update(normalize_occupancy=False, occupancy_max=100.0)
     config["campaign_checkpoint_policy"] = "min_validation_and_min_absolute_gap"
