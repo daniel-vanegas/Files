@@ -138,8 +138,10 @@ def get_state_dict(checkpoint: Any) -> dict:
         state = checkpoint["state_dict"]
     else:
         state = checkpoint
-    if not isinstance(state, dict) or "conv1.weight" not in state:
-        raise ValueError("Checkpoint is not a supported mapless RNN state_dict: conv1.weight is missing")
+    if not isinstance(state, dict):
+        raise ValueError("Checkpoint state_dict is invalid")
+    if "conv1.weight" not in state and "encoder.0.weight" not in state:
+        raise ValueError("Checkpoint is not a known mapless model")
     return state
 
 
@@ -148,6 +150,15 @@ def detect_architecture(state: dict, checkpoint: Any) -> str:
         claimed = checkpoint.get("architecture")
         if claimed in ("ros1_legacy", "ros2"):
             return claimed
+    if isinstance(checkpoint, dict):
+        config = get_nested_config(checkpoint)
+        model_type = config.get("model_type")
+        if (config.get("model_family") == "temporal_v1"
+                and model_type in ("rnn", "gru", "lstm")
+                and "encoder.0.weight" in state):
+            return "temporal_" + model_type
+    if "conv1.weight" not in state:
+        raise ValueError("Temporal checkpoints require explicit model_family metadata")
     shape = tuple(state["conv1.weight"].shape)
     if len(shape) != 4:
         raise ValueError(f"Unexpected conv1.weight shape: {shape}")
@@ -204,7 +215,46 @@ def make_model(architecture: str, state: dict, config: dict, sequence_length_ove
     models_dir = scripts_dir / "TorchModels"
     if str(models_dir) not in sys.path:
         sys.path.insert(0, str(models_dir))
-    from models import RNN
+    from models import RNN, TemporalPolicy
+
+    if architecture.startswith("temporal_"):
+        model_type = architecture.removeprefix("temporal_")
+        if config.get("model_family") != "temporal_v1" or config.get("model_type") != model_type:
+            raise ValueError("Temporal checkpoint model metadata mismatch")
+        model = TemporalPolicy(
+            model_type=model_type,
+            img_h=int(config["img_h"]), img_w=int(config["img_w"]),
+            hidden_size=int(config["hidden_size"]), num_layers=int(config["num_layers"]),
+            dropout_1=float(config.get("dropout_1", 0.20)),
+            dropout_2=float(config.get("dropout_2", 0.15)),
+        )
+        model.load_state_dict(state, strict=True)
+        if config.get("temporal_mode") != "independent":
+            raise ValueError("This patch supports independent temporal checkpoints only")
+        if config.get("representation") not in ("lom", "tlom"):
+            raise ValueError("Invalid temporal observation representation")
+        variant = config.get("variant", "5x4")
+        if variant not in VARIANT_SHAPES:
+            raise ValueError("Unknown grid variant")
+        if (int(config["img_h"]), int(config["img_w"])) != VARIANT_SHAPES[variant]:
+            raise ValueError("Checkpoint grid dimensions disagree with variant")
+        settings = {
+            "sequence_length": int(config["sequence_length"]),
+            "hidden_size": int(config["hidden_size"]),
+            "num_layers": int(config["num_layers"]),
+            "normalize_occupancy": bool(config.get("normalize_occupancy", True)),
+            "occupancy_max": float(config.get("occupancy_max", 100.0)),
+            "distance_max": config.get("distance_max"),
+            "vmax": config.get("vmax", (0.5, 0.5, 1.0)),
+            "reverse_enable": bool(config.get("reverse_enable", False)),
+            "wz_normalized": True,
+            "data_format": "ros2_episode",
+            "variant": variant,
+            "representation": config["representation"],
+            "require_full_sequence": True,
+            "temporal_mode": "independent",
+        }
+        return model, settings
 
     first_rnn = state.get("rnn_cell_list.0.x2h.weight")
     inferred_hidden = int(first_rnn.shape[0]) if first_rnn is not None else 350
@@ -397,6 +447,8 @@ class RNNMapless(Node):
             raise ValueError("goal tolerance and velocity limits must be positive")
 
         self.frames = deque(maxlen=self.sequence_length)
+        self.hx = None
+        self.temporal_mode = self.model_settings.get("temporal_mode", "historical")
         self.last_goal = (0.0, 0.0)
         self.last_goal_walltime: float | None = None
         self.last_grid_walltime: float | None = None
@@ -447,6 +499,7 @@ class RNNMapless(Node):
         self.last_goal_walltime = None
         self.command = (0.0, 0.0, 0.0)
         self.frames.clear()
+        self.hx = None
         self.get_logger().info(f"Clicked goal received in frame {msg.header.frame_id!r}; waiting for /NN_goal transform")
         self.publish_reached(False)
 
@@ -456,6 +509,7 @@ class RNNMapless(Node):
             self.last_goal = (0.0, 0.0)
             self.stop_command()
             self.frames.clear()
+            self.hx = None
         else:
             self.last_goal_walltime = time.monotonic()
         self.publish_reached(not self.goal_active)
@@ -525,9 +579,16 @@ class RNNMapless(Node):
 
         try:
             with torch.inference_mode():
-                output = self.model(x)
-                if isinstance(output, tuple):
-                    output = output[0]
+                # New independent policies never carry hidden state over sliding windows.
+                hx = None if self.temporal_mode == "independent" else self.hx
+                output, new_hx = self.model(x, hx, return_state=True)
+                if self.temporal_mode != "independent" and new_hx is not None:
+                    if isinstance(new_hx, tuple):
+                        self.hx = tuple(h.detach() for h in new_hx)
+                    elif isinstance(new_hx, torch.Tensor):
+                        self.hx = new_hx.detach()
+                    else:
+                        self.hx = [h.detach() for h in new_hx]
                 y = output.detach().cpu().reshape(-1).numpy()
             if y.size < 3 or not np.all(np.isfinite(y[:3])):
                 raise ValueError(f"Invalid output from RNN: {y}")

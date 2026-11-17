@@ -584,6 +584,8 @@ class Campaign:
                    "--representation", representation, "--sequence-length", "2", "--architecture", "ros1_legacy",
                    "--hidden-size", "350", "--num-layers", "4", "--seed", str(seed), "--output-dir", str(output),
                    "--action-weights", *map(str, hp["action_weights"])]
+        if hp.get("stateful"):
+            command.append("--stateful")
         for name in ("epochs", "patience", "batch_size", "learning_rate", "weight_decay", "dropout_1", "dropout_2"):
             command.extend(("--" + name.replace("_", "-"), str(hp[name])))
         if "occupancy_max" in hp:

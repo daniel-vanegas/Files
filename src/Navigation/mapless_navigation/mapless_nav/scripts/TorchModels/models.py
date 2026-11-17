@@ -184,7 +184,7 @@ class RNN(nn.Module):
             raise RuntimeError(f"ROS 2 model expected feature size {self.input_size}, got {features.shape[-1]}")
         return features
 
-    def forward(self, x: torch.Tensor, hx=None) -> torch.Tensor:
+    def forward(self, x: torch.Tensor, hx=None, return_state: bool = False):
         if x.ndim != 4:
             raise ValueError(f"Expected input [batch, C, {self.img_h + 2}, {self.img_w}], got {tuple(x.shape)}")
         if x.shape[2:] != (self.img_h + 2, self.img_w):
@@ -213,4 +213,69 @@ class RNN(nn.Module):
         output = self.dropout_20(output)
         output = torch.relu(self.flat2(output))
         output = self.dropout_15(output)
-        return torch.tanh(self.out(output))
+        out_final = torch.tanh(self.out(output))
+        
+        if return_state:
+            return out_final, hidden
+        return out_final
+
+
+class TemporalPolicy(nn.Module):
+    """Frame-wise CNN followed by a recurrent policy; no global map or external memory.
+
+    Input: [batch, steps, grid_height + 2, grid_width]. The two trailing
+    rows hold the repeated relative target (distance and angle). They are
+    read from column zero, without altering the recorded T-LOM.
+    """
+
+    MODEL_TYPES = ("rnn", "gru", "lstm")
+
+    def __init__(self, model_type: str = "rnn", img_h: int = 100,
+                 img_w: int = 80, hidden_size: int = 350,
+                 num_layers: int = 4, dropout_1: float = 0.20,
+                 dropout_2: float = 0.15):
+        super().__init__()
+        if model_type not in self.MODEL_TYPES:
+            raise ValueError(f"Unknown temporal model: {model_type}")
+        if min(img_h, img_w, hidden_size, num_layers) < 1:
+            raise ValueError("Dimensions and recurrent depth must be positive")
+        self.model_type = model_type
+        self.img_h = int(img_h)
+        self.img_w = int(img_w)
+        self.hidden_size = int(hidden_size)
+        self.num_layers = int(num_layers)
+        self.encoder = nn.Sequential(
+            nn.Conv2d(1, 8, kernel_size=3, stride=2, padding=1), nn.ReLU(),
+            nn.Conv2d(8, 16, kernel_size=3, stride=2, padding=1), nn.ReLU(),
+            nn.Conv2d(16, 16, kernel_size=3, stride=2, padding=1), nn.ReLU(),
+            nn.AdaptiveAvgPool2d((4, 4)),
+        )
+        recurrent = {"rnn": nn.RNN, "gru": nn.GRU, "lstm": nn.LSTM}[model_type]
+        self.recurrent = recurrent(
+            input_size=16 * 4 * 4 + 2, hidden_size=hidden_size,
+            num_layers=num_layers, batch_first=True,
+            dropout=dropout_1 if num_layers > 1 else 0.0,
+        )
+        self.head = nn.Sequential(
+            nn.Linear(hidden_size, 120), nn.ReLU(),
+            nn.Dropout(dropout_1), nn.Linear(120, 80), nn.ReLU(),
+            nn.Dropout(dropout_2), nn.Linear(80, 3), nn.Tanh(),
+        )
+
+    def forward(self, x: torch.Tensor, hx=None, return_state: bool = False):
+        if x.ndim != 4 or tuple(x.shape[2:]) != (self.img_h + 2, self.img_w):
+            raise ValueError(
+                f"Expected [batch,steps,{self.img_h+2},{self.img_w}], got {tuple(x.shape)}"
+            )
+        batch, steps = x.shape[:2]
+        if steps < 1:
+            raise ValueError("At least one observation is required")
+        image = x[:, :, :self.img_h, :].reshape(batch * steps, 1, self.img_h, self.img_w)
+        features = self.encoder(image).flatten(1).reshape(batch, steps, -1)
+        target = x[:, :, -2:, 0]
+        temporal_input = torch.cat((features, target), dim=-1)
+        sequence, next_state = self.recurrent(temporal_input, hx)
+        prediction = self.head(sequence[:, -1, :])
+        if return_state:
+            return prediction, next_state
+        return prediction

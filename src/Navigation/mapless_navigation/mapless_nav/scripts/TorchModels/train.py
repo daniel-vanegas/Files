@@ -21,7 +21,7 @@ from pathlib import Path
 
 import numpy as np
 import torch
-from torch.utils.data import DataLoader, TensorDataset
+from torch.utils.data import DataLoader, TensorDataset, Subset
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 EXPERIMENT_TOOLS_DIR = SCRIPT_DIR.parent / "experiment_tools"
@@ -44,7 +44,7 @@ from dataset_utils import (
     split_scenarios,
     split_validation_a,
 )
-from models import RNN
+from models import RNN, TemporalPolicy
 
 
 def seed_everything(seed: int) -> None:
@@ -112,6 +112,16 @@ VARIANT_SHAPES = {
 
 def make_model(args):
     img_h, img_w = VARIANT_SHAPES[args.variant]
+    if args.model_type is not None:
+        return TemporalPolicy(
+            model_type=args.model_type,
+            img_h=img_h,
+            img_w=img_w,
+            hidden_size=args.hidden_size,
+            num_layers=args.num_layers,
+            dropout_1=args.dropout_1,
+            dropout_2=args.dropout_2,
+        )
     return RNN(
         channels=args.sequence_length,
         img_h=img_h,
@@ -189,6 +199,10 @@ class ManifestPairs(torch.utils.data.Dataset):
 
     def __getitem__(self, index):
         x, y = self.samples[index]
+        if getattr(self, "stateful", False):
+            meta = self.sequence_meta[index]
+            ep_key = meta.get("episode_key", f"{meta['run_file']}#{meta['episode_id']}")
+            return torch.from_numpy(x).float(), torch.from_numpy(y).float(), ep_key
         return torch.from_numpy(x).float(), torch.from_numpy(y).float()
 
 
@@ -227,13 +241,24 @@ def make_pair_manifest_loaders(args, root, seed):
             if start < last_end.get(key, 0) or (version == 1 and start % 2):
                 raise ValueError("Manifest windows must be distinct and non-overlapping within episodes")
             last_end[key] = start + channels
+    if args.stateful:
+        spec["train"] = sorted(spec["train"], key=lambda x: (x["run_file"], x["episode_id"], x["start_index"]))
+        spec["validation"] = sorted(spec["validation"], key=lambda x: (x["run_file"], x["episode_id"], x["start_index"]))
+        
     train_set = ManifestPairs(root, spec["train"], args)
     val_set = ManifestPairs(root, spec["validation"], args)
+    train_set.stateful = args.stateful
+    val_set.stateful = args.stateful
+    
     generator = torch.Generator().manual_seed(seed)
     pin = torch.cuda.is_available()
+    
+    bs = 1 if args.stateful else args.batch_size
+    shuf = not args.stateful
+    
     return (
-        DataLoader(train_set, batch_size=args.batch_size, shuffle=True, generator=generator, pin_memory=pin),
-        DataLoader(val_set, batch_size=args.batch_size, shuffle=False, pin_memory=pin),
+        DataLoader(train_set, batch_size=bs, shuffle=shuf, generator=generator, pin_memory=pin),
+        DataLoader(val_set, batch_size=bs, shuffle=False, pin_memory=pin),
         {"dataset_format": "ros2_episode", "environment_set": spec["environment_set"],
          "train_sequences": len(train_set), "validation_sequences": len(val_set),
          "pair_manifest_sha256": hashlib.sha256(manifest_path.read_bytes()).hexdigest(),
@@ -247,7 +272,8 @@ def audit_pair_actions(model, dataset, device, vmax):
     predictions = []
     model.eval()
     with torch.inference_mode():
-        for x, _ in DataLoader(dataset, batch_size=128, shuffle=False):
+        for batch in DataLoader(dataset, batch_size=128, shuffle=False):
+            x = batch[0]
             output = model(x.to(device))
             predictions.append(output.detach().cpu().numpy())
     predicted = np.concatenate(predictions, axis=0) * np.asarray(vmax)
@@ -278,10 +304,7 @@ def make_ros2_loaders(args, root: Path, seed: int):
             f"No ROS 2 scenario folders found under {root}; expected data/E01/*.npz, data/E02/*.npz, ..."
         )
     all_scenarios = sorted(scenario_files)
-    all_episodes = load_episodes(scenario_files)
-    if not all_episodes:
-        raise RuntimeError("No ROS 2 episodes found in NPZ files.")
-
+    # Do not load reserved evaluation maps into the training process.
     train_names = parse_csv_names(args.train_scenarios)
     val_names = parse_csv_names(args.validation_scenarios)
     test_names = parse_csv_names(args.test_scenarios) or []
@@ -306,6 +329,11 @@ def make_ros2_loaders(args, root: Path, seed: int):
     if overlap:
         raise ValueError(f"Train/validation/test scenario lists overlap: {sorted(overlap)}")
 
+    allowed = set(train_names) | set(val_names or [])
+    all_episodes = load_episodes({name: files for name, files in scenario_files.items()
+                                  if name in allowed})
+    if not all_episodes:
+        raise RuntimeError("No train/validation episodes found in selected NPZ files")
     train_candidates = [e for e in all_episodes if e.scenario in set(train_names)]
     if val_names:
         val_episodes = [e for e in all_episodes if e.scenario in set(val_names)]
@@ -348,11 +376,28 @@ def make_ros2_loaders(args, root: Path, seed: int):
         )
     use_pin = torch.cuda.is_available()
     generator = torch.Generator().manual_seed(seed)
+    # Paired T4/T5 tests can use an identical example budget.
+    full_train_size, full_val_size = len(train_dataset), len(val_dataset)
+    rng = np.random.default_rng(seed)
+    if args.train_budget is not None:
+        if args.train_budget > full_train_size:
+            raise ValueError(f"train-budget={args.train_budget} exceeds {full_train_size} available examples")
+        chosen = sorted(rng.choice(full_train_size, args.train_budget, replace=False).tolist())
+        train_dataset = Subset(train_dataset, chosen)
+    if args.validation_budget is not None:
+        if args.validation_budget > full_val_size:
+            raise ValueError(f"validation-budget={args.validation_budget} exceeds {full_val_size} available examples")
+        chosen = sorted(rng.choice(full_val_size, args.validation_budget, replace=False).tolist())
+        val_dataset = Subset(val_dataset, chosen)
     return (
         DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=0,
                    pin_memory=use_pin, generator=generator),
         DataLoader(val_dataset, batch_size=args.batch_size, shuffle=False, num_workers=0, pin_memory=use_pin),
         {
+            "full_train_sequences": full_train_size,
+            "full_validation_sequences": full_val_size,
+            "train_budget": args.train_budget,
+            "validation_budget": args.validation_budget,
             "dataset_format": "ros2_episode",
             "all_scenarios": all_scenarios,
             "train_scenarios": sorted(set(train_names)),
@@ -437,18 +482,38 @@ def check_inference_contract(model, config: dict, dataset, device) -> dict:
             "recurrent_input_size": 736, "scope": "offline model and preprocessing compatibility"}
 
 
-def run_epoch(model, loader, optimizer, device, legacy_batch_mean=False, action_weights=(1.0, 1.0, 1.0)):
+def run_epoch(model, loader, optimizer, device, legacy_batch_mean=False, action_weights=(1.0, 1.0, 1.0), stateful=False):
     training = optimizer is not None
     model.train(training)
     batch_losses = []
     total, count = 0.0, 0
     context = torch.enable_grad if training else torch.no_grad
+    
+    hx = None
+    last_ep = None
+    
     with context():
-        for x, y in loader:
+        for batch in loader:
+            if stateful:
+                x, y, ep_keys = batch
+            else:
+                x, y = batch
+                
             x, y = x.to(device), y.to(device)
             if training:
                 optimizer.zero_grad(set_to_none=True)
-            pred = model(x)
+                
+            if stateful:
+                current_ep = ep_keys[0]
+                if last_ep is not None and current_ep != last_ep:
+                    hx = None
+                last_ep = current_ep
+                
+                pred, hx = model(x, hx, return_state=True)
+                if hx is not None:
+                    hx = [h.detach() for h in hx]
+            else:
+                pred = model(x)
             if isinstance(pred, tuple):
                 pred = pred[0]
             if pred.ndim == 1:
@@ -533,7 +598,14 @@ def main() -> int:
     parser.add_argument("--action-weights", type=float, nargs=3, default=(1.0, 1.0, 1.0),
                         metavar=("VX", "VY", "WZ"), help="Training loss weights; validation keeps ordinary MSE")
     parser.add_argument("--data-format", choices=("auto", "ros1_legacy", "ros2_episode"), default="auto")
-    parser.add_argument("--architecture", choices=("ros1_legacy", "ros2"), default="ros1_legacy", help="Model layout; defaults to the historical ROS 1 layout for both data formats.")
+    parser.add_argument("--architecture", choices=("ros1_legacy", "ros2"), default="ros2",
+                        help="Old checkpoint layout; new tests use --model-type and ignore this layout.")
+    parser.add_argument("--model-type", choices=TemporalPolicy.MODEL_TYPES, default=None,
+                        help="Train a new frame-wise CNN+RNN/GRU/LSTM (no ros1_legacy).")
+    parser.add_argument("--train-budget", type=int, default=None,
+                        help="Optional exact example budget for independent ROS2 training (pilot only).")
+    parser.add_argument("--validation-budget", type=int, default=None,
+                        help="Optional exact validation example budget for ROS2 pilot.")
     parser.add_argument("--train-split", type=float, default=None, help="Scenario split fraction for ROS2; sample split fraction for legacy ROS1.")
     parser.add_argument("--validation-a-split", type=float, default=0.25)
     parser.add_argument("--train-scenarios", default=None, help="Comma-separated ROS2 scenario IDs used for training, e.g. E01,E02,E03.")
@@ -555,6 +627,7 @@ def main() -> int:
                         help="Occupied cell value for training with --pair-manifest.")
     parser.add_argument("--batch-size", type=int, default=None)
     parser.add_argument("--epochs", type=int, default=None)
+    parser.add_argument("--stateful", action="store_true", help="Keep recurrent state between batches.")
     parser.add_argument("--patience", type=int, default=None)
     parser.add_argument("--learning-rate", "--lr", dest="learning_rate", type=float, default=None)
     parser.add_argument("--weight-decay", type=float, default=0.0)
@@ -609,6 +682,19 @@ def main() -> int:
 
     data_format = "ros2_episode" if args.datasets_dir else detect_data_format(data_root) if args.data_format == "auto" else args.data_format
     resolve_defaults(args, data_format)
+    if args.model_type is not None:
+        if args.architecture != "ros2" or data_format != "ros2_episode":
+            parser.error("New temporal models require --architecture ros2 and --data-format ros2_episode")
+        if args.datasets_dir:
+            parser.error("--datasets-dir reference manifests are only for historical RNN; use scenario selectors or a pair manifest")
+        if args.stateful:
+            parser.error("Stateful training is not enabled in this first patch. Run independent-pair pilots first.")
+    if args.stateful and not args.pair_manifest:
+        parser.error("--stateful currently requires --pair-manifest with ordered episode entries")
+    if (args.train_budget is not None or args.validation_budget is not None) and (args.pair_manifest or args.datasets_dir):
+        parser.error("--train-budget/--validation-budget are currently supported only with ROS2 scenario selectors")
+    if any(v is not None and v < 1 for v in (args.train_budget, args.validation_budget)):
+        parser.error("Example budgets must be positive")
     if args.sequence_length < 1 or args.batch_size < 1 or args.epochs < 1 or args.patience < 1:
         parser.error("sequence length, batch size, epochs and patience must be positive")
     if args.hidden_size < 1 or args.num_layers < 1:
@@ -672,7 +758,10 @@ def main() -> int:
     stale_epochs = 0
     config = {
         "format_version": 2,
-        "architecture": args.architecture,
+        "architecture": "temporal_" + args.model_type if args.model_type is not None else args.architecture,
+        "model_family": "temporal_v1" if args.model_type is not None else "historical",
+        "model_type": args.model_type,
+        "temporal_mode": "independent" if args.model_type is not None else ("stateful" if args.stateful else "independent"),
         "data_format": data_format,
         "variant": args.variant,
         "representation": args.representation,
@@ -703,7 +792,7 @@ def main() -> int:
         "data_root": data_root.name,
         "split": split_info,
     }
-    if split_info.get("require_full_sequence"):
+    if split_info.get("require_full_sequence") or args.model_type is not None:
         config["require_full_sequence"] = True
     if args.pair_manifest and args.occupancy_max == 100:
         config.update(normalize_occupancy=False, occupancy_max=100.0)
@@ -719,7 +808,8 @@ def main() -> int:
                       source_sha256={p.name: file_hash(p) for p in [Path(__file__), SCRIPT_DIR / "models.py",
                                     SCRIPT_DIR / "experiment_control.py", SCRIPT_DIR.parent / "RNN_mapless.py"]})
     (out_dir / "config.json").write_text(json.dumps(config, indent=2, ensure_ascii=False))
-    print(f"Data format: {data_format} | architecture: {args.architecture}")
+    print(f"Data format: {data_format} | architecture: {config['architecture']}")
+    print(f"Trainable parameters: {sum(p.numel() for p in model.parameters() if p.requires_grad):,}")
     print(f"Dataset: {data_root}")
     print(f"Train batches: {len(train_loader)} | validation batches: {len(val_loader)}")
     print(f"Device: {device} | output: {out_dir}")
@@ -737,8 +827,8 @@ def main() -> int:
     try:
         for epoch in range(1, args.epochs + 1):
             epoch_start = time.monotonic()
-            train_loss = run_epoch(model, train_loader, optimizer, device, legacy_batch_mean=(data_format == "ros1_legacy" or bool(args.datasets_dir)), action_weights=args.action_weights)
-            val_loss = run_epoch(model, val_loader, None, device, legacy_batch_mean=(data_format == "ros1_legacy" or bool(args.datasets_dir)))
+            train_loss = run_epoch(model, train_loader, optimizer, device, legacy_batch_mean=(data_format == "ros1_legacy" or bool(args.datasets_dir)), action_weights=args.action_weights, stateful=args.stateful)
+            val_loss = run_epoch(model, val_loader, None, device, legacy_batch_mean=(data_format == "ros1_legacy" or bool(args.datasets_dir)), stateful=args.stateful)
             scheduler.step(val_loss)
             row = {
                 "epoch": epoch,
@@ -760,7 +850,7 @@ def main() -> int:
                     "epoch": epoch, "train_loss": train_loss,
                     "validation_loss": val_loss, "absolute_generalization_gap": gap,
                     "selection_criterion": "minimum_absolute_train_validation_gap",
-                    "architecture": args.architecture, "data_format": data_format,
+                    "architecture": config["architecture"], "data_format": data_format,
                     "config": config}, out_dir / "best_gap.pth")
             (out_dir / "history.json").write_text(json.dumps(history, indent=2))
             if np.isfinite(val_loss) and val_loss < best_val:
@@ -772,7 +862,7 @@ def main() -> int:
                     "epoch": epoch,
                     "train_loss": train_loss,
                     "validation_loss": val_loss,
-                    "architecture": args.architecture,
+                    "architecture": config["architecture"],
                     "data_format": data_format,
                     "config": config,
                 }, checkpoint_path)

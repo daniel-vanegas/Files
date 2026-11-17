@@ -408,7 +408,13 @@ def wins(candidate, incumbent):
 
 
 def candidates_for(candidate, parameter, values):
-    return [{**candidate, "train": {**candidate["train"], parameter: value}} for value in values]
+    result = []
+    for value in values:
+        new_train = {**candidate["train"], parameter: value}
+        if parameter == "stateful" and value:
+            new_train["batch_size"] = 1
+        result.append({**candidate, "train": new_train})
+    return result
 
 
 def run_round(branch, state, path, name, environment, candidate, proposals, scenarios, representation="lom"):
@@ -457,7 +463,8 @@ def stage3(original, root, state, path):
         lr = baseline["train"]["learning_rate"]
         for parameter, values in (("batch_size", (2, 6)), ("learning_rate", (lr/2, lr*2)),
                                   ("num_layers", (2, 3)), ("hidden_size", (256,)),
-                                  ("dropout_1", (0.10,)), ("dropout_2", (0.05,))):
+                                  ("dropout_1", (0.10,)), ("dropout_2", (0.05,)),
+                                  ("stateful", (True,))):
             current = winner["candidate"]
             proposals = candidates_for(current, parameter, values)
             winner = run_round(branch, state, path, f"{name}:{parameter}", env, current, proposals, development, rep)
