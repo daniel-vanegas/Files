@@ -56,7 +56,7 @@ Autonomous mobile robots must operate effectively in complex, unstructured, and 
 
 In this work, we present a comparison of CNN and RNN architectures for learning navigation behaviors against two conventional approaches—APF and FSM—in both known and unknown environments. Section~\ref{sec:rel_work} presents related work on mapless navigation. Section~\ref{sec:OurSystem} presents the proposed mapless navigation framework, including the Local Obstacle Matrix (LOM) and the deep neural network architectures (CNN and RNN) that generate velocity commands from local perception and target information. Subsections~\ref{subsec:cnn_arq} and~\ref{subsec:rnn_arq} describe the proposed architectures in detail.
 
-\textcolor{red}{A critical challenge in mapless navigation is characterizing how differences between environments relate to the generalization of a trained model. To investigate this issue, we introduce an environment similarity metric based on the Wasserstein distance to quantify structural differences between environments. Section~\ref{sec:metric_definition} formalizes the metric and evaluates its numerical stability and sensitivity to physical scale. Its relationship with navigation performance must be assessed using experimental outcomes.}
+\textcolor{red}{A critical challenge in mapless navigation is characterizing how differences between environments relate to the generalization of a trained model. To investigate this issue, we introduce an environment similarity metric based on the Wasserstein distance to quantify structural differences between environments. Section~\ref{sec:metric_definition} formalizes the metric and evaluates its numerical stability and sensitivity to physical scale. We use the metric to compare the geometric coverage of training sets and to guide scenario selection in the extended RNN evaluation (Subsection~\ref{subsec:ros2_setup}). Predicting navigation success from environmental distance remains an open question.}
 
 \textcolor{red}{By mapless, we mean that the robot does not maintain or require a global geometric map (occupancy grid, costmap, or metric representation of the environment) for path planning. The robot relies solely on local perception (the LOM, which is a local occupancy representation of the immediate surroundings) and a target vector specifying the relative position of the goal. This is in contrast to map-based systems that require a pre-built global map and localization.}
 
@@ -82,7 +82,7 @@ Each approach offers distinct advantages, including robust generalization across
 \caption{Local environment signals: Local Obstacle Matrix (bottom left) and relative position vector of the target (bottom right).}\label{fig:input_signal}
 \end{figure}
 
-We aim to build a navigation system where the robot requires only information about free and occupied space in its immediate surroundings. The Local Obstacle Matrix (LOM) is a small occupancy grid obtained from the LiDAR sensor and a 2D projection of a point cloud, which are used to generate a representation of the perceived obstacles (see Subsection~\ref{subsec:inputs}); the LOM covers a square area in front of the robot. The target vector $(d, \theta)$ represents the relative position of the goal with respect to the robot's frame. These variables are the distance and angle in polar coordinates of the goal point. In Figure~\ref{fig:input_signal}, the target vector and the LOM generation process are shown. Both serve as inputs to the proposed neural network architectures, and the outputs consist of velocity commands in the form $(v_x, v_y, \omega)$, where $v_x$ and $v_y$ are the linear velocities along the robot's $x$ and $y$ axes, respectively, and $\omega$ is the angular velocity around the robot's vertical axis. In Figure~\ref{fig:gen_sch} a general scheme of the navigation behavior system is presented.
+We aim to build a navigation system where the robot requires only information about free and occupied space in its immediate surroundings. The Local Obstacle Matrix (LOM) is a small occupancy grid obtained from the LiDAR sensor and a 2D projection of a point cloud, which are used to generate a representation of the perceived obstacles (see Subsection~\ref{subsec:inputs}); \textcolor{red}{the LOM covers a bounded region around the robot, with its extent specified for each experimental stage.} The target vector $(d, \theta)$ represents the relative position of the goal with respect to the robot's frame. These variables are the distance and angle in polar coordinates of the goal point. In Figure~\ref{fig:input_signal}, the target vector and the LOM generation process are shown. Both serve as inputs to the proposed neural network architectures, and the outputs consist of velocity commands in the form $(v_x, v_y, \omega)$, where $v_x$ and $v_y$ are the linear velocities along the robot's $x$ and $y$ axes, respectively, and $\omega$ is the angular velocity around the robot's vertical axis. In Figure~\ref{fig:gen_sch} a general scheme of the navigation behavior system is presented.
 
 \begin{figure}[htbp]
     \centering
@@ -93,14 +93,10 @@ We aim to build a navigation system where the robot requires only information ab
 
 \subsection{The Binary Local Obstacle Matrix (LOM)} \label{subsec:inputs}
 
-The binary LOM can be generated using various depth sensors or estimators, such as RGB-D cameras, ultrasonic sensors, LiDAR, 3D point clouds, or neural network–based depth estimators. In this work, we use two complementary sensors: an RGB-D camera mounted on the robot's head provides point cloud data, while a 2D LiDAR sensor located on the robot's base provides laser scans. We fuse both sources to build a richer representation of the surroundings. The LOM is an $N \times N$ matrix at ground level, where each cell encodes the presence of an obstacle. For each cell, we project the corresponding 3D points from the point cloud and also integrate the LiDAR readings that fall into that cell. The final value of a cell is set to 100 if either sensor detects an obstacle, and 0 otherwise.
+The binary LOM can be generated using various depth sensors or estimators, such as RGB-D cameras, ultrasonic sensors, LiDAR, 3D point clouds, or neural network–based depth estimators. In this work, we use two complementary sensors: an RGB-D camera mounted on the robot's head provides point cloud data, while a 2D LiDAR sensor located on the robot's base provides laser scans. We fuse both sources to build a richer representation of the surroundings. \textcolor{red}{The LOM is a ground-level grid in which each cell encodes the presence of an obstacle.} For each cell, we project the corresponding 3D points from the point cloud and also integrate the LiDAR readings that fall into that cell. \textcolor{red}{A cell is marked occupied if either sensor detects an obstacle. The original ROS~1 configuration used values of 100 for occupied cells and 0 otherwise. The final ROS~2 configuration normalizes this binary occupancy to 0/1 before the network processes it, in both training and inference.}
 
-% LOM encoding comparison.
-\textcolor{red}{The LOM is treated as a single-channel binary image. Its two values represent free and occupied space; changing the occupied-cell value modifies the numerical input scale without changing the obstacle geometry. To select the occupied-cell value, we compared the 0/1, 0/100, and 0/255 encodings using RNN models trained with different random seeds and the same dataset and training hyperparameters. Among the selected models, 0/100 achieved the lowest average validation mean squared error (MSE), 0.075609, compared with 0.084249 for 0/1 and 0.085079 for 0/255.}
-
-\textcolor{red}{To assess the use of obstacle information, we permuted complete LOM sequences between validation samples while keeping the target vectors, reference velocity commands, and model weights fixed. The MSE increased by 74.29\% with 0/100, compared with 4.80\% with 0/1 and 59.96\% with 0/255. This sensitivity indicates that the 0/100 models use obstacle information together with the target vector to predict velocity commands.}
-
-\textcolor{red}{In navigation tests for this encoding comparison, with obstacles concentrated on the left or right, the goal was reached without collisions in 70\% of the cases with 0/100, compared with 10\% with 0/1 and 50\% with 0/255. These results support the selection of 0/100 for the evaluated configuration.}
+% Occupancy semantics and stage-dependent input encoding.
+\textcolor{red}{The LOM is treated as a single-channel binary image. For a binary occupancy mask $B_t$, an encoding with occupied value $s$ is $G_t^{(s)}=sB_t$. Changing $s$ changes the numerical input scale while preserving the occupied cells. The original $4\times4$~m reference used 0/100. The final instantaneous LOM covers $5\times4$~m and uses 0/1 at the network input. The reference-configuration diagnostic in Subsection~\ref{subsec:encoding_reference_results} and the later matched comparisons in Stage~6 (Subsection~\ref{subsec:stage6_results}) explain the evidence for these choices.}
 
 \subsection{Proposed CNN Architecture} \label{subsec:cnn_arq}
 
@@ -152,9 +148,9 @@ Unlike the CNN, the RNN model operates with $N = 80$ and $C = 2$, producing an i
 
 \section{Training of Neural Network Architectures}\label{sec:training}
 
-Our proposed neural network models—the CNN and RNN (see Subsections~\ref{subsec:cnn_arq} and~\ref{subsec:rnn_arq})—employ supervised learning and therefore require labeled data. Because the network outputs are continuous velocity commands, the learning task is formulated as a regression problem. We train the models by minimizing the mean squared error (MSE) between the predicted velocities and the ground-truth commands recorded during data collection. The hyperparameters used for training both models are summarized in Table~\ref{tab:hyperparams}.
+Our proposed neural network models—the CNN and RNN (see Subsections~\ref{subsec:cnn_arq} and~\ref{subsec:rnn_arq})—employ supervised learning and therefore require labeled data. Because the network outputs are continuous velocity commands, the learning task is formulated as a regression problem. We train the models by minimizing the mean squared error (MSE) between the predicted velocities and the ground-truth commands recorded during data collection. \textcolor{red}{The hyperparameters for the original ROS~1 comparison (Stage~1) are summarized in Table~\ref{tab:hyperparams}. Subsequent RNN settings are specified by stage in Subsection~\ref{subsec:ros2_setup}, with the final configuration in Table~\ref{tab:final_rnn_configuration}.}
 
-For the experiments, six different environments were generated using a custom generator developed by us (see Subsection~\ref{subsec:random_map}). Three of these environments were used for data collection and are therefore considered "known" environments, while the remaining three are treated as "unknown" environments. Data collection was carried out using a script that validates and stores the labels while the robot navigates through the environment toward randomly selected target objectives inside the navigable area, as described in Subsection~\ref{subsec:Dataset}. Navigation can be executed either manually by a human operator (without requiring a map) or autonomously through a navigation system. In our case, to avoid introducing bias, we employed our PNS (see Subsection~\ref{subsec:pumas_nav}). 
+\textcolor{red}{For Stage~1, six different environments were generated} using a custom generator developed by us (see Subsection~\ref{subsec:random_map}). Three of these environments were used for data collection and are therefore considered "known" environments, while the remaining three are treated as "unknown" environments. Data collection was carried out using a script that validates and stores the labels while the robot navigates through the environment toward randomly selected target objectives inside the navigable area, as described in Subsection~\ref{subsec:Dataset}. Navigation can be executed either manually by a human operator (without requiring a map) or autonomously through a navigation system. In our case, to avoid introducing bias, we employed our PNS (see Subsection~\ref{subsec:pumas_nav}). 
 
 \begin{table}[htbp]
 \centering
@@ -176,7 +172,7 @@ RNN layers & — & 4 \\
 \hline
 \end{tabular}
 \vspace{2.5pt}
-\caption{Hyperparameters for CNN and RNN training.}
+\caption{\textcolor{red}{Hyperparameters for CNN and RNN training in Stage~1 (ROS~1).}}
 \label{tab:hyperparams}
 \end{table}
 
@@ -192,7 +188,7 @@ The PNS \citep{contreras2025b} is the standard map-based navigation system in ou
 % Original experimental configuration.
 \textcolor{red}{For the six environments used in the original navigation experiments (E1--E6), map dimensions ranged from $5$ to $10$ meters along both axes. The generator was configured with $SC=2$, and the selected layouts contained two rooms. Furniture was added separately, with $10$--$25$ items per room. These counts describe the selected scenarios rather than fixed outputs of the subdivision parameter.}
 
-\textcolor{red}{We used the same generator to produce 30 environments (E1–E30) with different layouts, physical sizes, and values of the subdivision parameter $SC$ (SC2--SC30) for the analysis of environmental similarity. The navigation experiments reported in this paper were conducted in six environments (E1–E6), reflecting the scope of the original evaluation. The 30-environment analysis characterizes geometric differences across a broader set of maps; it does not, by itself, establish a relationship between the similarity metric and navigation performance.}
+\textcolor{red}{We used the same generator to create 30 environments (E01--E30) with different layouts, physical sizes, and subdivision parameters (SC2--SC30). The original navigation comparison used E1--E6. The broader collection supports the geometric similarity analysis and provides training and evaluation environments for the extended RNN study in Subsection~\ref{subsec:ros2_setup}.}
 
 % Room subdivision.
 \textcolor{red}{At each subdivision step, the algorithm selects either a random face or the largest available face and applies a cut with a random edge-slide offset between $-0.8$ and $0.8$. This introduces additional variation in room shapes and proportions.}
@@ -206,6 +202,8 @@ The resulting geometric maps, shown in Figure~\ref{fig:maps}, illustrate the occ
 \end{figure}
 
 \subsection{Dataset Collection}\label{subsec:Dataset}
+
+\textcolor{red}{This subsection describes the original ROS~1 dataset used in Stage~1. Stage~2 introduces the expanded ROS~2 dataset.}
 
 The curriculum learning approach \citep{DBLP:journals/corr/abs-2101-10382} improves model efficiency during training by gradually increasing task difficulty. Following this principle, we initially trained the model in a single empty room to allow it to learn basic movements (turning left and right, moving forward and backward) for navigating toward a given target. Subsequently, data collection was expanded to include samples of the robot moving between rooms interconnected by a door. Unfortunately, the resulting dataset presented challenges, leading to unstable behaviors. In many cases, the trajectories followed by the trained model formed spiral paths instead of moving directly toward the target. We concluded that in empty environments, the predominantly zero values in the LOM prevented the model from effectively associating appropriate control commands with similar inputs.
 
@@ -224,7 +222,7 @@ $\mathbf{tgt}^{(i,c)} = (d^{(i,c)}, \theta^{(i,c)}) \in \mathbb{R}^{2}$: sequenc
 $\mathbf{v}^{(i,c)} = (v_x^{(i,c)}, v_y^{(i,c)}, \omega^{(i,c)}) \in \mathbb{R}^{3}$: sequence of $C$ command vectors for sample $i$, where $v_x$ and $v_y$ are the linear velocities along the robot's $x$ and $y$ axes, respectively, and $\omega$ is the angular velocity around the robot's vertical axis.\\
 $N$: LOM pixel size.
 
-We tested multiple hyperparameter combinations and selected those that stabilized training and produced consistent results. For our CNN, we selected a batch size of 8, meaning that each training batch consists of 8 samples, with each sample corresponding to a 4-channel ($C = 4$) LOM array of consecutive frames. For the RNN model, we use a batch size of 3, with each sample corresponding to a 2-channel ($C= 2$) LOM array. The LOM is a binary N$\times$N pixel matrix encoding a squared area in front of the robot. \textcolor{red}{A $4\times4$ m region works well in different scenarios.} Using a larger area may reduce training stability, while a smaller area reduces the capability to detect obstacles and thus increases the collision risk. The size of N in pixels is 80 and is defined by the resolution of the local occupancy projection calculated as follows: \textcolor{red}{$N=m\,\mathrm{Res}$, where $m$ is the side length in meters and
+We tested multiple hyperparameter combinations and selected those that stabilized training and produced consistent results. For our CNN, we selected a batch size of 8, meaning that each training batch consists of 8 samples, with each sample corresponding to a 4-channel ($C = 4$) LOM array of consecutive frames. For the RNN model, we use a batch size of 3, with each sample corresponding to a 2-channel ($C= 2$) LOM array. The LOM is a binary N$\times$N pixel matrix encoding a squared area in front of the robot. \textcolor{red}{Stage~1 used a $4\times4$~m region in front of the robot. Stages~4--6 subsequently examined larger and rectangular footprints together with their input encodings.} The size of N in pixels is 80 and is defined by the resolution of the local occupancy projection calculated as follows: \textcolor{red}{$N=m\,\mathrm{Res}$, where $m$ is the side length in meters and
 $\mathrm{Res}$ is the resolution expressed in cells per meter.
 With $m=4$ m and $\mathrm{Res}=20$ cells/m, $N=80$.}
 
@@ -332,6 +330,36 @@ E05 vs. E10 & Diff. scale, diff. layout & \(0.1733 \pm 0.0006\) & \(0.1762 \pm 0
 
 \section{Experimental Setup}\label{sec:Experiments}
 
+\textcolor{red}{We organized the experiments into the eight stages in Table~\ref{tab:experimental_stages}. Stage~1 establishes the original CNN--RNN comparison in ROS~1 using E1--E6. The complementary encoding diagnostic is presented with this reference configuration. Stages~2--8 follow the development of the RNN in ROS~2, from data selection and optimization to input configuration, compact training, and evaluation on new routes. Each stage identifies the settings explored, the observed results, and the choice carried forward.}
+
+\begin{table}[htbp]
+\centering
+\caption{\textcolor{red}{Experimental stages and their purpose.}}
+\label{tab:experimental_stages}
+\color{red}
+\small
+\begin{tabular}{@{}p{0.07\linewidth}p{0.36\linewidth}p{0.50\linewidth}@{}}
+\toprule
+Stage & Experiment & Purpose \\
+\midrule
+1 & Original ROS~1 reference & Train on E1--E3, evaluate in E1--E6, and characterize the reference input encoding. \\
+2 & ROS~2 data and sampling & Expand to 30 environments and examine training sets and route mixtures. \\
+3 & Sample budget and learning rate & Compare 2,500--20,000 pairs and three learning rates. \\
+4 & Spatial extent and temporal input & Compare three footprints using instantaneous LOM and T-LOM at 0/1. \\
+5 & Sampling with the $5\times4$~m input & Compare T1/T2 and route mixtures at 10,000 pairs. \\
+6 & Encoding and representation & Re-test 0/1 against 0/100 in the selected $5\times4$~m configurations. \\
+7 & Compact training configuration & Reduce the sample budget, select T3, and tune the RNN. \\
+8 & New paired routes & Compare the selected Stage~6 and Stage~7 checkpoints on 50 shared routes. \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{\texorpdfstring{\textcolor{red}{Stage 1. Original ROS 1 Reference}}{Stage 1. Original ROS 1 Reference}}\label{subsec:stage1_setup}
+
+\textcolor{red}{Stage~1 used the CNN and RNN trained on demonstrations from E1--E3 in ROS~1, with the $4\times4$~m instantaneous LOM encoded as 0/100. The six-environment comparison and its conventional baselines are described below.}
+
+
+
 Once our neural network models were trained, the robot was placed in environments E1 through E6. Regardless of its initial position (no localization is required), a target point was randomly selected for navigation. The trained model waits for $C$ consecutive frames as input to perform inference, stacking the LOM and target vector as depicted in Figure~\ref{fig:gen_sch}. The output of the trained model consists of the velocity commands $(v_x, v_y, \omega)$ that our robot must command to its actuators. Often, the robot demonstrated the ability to evade dynamic obstacles.\textcolor{red}{The navigation policy used this relative target vector and the LOM sequence, without requiring localization within a global geometric map.}
 
 Table~\ref{tab:map_tasks} summarizes the use of environments for training (tuning, configuring) and testing across maps E1 to E6.
@@ -368,11 +396,11 @@ FSM Testing                &  x  &  x  &  x  &  x  &  x  &  x  \\
 \label{tab:map_tasks}
 \end{table}
 
-\subsection{Test of the Pumas Navigation System (PNS) in Known and Unknown Environments}\label{subsec:pns_test}
+\subsubsection{Test of the Pumas Navigation System (PNS) in Known and Unknown Environments}\label{subsec:pns_test}
 
 Traditional map-based navigation systems have been shown to outperform many mapless navigation techniques in previously known environments, where an updated map is provided. However, they lack the ability to generalize navigation when the environment suffers significant changes. This limitation is proven in the following experiment.
 
-We start with environment E1 to navigate with our map-based PNS, using the corresponding map E1; this is the reference case, where the map matches the environment. As expected, the navigation performance was very high. In a second stage, we deployed our robot in environment E4, but using the map from E1 instead; this is the mismatched-map case, where the environment is unknown to the PNS and the available map is outdated. Considering some similarity in space between E1 and E4, and even though the PNS employs potential fields to obstacle avoidance, navigation performance drops drastically, and was unable to successfully navigate to a new target provided. The experiment highlights the need to remap every new unseen environment. The results are summarized in Table \ref{tab:nav_system}.
+We start with environment E1 to navigate with our map-based PNS, using the corresponding map E1; this is the reference case, where the map matches the environment. As expected, the navigation performance was very high. \textcolor{red}{In a second condition,} we deployed our robot in environment E4, but using the map from E1 instead; this is the mismatched-map case, where the environment is unknown to the PNS and the available map is outdated. Considering some similarity in space between E1 and E4, and even though the PNS employs potential fields to obstacle avoidance, navigation performance drops drastically, and was unable to successfully navigate to a new target provided. The experiment highlights the need to remap every new unseen environment. The results are summarized in Table \ref{tab:nav_system}.
 
 \begin{table}[htbp]
 \centering
@@ -385,9 +413,9 @@ We start with environment E1 to navigate with our map-based PNS, using the corre
 \caption{PNS tested in the known environment E1 with the correct map (reference case), and in the unknown environment E4 with the outdated map from E1 (mismatched-map case).}\label{tab:nav_system}
 \end{table}
 
-\subsection{Mapless Navigation Techniques Comparison}
+\subsubsection{Mapless Navigation Techniques Comparison}
 
-All environments generated (see Subsection~\ref{subsec:random_map}) were used to test the navigation performance of each methodology, except for the map-based navigation system. \textcolor{red}{The PNS was evaluated in two conditions: E1 with the correct map (reference case) and E4 with the outdated map from E1 (mismatched-map case), as described in Subsection~\ref{subsec:pns_test}.} For the neural network models, E1, E2, and E3 were used to collect the dataset; thus, they are considered previously known environments, while E4, E5, and E6 are considered unknown. The finite state machine (FSM) was configured in advance in environment E4 to test its performance, whereas the parameters of the potential fields (PF) were tuned in E2. Consequently, E4 and E2 are considered previously known environments for the FSM and PF baselines, respectively.
+\textcolor{red}{The six Stage~1 environments (see Subsection~\ref{subsec:random_map}) were used to test the CNN, RNN, FSM, and PF controllers.} \textcolor{red}{The PNS was evaluated in two conditions: E1 with the correct map (reference case) and E4 with the outdated map from E1 (mismatched-map case), as described in Subsection~\ref{subsec:pns_test}.} For the neural network models, E1, E2, and E3 were used to collect the dataset; thus, they are considered previously known environments, while E4, E5, and E6 are considered unknown. The finite state machine (FSM) was configured in advance in environment E4 to test its performance, whereas the parameters of the potential fields (PF) were tuned in E2. Consequently, E4 and E2 are considered previously known environments for the FSM and PF baselines, respectively.
 
 \begin{figure}[htbp]
 \centering
@@ -533,7 +561,68 @@ Each test was executed by a script that generates 100 random navigation goals, e
 \label{fig:res2_col-stuck}
 \end{figure*}
 
+\begingroup
+\color{red}
+\subsubsection{Input-Encoding Diagnostic for the Stage 1 Reference}\label{subsec:encoding_reference_setup}
+
+A complementary diagnostic examined the scale of the occupied-cell value in the reference configuration with $80\times80$ grids and $C=2$. For each encoding, 0/1, 0/100, and 0/255, we performed 100 trainings with different seeds while holding the dataset and training hyperparameters fixed across encodings. We selected the five models with the lowest validation MSE in each group. To measure sensitivity to obstacle input, we permuted complete two-frame LOM sequences among 388 validation examples, retaining the target vectors, reference velocities, and model weights. Ten permutations were evaluated per selected model. We present this diagnostic alongside Stage~1 because it characterizes the original input configuration. Stage~6 revisits the encoding with the selected ROS~2 datasets and a larger footprint.
+
+\endgroup
+
+\begingroup
+\color{red}
+\subsection{Stages 2--8. RNN Development and Evaluation}\label{subsec:ros2_setup}
+
+\subsubsection{Stage 2. ROS 2 Data and Route Sampling}\label{subsec:stage2_setup}
+
+The ROS~2 corpus from E01--E30 contained 5,061 episodes and 212,646 observations. Each observation comprised a local obstacle grid, the target distance and bearing relative to the robot, and the demonstrated velocity command. Episodes were assigned to training or validation before forming consecutive, non-overlapping observation pairs. These pairs were shuffled across episodes for training. The notation E01--E06 identifies the six environments previously denoted E1--E6.
+
+Training-set selection used three initial configurations. T0 retained E01--E03 for continuity with Stage~1. T1 added E12, E17, E22, E27, and E30 to represent additional subdivision families, using within-family Wasserstein distances and the availability of demonstrations. T2 comprised E01, E02, E03, E07, E09, E11, E12, E13, E14, E15, E17, E18, E21, E22, E25, E26, E28, and E30. The geometric distances are dimensionless, with lower values indicating more similar environments and higher values indicating more dissimilar environments. Over the common excluded set E04, E05, E06, E08, E10, E16, E19, E20, E23, E24, and E29, the mean distance to the nearest training environment was 0.0733 for T0, 0.0581 for T1, and 0.0491 for T2.
+
+Demonstration episodes were classified as straight, semi-complex, complex, or very complex using trajectory efficiency (start-to-goal distance divided by path length) and heading changes greater than $45^\circ$. Each observation pair inherited its episode's class. Using T1, Stage~2 compared natural sampling, equal class quotas, and mixtures that increased the proportion of selected route classes. Throughout the following stages, four-part sampling percentages refer to these classes in that order. These labels controlled data selection. The network inputs remained the local grid and relative target.
+
+\subsubsection{Stage 3. Training-Set Size and Learning Rate}\label{subsec:stage3_setup}
+
+Following the sampling comparison in Stage~2, Stage~3 used T2 and a 20/20/30/30 class mixture. Five nested sample budgets, 2,500, 5,000, 10,000, 15,000, and 20,000 pairs, were trained with ten recorded random seeds per budget and an initial learning rate of 0.0006. The selected 20,000-pair budget was then re-trained with learning rates of 0.0003 and 0.00015, reusing its datasets and seeds. Input preprocessing was fixed within these comparisons.
+% Editorial verification: the Stage 2 and Stage 3 reports do not specify the effective occupancy scale at the network input. Confirm it from the saved training configurations before publication.
+ All models used $C=2$, four recurrent layers, 350 hidden units, a batch size of three, Adam, a maximum of 20 epochs, and patience of five epochs.
+
+Each training retained the checkpoints with minimum validation MSE and minimum absolute train--validation MSE gap. The 70 trainings produced 140 checkpoints, evaluated in E08, E16, and E20. All checkpoints shared the same 24 initial evaluation routes. Six selected checkpoints were evaluated on a further common set of 24 routes, giving 3,504 runs in total.
+
+Webots Supervisor supplied goal-distance and contact measurements for evaluation. The strict arrival tolerance was 0.25~m, with a 60~s simulated-time limit. After examining the recorded final distances, we additionally classified an acceptable arrival as a final distance of at most 0.35~m without collision. This criterion was applied retrospectively to the Stage~3 records and carried forward into Stages~4--8. Strict and acceptable arrivals are identified explicitly in the reported results.
+
+\subsubsection{Stage 4. Spatial Extent and Temporal Input}\label{subsec:stage4_setup}
+
+Stage~4 used the learning rate of 0.00015 identified in Stage~3 and tested normalized 0/1 occupancy as a candidate input configuration. The experiment crossed T1/T2, four shared seeds, three spatial footprints, and two representations, producing 48 trainings. The footprints were $4\times4$~m ($80\times80$ cells), $5\times4$~m ($100\times80$ cells), and $7\times6$~m ($140\times120$ cells), all at 0.05~m per cell. The $5\times4$~m grid extended from $-1$ to $4$~m longitudinally and from $-2$ to $2$~m laterally. Input-dependent layers were adapted to the grid dimensions, so this comparison included the parameter changes required by each footprint.
+
+The instantaneous LOM fused current RGB-D and LiDAR observations. T-LOM also projected recent occupied cells into the current robot frame using odometry and retained repeatedly supported occupancy. For the network, current and retained occupancy were binarized before normalization to 0/1. For each training-set/seed combination, the six input variants used identical pairs, partitions, labels, and batch order. Approximately 25\% of eligible episodes were held out for validation. Every checkpoint selected by minimum validation MSE executed the same four routes in E08, producing 192 runs. This stage compared footprints and representations at a fixed input scale. The direct re-test of 0/1 against 0/100 followed in Stage~6.
+
+\subsubsection{Stage 5. Sampling with the Selected Spatial Extent}\label{subsec:stage5_setup}
+
+Stage~5 carried forward the $5\times4$~m footprint and 0/1 encoding. At a common budget of 10,000 pairs, we compared T1 and T2, instantaneous LOM and T-LOM, four shared seeds, and two sampling strategies. Natural sampling preserved the available class proportions, approximately 20/25/25/30 in these datasets. The alternative allocated 10/15/35/40. Pairs were selected without replacement, with left/right lateral command signs balanced within each class. E08 was used for selection, followed by 16 confirmation routes in E16 and E20, with two routes per class and environment.
+
+From this stage onward, the selection score combined trajectory similarity (40\%), arrival (30\%), absence of collision (15\%), time (10\%), and length (5\%). We also report arrival and collision counts to describe navigation outcomes directly. Six checkpoints were retained for the next encoding comparison based on performance on complex and very complex routes.
+
+\subsubsection{Stage 6. Encoding and Representation Validation}\label{subsec:stage6_setup}
+
+Stage~6 re-examined the encoding decision after the changes in data, learning rate, footprint, and sampling. First, the six Stage~5 candidates were re-trained with 0/100 using the same observation pairs and seeds as their 0/1 counterparts. Both groups were evaluated on the common 16-route suite in E16 and E20, yielding 96 runs per scale.
+
+Next, a new seed was assigned to each of the six finalist configurations. For each configuration, we held the seed, training and validation pairs, hyperparameters, and checkpoint criterion fixed while training all four combinations of instantaneous LOM/T-LOM and 0/1/0/100. The resulting 24 models were evaluated on the same 16 routes. In addition, LOM-trained checkpoints were evaluated with T-LOM using their existing weights and training scale. The six evaluation conditions each comprised 96 runs, for a total of 576 runs, using a common motion configuration with turn assistance disabled. E16 and E20 were development environments used in the preceding selection stages.
+
+\subsubsection{Stage 7. Compact Training Set and Hyperparameter Selection}\label{subsec:stage7_setup}
+
+Stage~7 adopted the 0/1 encoding supported by Stage~6 and first tested reduced T1 budgets of 6,000, 4,000, 3,000, and 2,500 pairs against a 10,000-pair reference. A 3,000-pair budget was selected for the subsequent training-set comparison. We then selected T3, comprising E01, E03, E16, E18, and E19, using Wasserstein coverage and available samples by route difficulty and lateral command direction. T1 and T3 were each evaluated with LOM and T-LOM on shared routes in E08 and E20, with three independent seeds and 48 runs per condition. E16 contributed training data to T3, so its earlier development results were outside this comparison.
+
+After the common-budget comparison, we tuned the sampling mixture, batch size (2, 3, or 6), learning rate, recurrent depth (2, 3, or 4 layers), hidden size (256 or 350), dropout, and sequence length ($C=2$, 3, or 4). Sequences remained consecutive and non-overlapping. The selected checkpoint was subsequently evaluated on 16 reserved routes in E28 and E29.
+
+\subsubsection{Stage 8. Comparison on New Paired Routes}\label{subsec:stage8_setup}
+
+Stage~8 evaluated the selected T1 checkpoint from Stage~6 and the selected T3 checkpoint from Stage~7 on the same 50 new routes in E01, E03, E04, E05, and E10. Both used the instantaneous $5\times4$~m LOM with 0/1 encoding. E01 and E03 contributed demonstrations to both training sets, while E04, E05, and E10 were excluded from both. The comparison therefore tests new routes across environments with different training exposure. The route set and its difficulty composition differ from the 16-route E28/E29 evaluation in Stage~7.
+\endgroup
+
 \section{Results}\label{sec:Results}
+
+\subsection{\texorpdfstring{\textcolor{red}{Stage 1. Original ROS 1 Reference}}{Stage 1. Original ROS 1 Reference}}\label{subsec:stage1_results}
 
 A direct comparison with the Pumas Navigation System (PNS) highlights the limitations of map-based approaches when operating outside their training conditions. As shown in Table~\ref{tab:nav_system}, the PNS achieves a high success rate of 98\% in the known environment (E1), where an accurate map is available. This confirms the effectiveness of classical navigation pipelines when reliable prior information is provided.
 
@@ -543,7 +632,7 @@ However, when deployed in an unseen environment (E4) while still relying on the 
 
 These results demonstrate a fundamental limitation of map-based navigation systems: their strong dependence on accurate and up-to-date environmental representations. Even when environments share similar geometric properties, small discrepancies—such as furniture placement or corridor structure—can severely degrade performance. \textcolor{red}{In contrast, our mapless approaches generate velocity commands directly from the LOM and the relative target vector, allowing the robot to respond to environmental changes without requiring a global geometric map, global path planning, or global localization.}
 
-Building on this comparison, we evaluate all navigation methods across both known and unknown environments. Our learning-based models, particularly the RNN (Subsection~\ref{subsec:rnn_arq}), consistently outperform traditional reactive methods such as finite state machines (FSM), which rely on predefined rules, and potential fields (PF), which are prone to local minima and reactive-only behaviors. These results confirm that the primary advantage of the proposed approach lies in its ability to generalize robustly to previously unseen environments.
+Building on this comparison, we evaluate all navigation methods across both known and unknown environments. Our learning-based models, particularly the RNN (Subsection~\ref{subsec:rnn_arq}), consistently outperform traditional reactive methods such as finite state machines (FSM), which rely on predefined rules, and potential fields (PF), which are prone to local minima and reactive-only behaviors. \textcolor{red}{These comparisons characterize the behavior of the controllers on the six environments of the original evaluation.}
 
 During navigation, all collisions were counted, as they may briefly slow the robot, cause it to become stuck, or delay its arrival at the goal. These events provide insight into the robot’s stability and adaptability in dynamic, cluttered environments. The success rate, defined as the proportion of goals reached within a fixed time limit, is reported in Figure~\ref{fig:res1_tg-time} (Left). The corresponding average time to reach each goal is shown in Figure~\ref{fig:res1_tg-time} (Right), offering a measure of efficiency for each method. Across all tested environments, collisions, instances of the robot becoming stuck, and failures to reach targets within the time limit were observed, reflecting the challenges posed by complex layouts and narrow pathways. A summary of these events is presented in Figure~\ref{fig:res2_col-stuck}.
 
@@ -573,15 +662,170 @@ To complement these quantitative measures, we generated heatmaps that provide a 
 \caption{Recurrent neural network (RNN) heat map behavior. Training E1, E2, and E3.}\label{fig:RNN_complx}
 \end{figure*}
 
+\begingroup
+\color{red}
+\subsubsection{Input-Encoding Diagnostic for the Stage 1 Reference}\label{subsec:encoding_reference_results}
+
+For the reference $80\times80$ input configuration, the five selected models at 0/100 achieved a mean validation MSE of 0.075609, compared with 0.084249 at 0/1 and 0.085079 at 0/255. Permuting the LOM sequences increased these errors by 74.29\%, 4.80\%, and 59.96\%, respectively (Table~\ref{tab:reference_encoding}). The accompanying navigation tests with obstacles concentrated on either side yielded collision-free goal arrival in 70\% of cases at 0/100, 10\% at 0/1, and 50\% at 0/255.
+
+\begin{table}[htbp]
+\color{red}
+\centering
+\caption{Encoding diagnostic for the original $80\times80$ reference input. MSE and its relative increase are computed from the five selected models per scale.}
+\label{tab:reference_encoding}
+\small
+\begin{tabular}{lrrr}
+\toprule
+Encoding & Validation MSE & MSE increase after & Collision-free \\
+         &                & LOM permutation & arrival (\%) \\
+\midrule
+0/1 & 0.084249 & 4.80\% & 10 \\
+0/100 & 0.075609 & 74.29\% & 70 \\
+0/255 & 0.085079 & 59.96\% & 50 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+These results supported 0/100 for this reference configuration. The permutation experiment measured dependence on obstacle input under fixed weights, while the navigation trials provided the accompanying behavioral evidence. The selected numerical scale was subsequently re-examined after changes to the dataset, spatial input, and training settings, as reported in Stage~6. The final ROS~2 configuration uses 0/1.
+\endgroup
+
+\begingroup
+\color{red}
+\subsection{Stages 2--8. Configuration Selection and Navigation Results}\label{subsec:ros2_results}
+
+\subsubsection{Stage 2. Selecting a Route Mixture}\label{subsec:stage2_results}
+
+Among the mixtures screened in E08, allocating 20/20/30/30 of the pairs to increasing route difficulty gave the most promising initial result. Two models using this mixture also completed complex routes in E20. The evaluated candidates continued to fail on very complex routes in the E16/E20 confirmation. We therefore carried this mixture into Stage~3 and expanded the training pool to T2 to examine the effects of sample budget and optimization. E08, E16, and E20 served as development environments for these choices.
+
+\subsubsection{Stage 3. Selecting the Learning Rate}\label{subsec:stage3_results}
+
+With an initial learning rate of 0.0006, increasing the budget from 2,500 to 20,000 pairs produced mean strict-arrival rates of 22.9\%, 20.0\%, 22.5\%, 30.0\%, and 29.6\% for checkpoints selected by minimum validation MSE. The dependence on data volume was non-monotonic. At 20,000 pairs, reducing the learning rate to 0.0003 or 0.00015 increased mean strict success to 55.0\% and 56.7\%, respectively. The corresponding acceptable-arrival means were 33.8\%, 58.8\%, and 61.7\% for learning rates of 0.0006, 0.0003, and 0.00015.
+
+On the additional confirmation routes, the best checkpoint under the acceptable-arrival criterion achieved 18/24 arrivals and 6/24 collisions. Stage~4 adopted a learning rate of 0.00015. The improved navigation at this learning rate motivated retaining it as a reference when investigating the spatial input.
+
+\subsubsection{Stage 4. Selecting a Spatial Footprint}\label{subsec:stage4_results}
+
+At scale 0/1, the instantaneous $5\times4$~m LOM yielded 17/32 acceptable arrivals in E08, compared with 16/32 for both $4\times4$ and $7\times6$~m. This advantage arose from one run with a final distance of 0.258~m, within the acceptable-arrival threshold. Its strict-arrival count was 16/32. We selected $5\times4$~m for the next stage on this limited development evidence and retained both instantaneous and temporal occupancy for further comparison. Because all Stage~4 models used 0/1, this result established a candidate footprint under that scale. Stage~6 provided the direct comparison with 0/100.
+
+\subsubsection{Stage 5. Selecting Data Composition at a Fixed Budget}\label{subsec:stage5_results}
+
+Using 10,000 pairs, the $5\times4$~m input, and 0/1, T1 with instantaneous LOM and natural sampling achieved the highest confirmation score in E16 and E20 (0.7543), with 51/64 acceptable arrivals and 10/64 collisions. The arrivals were distributed similarly across E16 (26/32) and E20 (25/32). T2 with T-LOM and natural sampling achieved 47/64 arrivals and 15/64 collisions. For T1 with T-LOM, increasing the difficult-route allocation to 10/15/35/40 preserved 43/64 arrivals but increased collisions from 16 to 19 relative to natural sampling.
+
+The tested learning-rate, dropout, and loss adjustments did not improve the configurations selected in E08. All retained a learning rate of 0.00015. We selected six checkpoints for Stage~6 using their performance on complex and very complex routes, with T1 and instantaneous LOM providing the leading configuration at this point.
+
+\subsubsection{Stage 6. Re-Evaluating the Input Scale}\label{subsec:stage6_results}
+
+The first paired re-training retained each selected candidate's observation pairs and seed while changing the occupied-cell encoding. Across the six candidates and the common E16/E20 suite, 0/1 yielded 77/96 acceptable arrivals and 17/96 collisions. The corresponding 0/100 models yielded 63/96 arrivals and 26/96 collisions. On the 48 complex or very complex runs, acceptable arrivals were 33 at 0/1 and 17 at 0/100. This comparison supported retaining 0/1 for the selected $5\times4$~m configurations.
+
+The subsequent comparison with new seeds crossed scale and representation under matched conditions within each finalist configuration. Its results are shown in Table~\ref{tab:stage6_encoding}. With the instantaneous LOM in both training and inference, 0/1 achieved 75/96 acceptable arrivals and 13/96 collisions, compared with 63/96 and 33/96 at 0/100. The 0/1 encoding also produced more acceptable arrivals and fewer collisions in the other two representation conditions. We therefore selected instantaneous LOM at 0/1 as the reference input for Stage~7.
+
+\begin{table}[htbp]
+\color{red}
+\centering
+\caption{Stage~6 comparison with new seeds on the shared E16/E20 routes. Each row aggregates six models evaluated on 16 routes. Each difficult-route subset contains 48 runs.}
+\label{tab:stage6_encoding}
+\small
+\begin{tabular}{llrrrr}
+\toprule
+Scale & Training $\rightarrow$ inference & Arrivals & Collisions & Difficult & Difficult \\
+      & & & & arrivals & collisions \\
+\midrule
+0/1 & LOM $\rightarrow$ LOM & 75/96 & 13/96 & 28/48 & 12/48 \\
+0/1 & LOM $\rightarrow$ T-LOM & 68/96 & 19/96 & 21/48 & 18/48 \\
+0/1 & T-LOM $\rightarrow$ T-LOM & 73/96 & 18/96 & 28/48 & 15/48 \\
+0/100 & LOM $\rightarrow$ LOM & 63/96 & 33/96 & 20/48 & 28/48 \\
+0/100 & LOM $\rightarrow$ T-LOM & 64/96 & 29/96 & 17/48 & 28/48 \\
+0/100 & T-LOM $\rightarrow$ T-LOM & 60/96 & 29/96 & 21/48 & 22/48 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+At 0/1, training with T-LOM matched the 28/48 difficult-route arrivals of instantaneous LOM and reduced mean Fr\'echet distance from 0.579 to 0.539~m, with three additional collisions on those routes. Switching a LOM-trained checkpoint to T-LOM only at inference reduced arrivals and increased collisions. These outcomes motivated using the instantaneous LOM consistently in training and inference for the reference configuration.
+
+The encoding preferences correspond to different experimental conditions. The original diagnostic favored 0/100 with its $80\times80$ inputs, fixed dataset and training settings, and accompanying obstacle-avoidance tests. Stage~6 favored 0/1 with the selected ROS~2 demonstration subsets, $100\times80$ inputs, revised training settings, and shared E16/E20 navigation routes. Its paired re-training and matched scale/representation comparison provide the evidence for the updated choice. The individual contribution of the intervening dataset, input-dimension, and training changes to this reversal remains unresolved. Consequently, our operational choice for the subsequent ROS~2 model is 0/1, supported by the navigation outcomes in this configuration.
+
+\subsubsection{Stage 7. Selecting a Compact Final Configuration}\label{subsec:stage7_results}
+
+The initial budget reduction selected a 3,000-pair T1 candidate for the next comparison. This candidate achieved 34/48 acceptable arrivals and 11/48 collisions in confirmation, while the 10,000-pair reference achieved 39/48 and 8/48. We used 3,000 pairs as a smaller common budget for examining environmental selection and hyperparameters, accepting this initial reduction in performance.
+
+At the common 3,000-pair budget, sampling strategy, and hyperparameters, the mean selection score in E08/E20 was 0.7519 for T3 with instantaneous LOM and 0.6562 for T1 with instantaneous LOM. We subsequently adjusted each condition's sampling mixture and training settings. The resulting comparison across three new seeds is reported in Table~\ref{tab:stage7_comparison}. T3 with instantaneous LOM achieved the highest mean score (0.7916), 41/48 acceptable arrivals, and 5/48 collisions. Its selected sampling allocation was 10/20/30/40.
+
+\begin{table}[htbp]
+\color{red}
+\centering
+\caption{Stage~7 results after tuning, using 3,000 pairs per training and 0/1 occupancy. Each condition was evaluated in 48 runs in E08 and E20 across three seeds.}
+\label{tab:stage7_comparison}
+\small
+\begin{tabular}{lrrr}
+\toprule
+Training set and input & Mean selection score & Acceptable arrivals & Collisions \\
+\midrule
+T1, instantaneous LOM & 0.7202 & 36/48 & 8/48 \\
+T1, T-LOM & 0.7226 & 36/48 & 8/48 \\
+T3, instantaneous LOM & 0.7916 & 41/48 & 5/48 \\
+T3, T-LOM & 0.7115 & 35/48 & 8/48 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+We selected the T3 checkpoint with seed 73746319 from epoch 12. Its configuration is specified in Table~\ref{tab:final_rnn_configuration}. Relative to the reference settings, it reduced batch size from three to two and the second dropout rate from 0.15 to 0.05, while retaining four recurrent layers, 350 hidden units, $C=2$, and a learning rate of 0.00015. On the 16 reserved routes in E28 and E29, this checkpoint achieved 12 acceptable arrivals and three collisions. The very complex class accounted for two collisions and yielded one acceptable arrival in four runs.
+
+\begin{table}[htbp]
+\color{red}
+\centering
+\caption{Final RNN configuration selected in Stage~7 and carried into Stage~8. The input settings apply in both training and inference.}
+\label{tab:final_rnn_configuration}
+\small
+\begin{tabular}{@{}p{0.34\linewidth}p{0.59\linewidth}@{}}
+\toprule
+Parameter & Selected value \\
+\midrule
+Training environments & T3 (E01, E03, E16, E18, E19) \\
+Training pairs & 3,000, consecutive and non-overlapping \\
+Class allocation & 10/20/30/40\% (straight to very complex) \\
+Obstacle representation & Instantaneous LOM \\
+Input footprint and grid & $5\times4$~m, $100\times80$ cells at 0.05~m per cell \\
+Input occupancy encoding & 0/1, obtained by normalizing binary 0/100 occupancy \\
+Observations per sequence & $C=2$ \\
+Recurrent layers and hidden units & Four layers, 350 units per layer \\
+Batch size and learning rate & 2 and 0.00015 \\
+Dropout rates & 0.20 and 0.05 \\
+Training limit and patience & 20 epochs and five epochs \\
+Selected seed and epoch & 73746319 and 12 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsubsection{Stage 8. Testing the Selected Checkpoints on New Routes}\label{subsec:stage8_results}
+
+Table~\ref{tab:ros2_paired} reports the new 50-route comparison. The selected Stage~7 checkpoint achieved 12 acceptable arrivals, compared with 11 for the Stage~6 checkpoint. Both achieved six strict arrivals and collided on 32 routes. Both succeeded on nine shared routes, only Stage~6 succeeded on two, only Stage~7 succeeded on three, and neither succeeded on 36. Each achieved 3/26 acceptable arrivals on the difficult subset. In E10, both collided in nine of ten runs and neither reached the goal.
+
+\begin{table}[htbp]
+\color{red}
+\centering
+\caption{Stage~8 paired evaluation of the selected Stage~6 and Stage~7 checkpoints on 50 new routes per checkpoint. Both use instantaneous LOM at $5\times4$~m and 0/1.}
+\label{tab:ros2_paired}
+\small
+\begin{tabular}{lrrrr}
+\toprule
+Checkpoint & Acceptable & Strict & Collisions & Difficult arrivals \\
+\midrule
+Stage~6, T1 & 11/50 & 6/50 & 32/50 & 3/26 \\
+Stage~7, T3 & 12/50 & 6/50 & 32/50 & 3/26 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The one-route difference leaves the relative performance of these checkpoints unresolved. We retain the Stage~7 T3 model as the compact reference because of its development results and its similar observed performance to the Stage~6 model using five training environments and 3,000 pairs. Its 12/16 result in E28/E29 and 12/50 result here characterize different route suites. The high collision count in Stage~8 establishes that substantial difficulties persist on new routes. E10's geometric distance and poor outcome motivate a broader analysis of the relation between environmental distance and navigation performance.
+\endgroup
+
 \section{Conclusions}\label{sec:Conclusion}
 
-We proposed two neural network architectures for generating local navigation behaviors with obstacle avoidance: a convolutional neural network (CNN) and a recurrent variant (RNN) with four recurrent layers (see Subsections~\ref{subsec:cnn_arq} and~\ref{subsec:rnn_arq}). Unlike traditional methods—where map-based approaches may fail without an accurate or updated map—our models do not require retraining or parameter tuning, \textcolor{red}{allowing them to generate navigation commands without a global geometric map of the test environment.} In comparison, classical reactive approaches such as Potential Fields (PF) and Finite State Machines (FSM) often rely on hand-tuned parameters and may fail in unknown settings. Although the PNS performs better in a known environment (E1), its performance drops significantly in an unseen environment (E4) when using the same map, highlighting that our main contribution is robust generalization rather than superior performance in familiar scenarios.
+\textcolor{red}{Stage~1 compared CNN and RNN mapless controllers with conventional navigation methods in six environments, using demonstrations from E1--E3. The RNN performed better than the CNN on most metrics in that evaluation. The subsequent RNN experiments showed that data selection and optimization affected navigation. In Stage~3, reducing the learning rate improved outcomes at a fixed sample budget. Stages~4--6 then examined spatial extent, temporal occupancy, sampling, and input encoding, providing the basis for the compact training comparison in Stage~7.}
 
-Our experiments evaluated all methods in both previously known and unknown environments. The RNN models demonstrated strong generalization, achieving high success rates, fewer robot stuck events, and more efficient navigation than traditional approaches. Heatmaps of navigation behavior revealed specific areas where collisions or difficulties occurred, highlighting the robustness and adaptability of our learning-based models in dynamic, cluttered environments. Among the two architectures, the RNN consistently outperformed the CNN in most metrics, likely due to its ability to incorporate temporal context into decision-making.
+\textcolor{red}{The final selected input is the instantaneous $5\times4$~m LOM encoded as 0/1 at both training and inference. The original $80\times80$ diagnostic supported 0/100 for its reference configuration. The paired re-training and matched comparisons in Stage~6 supported 0/1 under the selected ROS~2 data and training settings, with more acceptable arrivals and fewer collisions. These comparisons identify the encoding preferred in each tested configuration. The contributions of individual changes between the reference and later experiments remain to be determined.}
 
-\textcolor{red}{Furthermore, we introduced and evaluated an environment similarity metric based on entropy-regularized optimal transport. The pairwise analysis across 30 environments showed a broad range of distances, stable rankings under the tested sampling densities, and sensitivity to physical scale. These results support the use of the metric to characterize geometric differences between environments. Its ability to predict navigation performance remains to be established by correlating the distances with outcomes from controlled navigation experiments.}
-
-A key challenge remains in heuristically generating a suitable dataset that maximizes performance across diverse environments. Nevertheless, the results indicate that learning-based navigation strategies offer a reliable, scalable, and flexible alternative to traditional rule-based methods, particularly in scenarios where prior knowledge of the environment is limited or unavailable.
+\textcolor{red}{We retain the Stage~7 RNN as the compact reference, using T3, 3,000 pairs, a 10/20/30/40 class allocation, two observations per sequence, four recurrent layers, 350 hidden units, a batch size of two, and a learning rate of 0.00015. It achieved 12/16 acceptable arrivals on the E28/E29 routes. The subsequent Stage~8 comparison gave 12/50 acceptable arrivals for this checkpoint and 11/50 for the selected Stage~6 checkpoint, with 32 collisions for each. The geometric distance informed training-set coverage, while the new-route results identified substantial remaining collision-avoidance difficulties. Further controlled experiments with persistent recurrent state and recovery demonstrations are needed to assess how these difficulties can be reduced.}
 
 \authorcontributions{D. Vanegas: conceptualization, methodology, software, writing – original draft. M. Negrete: validation, formal analysis, writing – review \& editing. J. Savage: writing and methodology review, supervision.}
 
@@ -603,6 +847,7 @@ The following abbreviations are used in this manuscript:
 CNN & Convolutional Neural Network \\
 RNN & Recurrent Neural Network \\
 LOM & Local Obstacle Matrix \\
+\textcolor{red}{T-LOM} & \textcolor{red}{Temporal Local Obstacle Matrix} \\
 PNS & Pumas Navigation System \\
 FSM & Finite State Machine \\
 PF & Potential Fields \\
