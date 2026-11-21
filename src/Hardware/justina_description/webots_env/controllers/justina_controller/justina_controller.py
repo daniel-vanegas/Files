@@ -364,6 +364,24 @@ class JustinaController(Node):
                 dev.setVelocity(1.0)
                 self.gripper_joints.append(dev)
                 self.gripper_names.append(name)
+        # Move both hands away from the LiDAR field of view at startup.
+        lidar_clearance_pose = {
+            'r_hand_joint': 1.0,
+            'r_wrist_joint': 0.7,
+            'l_hand_joint': 1.0,
+            'l_wrist_joint': -0.7,
+        }
+        for name, position in lidar_clearance_pose.items():
+            motor = robot.getDevice(name)
+            if motor is None:
+                self.get_logger().warn(
+                    f"LiDAR clearance motor not found: {name}")
+                continue
+            motor.setVelocity(1.0)
+            motor.setPosition(position)
+            self.get_logger().info(
+                f"LiDAR clearance target: {name}={position:.3f} rad")
+
         self.set_initial_head_pose()   
 
         # Collision detector. Optional: older worlds may not have it.
