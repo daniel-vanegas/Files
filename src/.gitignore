@@ -1,5 +1,3 @@
-dataset.tar
-
 # ==============================
 # Python
 # ==============================
@@ -25,6 +23,8 @@ env/
 build/
 install/
 log/
+experiments/
+
 
 # Some ROS2 specific generated files
 *.egg-info/
