@@ -5,7 +5,7 @@ set -Eeuo pipefail
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 DATASET_DIR="$(cd -- "$SCRIPT_DIR/.." && pwd)"
 REPO_ROOT="$(cd -- "$SCRIPT_DIR/../../../../.." && pwd)"
-DATA_ROOT="$DATASET_DIR/data"
+DATA_ROOT="${MAPLESS_DATA_ROOT:-$DATASET_DIR/data}"
 EXPECTED_DATA_ROOT="$REPO_ROOT/src/Navigation/mapless_navigation/dataset/data"
 MAPS_ROOT="$REPO_ROOT/src/Hardware/justina_description/webots_env/environments/maps"
 GENERATOR="$SCRIPT_DIR/path_generator.py"
@@ -50,6 +50,9 @@ CURRENT_PGID=""
 LAUNCH_RETRIES="${LAUNCH_RETRIES:-2}"
 # Seconds to wait for the recorder node to log its ready marker.
 WORLD_READY_TIMEOUT_S="${WORLD_READY_TIMEOUT_S:-60}"
+# RViz must remain available while data are recorded.
+RVIZ_START_TIMEOUT_S="${RVIZ_START_TIMEOUT_S:-30}"
+RVIZ_LOST_GRACE_S="${RVIZ_LOST_GRACE_S:-20}"
 
 usage() {
   cat <<EOF
@@ -139,10 +142,25 @@ done
 [[ ! -L "$DATA_ROOT" ]] || { echo "ERROR: refusing to purge or write through a data-root symlink: $DATA_ROOT" >&2; exit 2; }
 actual_data="$(realpath -m "$DATA_ROOT")"
 expected_data="$(realpath -m "$EXPECTED_DATA_ROOT")"
-[[ "$actual_data" == "$expected_data" && "$DATA_ROOT" == "$EXPECTED_DATA_ROOT" ]] || { echo "ERROR: data-root safety check failed: $DATA_ROOT" >&2; exit 2; }
+[[ "$DATA_ROOT" == "$actual_data" ]] || { echo "ERROR: data-root must be absolute and normalized: $DATA_ROOT" >&2; exit 2; }
+[[ "$actual_data" == "$expected_data" || "$actual_data" == "$expected_data"_* ]] || { echo "ERROR: data-root safety check failed: $DATA_ROOT" >&2; exit 2; }
 python3 -c 'import numpy, yaml, PIL, scipy' || { echo "ERROR: missing Python dependencies: numpy, PyYAML, Pillow, SciPy" >&2; exit 2; }
 [[ "$N_GOALS" =~ ^[0-9]+$ ]] && ((N_GOALS >= 4)) || { echo "ERROR: --n-goals must be an integer >= 4" >&2; exit 2; }
 [[ "$STALL_TIMEOUT" =~ ^[0-9]+$ ]] || { echo "ERROR: --stall-timeout must be a non-negative integer" >&2; exit 2; }
+
+# Data recording requires an active graphical RViz monitor.
+# Pool-only generation can run headlessly.
+if ((POOL_ONLY == 0)); then
+  if [[ -z "${DISPLAY:-}" && -z "${WAYLAND_DISPLAY:-}" ]]; then
+    echo "ERROR: RViz is required for recording, but DISPLAY/WAYLAND_DISPLAY is unset." >&2
+    echo "Run from a graphical desktop session or use X11 forwarding." >&2
+    exit 2
+  fi
+  command -v rviz2 >/dev/null 2>&1 || {
+    echo "ERROR: rviz2 executable not found; source the ROS 2 environment." >&2
+    exit 2
+  }
+fi
 
 if ((PURGE_DATA)); then
   echo "Purging requested dataset directory: $DATA_ROOT"
@@ -299,21 +317,69 @@ if ! ros2 pkg prefix "$PKG" >/dev/null 2>&1; then
 fi
 
 cleanup_current() {
-  if [[ -n "${CURRENT_PGID:-}" ]]; then
-    kill -INT -- "-$CURRENT_PGID" 2>/dev/null || true
-    for _ in $(seq 1 10); do
-      kill -0 -- "-$CURRENT_PGID" 2>/dev/null || break
+  local pgid="${CURRENT_PGID:-}"
+  [[ -n "$pgid" ]] || return 0
+
+  if [[ ! "$pgid" =~ ^[0-9]+$ ]] || [[ "$pgid" == "$$" ]]; then
+    echo "[cleanup] ERROR: Unsafe PGID=$pgid" >&2
+    return 1
+  fi
+
+  # Check remaining non-zombie processes in this launch group.
+  group_alive() {
+    ps -eo pgid=,stat= |
+      awk -v id="$pgid" \
+        '$1 == id && $2 !~ /^Z/ { found=1 } END { exit !found }'
+  }
+
+  echo "[cleanup] Stopping launch PGID=$pgid"
+
+  local signal
+  local attempt
+
+  for signal in INT TERM KILL; do
+    group_alive || break
+
+    kill -s "$signal" -- "-$pgid" 2>/dev/null || true
+
+    for attempt in 1 2 3 4 5; do
+      group_alive || break
       sleep 1
     done
-    kill -TERM -- "-$CURRENT_PGID" 2>/dev/null || true
-    sleep 1
-    kill -KILL -- "-$CURRENT_PGID" 2>/dev/null || true
-    CURRENT_PGID=""
+  done
+
+  if group_alive; then
+    echo "[cleanup] ERROR: PGID=$pgid still active" >&2
+    return 1
   fi
+
+  CURRENT_PGID=""
+  echo "[cleanup] PGID=$pgid terminated"
+  return 0
 }
 on_signal() { GRACEFUL_STOP=1; cleanup_current; }
 trap on_signal INT TERM
 trap cleanup_current EXIT
+
+# Check that RViz is in this particular scenario launch process group.
+# Do not confuse it with an RViz window from another recording.
+rviz_running() {
+  [[ "${CURRENT_PGID:-}" =~ ^[0-9]+$ ]] || return 1
+  pgrep -g "$CURRENT_PGID" -f '(^|/|[[:space:]])rviz2([[:space:]]|$)' >/dev/null 2>&1
+}
+
+wait_for_rviz() {
+  local launch_pid="$1" timeout_s="$2"
+  local started now
+  started=$(date +%s)
+  while true; do
+    rviz_running && return 0
+    kill -0 "$launch_pid" 2>/dev/null || return 1
+    now=$(date +%s)
+    (( now - started < timeout_s )) || return 1
+    sleep 1
+  done
+}
 
 # Wait until the recorder node logs its ready marker, the launch crashes,
 # or the timeout is reached. Returns 0 ready, 1 crashed, 2 timeout.
@@ -545,7 +611,8 @@ PYCOUNT
       world:="$scenario" scenario:="$scenario" num_goals:="$actual_goals" \
       new_pools:="$NEW_POOLS_COUNT" \
       output_dir:="$DATA_ROOT" \
-      goal_position_tolerance_m:="$GOAL_POSITION_TOLERANCE_M" "${EXTRA_ARGS[@]}" >"$log" 2>&1 &
+      goal_position_tolerance_m:="$GOAL_POSITION_TOLERANCE_M" "${EXTRA_ARGS[@]}" \
+      rviz:=true >"$log" 2>&1 &
     pid=$!
     CURRENT_PGID="$(ps -o pgid= -p "$pid" 2>/dev/null | tr -d ' ' || true)"
 
@@ -554,17 +621,49 @@ PYCOUNT
 
     if (( ready_rc != 0 )); then
       echo "[$scenario] recorder not ready (rc=$ready_rc); retrying"
-      cleanup_current
+      cleanup_current || exit 1
       wait "$pid" 2>/dev/null || true
       pid=""
       continue
     fi
 
+    # Do not silently continue recording without the monitoring window.
+    if ! wait_for_rviz "$pid" "$RVIZ_START_TIMEOUT_S"; then
+      echo "[$scenario] ERROR: RViz did not start within ${RVIZ_START_TIMEOUT_S}s; retrying scenario launch." >&2
+      grep -Ei 'rviz|qt|display|egl|opengl|process has died' "$log" | tail -n 18 >&2 || true
+      cleanup_current || exit 1
+      wait "$pid" 2>/dev/null || true
+      pid=""
+      continue
+    fi
+    echo "[$scenario] RViz running (PGID=$CURRENT_PGID); monitoring recording goals."
+
     launch_ok=1
     reason="launch_exit"
+    rviz_down_since=""
 
     while kill -0 "$pid" 2>/dev/null; do
       ((GRACEFUL_STOP == 0)) || { reason="interrupted"; break; }
+
+      # Detect a Webots crash even when ROS launch and RViz remain alive.
+      if grep -Eq '\[ERROR\] \[webots-[0-9]+\]: process has died|Segmentation fault.*webots-bin' "$log" 2>/dev/null; then
+        echo "[$scenario] ERROR: Webots crashed during recording." >&2
+        reason="webots_crashed"
+        break
+      fi
+
+      # RViz is restarted by ROS launch if it crashes. Stop if it stays absent.
+      if rviz_running; then
+        rviz_down_since=""
+      else
+        rviz_now=$(date +%s)
+        [[ -n "$rviz_down_since" ]] || rviz_down_since="$rviz_now"
+        if (( rviz_now - rviz_down_since >= RVIZ_LOST_GRACE_S )); then
+          echo "[$scenario] ERROR: RViz unavailable for ${RVIZ_LOST_GRACE_S}s; stopping this recording." >&2
+          reason="rviz_unavailable"
+          break
+        fi
+      fi
       if grep -q "All requested goals collected" "$log" 2>/dev/null; then
         reason="sampler_complete"
         sleep 3
@@ -580,11 +679,33 @@ PYCOUNT
       fi
       sleep 2
     done
+
+    if [[ "$reason" == "webots_crashed" ]]; then
+      echo "[$scenario] Cleaning up after Webots failure."
+
+      cleanup_current || exit 1
+      wait "$pid" 2>/dev/null || true
+      pid=""
+
+      # Never replay a complete pool after committing some episodes.
+      saved_samples="$(count_recorded_samples "$scenario" "$before_dirs")"
+      saved_goals="$(count_committed_goals "$scenario" "$before_dirs")"
+
+      if (( saved_samples == 0 && saved_goals == 0 && attempt < LAUNCH_RETRIES )); then
+        echo "[$scenario] Retrying after Webots crash (attempt $((attempt + 1))/$LAUNCH_RETRIES)."
+        launch_ok=0
+        continue
+      fi
+
+      echo "[$scenario] No automatic retry: saved_samples=$saved_samples saved_goals=$saved_goals."
+      break
+    fi
+
     break
   done
 
   total_end_ts=$(date +%s)
-  cleanup_current
+  cleanup_current || exit 1
   if [[ -n "$pid" ]]; then
     wait "$pid" 2>/dev/null || true
   fi

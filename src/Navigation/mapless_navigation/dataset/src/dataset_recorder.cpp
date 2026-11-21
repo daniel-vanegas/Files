@@ -1,5 +1,6 @@
 #include <rclcpp/rclcpp.hpp>
 #include <nav_msgs/msg/occupancy_grid.hpp>
+#include <sensor_msgs/msg/image.hpp>
 #include <geometry_msgs/msg/twist.hpp>
 #include <geometry_msgs/msg/point_stamped.hpp>
 #include <std_msgs/msg/float32_multi_array.hpp>
@@ -23,7 +24,9 @@
 #include <chrono>
 #include <cmath>
 #include <csignal>
+#include <cstdint>
 #include <cstring>
+#include <stdexcept>
 #include <deque>
 #include <filesystem>
 #include <fstream>
@@ -75,6 +78,17 @@ public:
         episode_class_topic_ = declare_parameter<std::string>("episode_class_topic", "/mapless_nav/episode_class");
         goal_success_topic_ = declare_parameter<std::string>("goal_success_topic", "/mapless_nav/goal_success");
         collision_topic_    = declare_parameter<std::string>("collision_topic", "/navigation/collision");
+        record_depth_ = declare_parameter<bool>("record_depth", false);
+        depth_topic_ = declare_parameter<std::string>("depth_topic", "/hardware/camera/depth/image_raw");
+        depth_max_age_s_ = declare_parameter<double>("depth_max_age_s", 0.25);
+        depth_sync_slop_s_ = declare_parameter<double>("depth_sync_slop_s", 0.25);
+        depth_range_max_m_ = declare_parameter<double>("depth_range_max_m", 3.5);
+        if (depth_range_max_m_ <= 0.0) {
+            throw std::runtime_error("Depth maximum range must be positive");
+        }
+        if (record_depth_ && (depth_max_age_s_ <= 0.0 || depth_sync_slop_s_ <= 0.0)) {
+            throw std::runtime_error("Depth timing limits must be positive");
+        }
 
         stuck_window_s_          = declare_parameter<double>("stuck_window_s", 2.0);
         stuck_eps_pos_m_         = declare_parameter<double>("stuck_eps_pos_m", 0.02);
@@ -107,6 +121,15 @@ public:
                 std::lock_guard<std::mutex> l(mtx_);
                 last_temporal_costmap_ = m;
             });
+
+        if (record_depth_) {
+            sub_depth_ = create_subscription<sensor_msgs::msg::Image>(
+                depth_topic_, sensor_qos,
+                [this](sensor_msgs::msg::Image::SharedPtr m) {
+                    std::lock_guard<std::mutex> l(mtx_);
+                    last_depth_ = std::move(m);
+                });
+        }
 
         sub_cmd_ = create_subscription<geometry_msgs::msg::Twist>(
             cmd_vel_topic_, 10,
@@ -305,6 +328,11 @@ private:
         int lom_width;
         int lom_height;
         std::vector<uint8_t> tlom;
+        std::vector<uint16_t> depth_normalized;
+        int depth_width{0};
+        int depth_height{0};
+        double depth_stamp{0.0};
+        double depth_age_s{0.0};
         int tlom_width;
         int tlom_height;
         double ts;
@@ -345,6 +373,7 @@ private:
         fs::create_directories(run_dir_);
         fs::create_directories(run_dir_ / "lom");
         fs::create_directories(run_dir_ / "tlom");
+        if (record_depth_) fs::create_directories(run_dir_ / "depth");
     }
 
     void openCsv()
@@ -360,7 +389,9 @@ private:
             << "timestamp,episode_id,is_episode_start,"
                "d,theta,vx,vy,wz,"
                "pose_x,pose_y,pose_yaw,goal_x,goal_y,lom_file,tlom_file,"
-               "collision_flag,stuck_flag\n";
+               "collision_flag,stuck_flag";
+        if (record_depth_) csv_stream_ << ",depth_file,depth_stamp,depth_age_s";
+        csv_stream_ << "\n";
     }
 
     void writeDescriptorHeader()
@@ -395,6 +426,18 @@ private:
           << "stuck_min_duration_s: " << stuck_min_duration_s_ << "\n"
           << "collision_lookback_frames: " << collision_lookback_frames_ << "\n"
           << "stuck_lookback_frames: "     << stuck_lookback_frames_ << "\n";
+        if (record_depth_) {
+            f << "depth_topic: " << depth_topic_ << "\n"
+              << "depth_encoding_saved: 16UC1_PNG_normalized_near_high\n"
+              << "depth_unit: normalized_uint16\n"
+              << "depth_range_min_m: 0.0\n"
+              << "depth_range_max_m: " << depth_range_max_m_ << "\n"
+              << "depth_valid_range: [1, 65535]\n"
+              << "depth_invalid_value: 0\n"
+              << "depth_source_encoding: 32FC1_meters\n"
+              << "depth_max_age_s: " << depth_max_age_s_ << "\n"
+              << "depth_sync_slop_s: " << depth_sync_slop_s_ << "\n";
+        }
     }
 
     void writeEpisodeTriesSidecar()
@@ -587,6 +630,20 @@ private:
             return;
         }
 
+        if (record_depth_) {
+            if (s.depth_normalized.empty() || s.depth_width <= 0 || s.depth_height <= 0) {
+                RCLCPP_ERROR(get_logger(), "Missing depth for committed sample");
+                return;
+            }
+            fs::path depth_path = run_dir_ / "depth" / fname.str();
+            cv::Mat depth(s.depth_height, s.depth_width, CV_16UC1,
+                const_cast<uint16_t *>(s.depth_normalized.data()));
+            if (!cv::imwrite(depth_path.string(), depth)) {
+                RCLCPP_ERROR(get_logger(), "Failed to write %s", depth_path.c_str());
+                return;
+            }
+        }
+
         // Save T-LOM
         if (!s.tlom.empty()) {
             cv::Mat tlom(s.tlom_height, s.tlom_width,
@@ -613,7 +670,12 @@ private:
                     << fname.str()     << ","
                     << fname.str()     << ","
                     << s.collision_flag << ","
-                    << s.stuck_flag    << "\n";
+                    << s.stuck_flag;
+        if (record_depth_) {
+            csv_stream_ << "," << fname.str() << ","
+                        << s.depth_stamp << "," << s.depth_age_s;
+        }
+        csv_stream_ << "\n";
 
         committed_idx_++;
     }
@@ -735,6 +797,7 @@ private:
 
         nav_msgs::msg::OccupancyGrid::SharedPtr costmap;
         nav_msgs::msg::OccupancyGrid::SharedPtr temporal_costmap;
+        sensor_msgs::msg::Image::SharedPtr depth;
         geometry_msgs::msg::Twist cmd;
         double d, theta;
         geometry_msgs::msg::PointStamped goal;
@@ -745,6 +808,7 @@ private:
             std::lock_guard<std::mutex> l(mtx_);
             costmap         = last_costmap_;
             temporal_costmap = last_temporal_costmap_;
+            depth           = last_depth_;
             cmd             = last_cmd_;
             d            = last_d_;
             theta        = last_theta_;
@@ -786,6 +850,30 @@ private:
             return;
         }
 
+        if (record_depth_) {
+            if (!depth || !temporal_costmap || depth->encoding != "32FC1" ||
+                depth->width == 0 || depth->height == 0 ||
+                depth->step < depth->width * 4 ||
+                depth->data.size() < static_cast<size_t>(depth->step) * depth->height) {
+                RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 2000,
+                    "Depth or T-LOM missing/invalid; skipping training sample");
+                return;
+            }
+            auto msg_stamp = [](const builtin_interfaces::msg::Time & t) {
+                return static_cast<double>(t.sec) +
+                    static_cast<double>(t.nanosec) * 1e-9;
+            };
+            const double dt = msg_stamp(depth->header.stamp);
+            if (dt <= 0.0 ||
+                std::abs(now_s - dt) > depth_max_age_s_ ||
+                std::abs(msg_stamp(costmap->header.stamp) - dt) > depth_sync_slop_s_ ||
+                std::abs(msg_stamp(temporal_costmap->header.stamp) - dt) > depth_sync_slop_s_) {
+                RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 2000,
+                    "Depth/LOM/T-LOM timestamps outside synchronization limits");
+                return;
+            }
+        }
+
         Sample s;
         cv::Mat lom = costmapToLom(costmap);
 
@@ -798,6 +886,51 @@ private:
         s.lom_width = lom.cols;
         s.lom_height = lom.rows;
         s.lom.assign(lom.datastart, lom.dataend);
+
+        if (record_depth_) {
+            s.depth_width = static_cast<int>(depth->width);
+            s.depth_height = static_cast<int>(depth->height);
+            s.depth_stamp = static_cast<double>(depth->header.stamp.sec) +
+                static_cast<double>(depth->header.stamp.nanosec) * 1e-9;
+            s.depth_age_s = now_s - s.depth_stamp;
+            s.depth_normalized.resize(static_cast<size_t>(depth->width) * depth->height);
+            size_t valid_pixels = 0;
+            for (size_t row = 0; row < depth->height; ++row) {
+                for (size_t col = 0; col < depth->width; ++col) {
+                    const uint8_t * p = depth->data.data() + row * depth->step + col * 4;
+                    // Decode the IEEE 754 float using the message byte order.
+                    uint32_t bits;
+                    if (depth->is_bigendian) {
+                        bits = (static_cast<uint32_t>(p[0]) << 24) |
+                               (static_cast<uint32_t>(p[1]) << 16) |
+                               (static_cast<uint32_t>(p[2]) << 8) | p[3];
+                    } else {
+                        bits = (static_cast<uint32_t>(p[3]) << 24) |
+                               (static_cast<uint32_t>(p[2]) << 16) |
+                               (static_cast<uint32_t>(p[1]) << 8) | p[0];
+                    }
+                    float meters;
+                    std::memcpy(&meters, &bits, sizeof(float));
+                    uint16_t normalized = 0;
+                    if (std::isfinite(meters) && meters > 0.0f) {
+                        const double d = std::clamp(
+                            static_cast<double>(meters),
+                            0.0, depth_range_max_m_);
+                        const long value = 1L + std::lround(
+                            65534.0 * (1.0 - d / depth_range_max_m_));
+                        normalized = static_cast<uint16_t>(
+                            std::clamp(value, 1L, 65535L));
+                        ++valid_pixels;
+                    }
+                    s.depth_normalized[row * depth->width + col] = normalized;
+                }
+            }
+            if (valid_pixels == 0) {
+                RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 2000,
+                    "Depth contains no valid pixels; skipping sample");
+                return;
+            }
+        }
 
         // Process T-LOM
         if (temporal_costmap) {
@@ -899,6 +1032,11 @@ private:
     std::string output_dir_, scenario_, teacher_, map_frame_, base_frame_;
     std::string costmap_topic_, cmd_vel_topic_, nn_goal_topic_;
     std::string temporal_costmap_topic_;
+    std::string depth_topic_;
+    bool record_depth_{false};
+    double depth_max_age_s_{0.25};
+    double depth_sync_slop_s_{0.25};
+    double depth_range_max_m_{3.5};
     std::string current_goal_topic_, goal_active_topic_, episode_id_topic_;
     std::string goal_success_topic_, collision_topic_;
     std::string run_name_, csv_path_, descriptor_path_;
@@ -935,6 +1073,7 @@ private:
     std::mutex mtx_;
     nav_msgs::msg::OccupancyGrid::SharedPtr last_costmap_;
     nav_msgs::msg::OccupancyGrid::SharedPtr last_temporal_costmap_;
+    sensor_msgs::msg::Image::SharedPtr last_depth_;
     geometry_msgs::msg::Twist last_cmd_{};
     double last_d_{0.0}, last_theta_{0.0};
     geometry_msgs::msg::PointStamped last_goal_;
@@ -967,6 +1106,7 @@ private:
     std::shared_ptr<tf2_ros::TransformListener> tf_listener_;
     rclcpp::Subscription<nav_msgs::msg::OccupancyGrid>::SharedPtr sub_costmap_;
     rclcpp::Subscription<nav_msgs::msg::OccupancyGrid>::SharedPtr sub_temporal_costmap_;
+    rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr sub_depth_;
     rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr sub_cmd_;
     rclcpp::Subscription<std_msgs::msg::Float32MultiArray>::SharedPtr sub_nn_goal_;
     rclcpp::Subscription<geometry_msgs::msg::PointStamped>::SharedPtr sub_goal_;
