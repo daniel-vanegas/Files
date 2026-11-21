@@ -70,6 +70,10 @@
 
     <arg name="camera_publish_hz" default="10.0"/>
     <arg name="camera_enable" default="true"/>
+    <arg name="record_depth" default="false"/>
+    <arg name="depth_max_age_s" default="0.25"/>
+    <arg name="depth_sync_slop_s" default="0.25"/>
+    <arg name="depth_range_max_m" default="3.5"/>
     <arg name="scan_publish_divider" default="2"/>
 
     <let name="pkg_justina" value="$(find-pkg-share justina_description)"/>
@@ -263,6 +267,11 @@
         <param name="scenario" value="$(var scenario)"/>
         <param name="teacher" value="$(var teacher)"/>
         <param name="record_hz" value="$(var record_hz)"/>
+        <param name="record_depth" value="$(var record_depth)"/>
+        <param name="depth_topic" value="/hardware/camera/depth/image_raw"/>
+        <param name="depth_max_age_s" value="$(var depth_max_age_s)"/>
+        <param name="depth_sync_slop_s" value="$(var depth_sync_slop_s)"/>
+        <param name="depth_range_max_m" value="$(var depth_range_max_m)"/>
         <param name="max_goals" value="$(var num_goals)"/>
         <param name="costmap_topic" value="/mapless/local_occ_grid"/>
         <param name="temporal_costmap_topic" value="/mapless/temporal_occ_grid"/>
@@ -285,9 +294,8 @@
         <param name="stuck_lookback_frames" value="$(var stuck_lookback_frames)"/>
     </node>
 
-    <group if="$(var rviz)">
-        <node pkg="rviz2" exec="rviz2" name="rviz2" output="screen" args="-d $(var pkg_justina)/webots_env/rviz/justina_wbt.rviz">
-            <param name="use_sim_time" value="true"/>
-        </node>
-    </group>
+    <!-- RViz is always started for monitoring recorded goals. -->
+    <node pkg="rviz2" exec="rviz2" name="rviz2" output="screen" respawn="true" respawn_delay="3.0" args="-d $(var pkg_justina)/webots_env/rviz/justina_wbt.rviz">
+        <param name="use_sim_time" value="true"/>
+    </node>
 </launch>

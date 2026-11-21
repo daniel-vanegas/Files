@@ -43,6 +43,12 @@ ament_target_dependencies(temporal_occ_grid_node
   tf2_geometry_msgs
 )
 
+add_executable(depth_input_node src/depth_input_node.cpp)
+ament_target_dependencies(depth_input_node
+  rclcpp
+  sensor_msgs
+)
+
 add_executable(get_goal_point src/get_goal_point.cpp)
 ament_target_dependencies(get_goal_point
   rclcpp
@@ -59,6 +65,10 @@ install(TARGETS local_occ_grid_node
 )
 
 install(TARGETS temporal_occ_grid_node
+  DESTINATION lib/${PROJECT_NAME}
+)
+
+install(TARGETS depth_input_node
   DESTINATION lib/${PROJECT_NAME}
 )
 

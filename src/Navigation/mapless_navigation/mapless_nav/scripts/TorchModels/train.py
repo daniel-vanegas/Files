@@ -25,7 +25,7 @@ from torch.utils.data import DataLoader, TensorDataset, Subset
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 EXPERIMENT_TOOLS_DIR = SCRIPT_DIR.parent / "experiment_tools"
-EXPERIMENTS_ROOT = SCRIPT_DIR.parents[5] / "experiments"
+EXPERIMENTS_ROOT = (SCRIPT_DIR.parents[5] if len(SCRIPT_DIR.parents) > 5 else SCRIPT_DIR.parent) / "experiments"
 
 if str(SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPT_DIR))
@@ -35,6 +35,8 @@ if str(EXPERIMENT_TOOLS_DIR) not in sys.path:
 
 from dataset_utils import (
     SequenceDataset,
+    EpisodeChunkDataset,
+    EpisodeOrderSampler,
     build_input_frame,
     build_legacy_tensors,
     discover_npz_files,
@@ -44,7 +46,7 @@ from dataset_utils import (
     split_scenarios,
     split_validation_a,
 )
-from models import RNN, TemporalPolicy
+from models import RNN, TemporalPolicy, GoalConditionedConvLSTM
 
 
 def seed_everything(seed: int) -> None:
@@ -88,10 +90,10 @@ def resolve_defaults(args, data_format: str) -> None:
     # Original ROS 1 architecture is the common default for both ROS 1 and ROS 2
     # data. Native ROS 2 model layouts remain configurable for explicit experiments
     # and compatibility with checkpoints trained by the previous ROS 2 model.
-    args.sequence_length = args.sequence_length if args.sequence_length is not None else 2
+    args.sequence_length = args.sequence_length if args.sequence_length is not None else (8 if args.model_type == "convlstm" else 2)
     args.hidden_size = args.hidden_size if args.hidden_size is not None else 350
-    args.num_layers = args.num_layers if args.num_layers is not None else 4
-    args.batch_size = args.batch_size if args.batch_size is not None else 3
+    args.num_layers = args.num_layers if args.num_layers is not None else (1 if args.model_type == "convlstm" else 4)
+    args.batch_size = args.batch_size if args.batch_size is not None else (1 if args.model_type == "convlstm" else 3)
     args.epochs = args.epochs if args.epochs is not None else 20
     args.learning_rate = args.learning_rate if args.learning_rate is not None else 0.0006
     args.train_split = args.train_split if args.train_split is not None else 0.8
@@ -112,6 +114,14 @@ VARIANT_SHAPES = {
 
 def make_model(args):
     img_h, img_w = VARIANT_SHAPES[args.variant]
+    if args.model_type == "convlstm":
+        return GoalConditionedConvLSTM(
+            img_h=img_h, img_w=img_w,
+            spatial_hidden_channels=args.spatial_hidden_channels,
+            num_layers=args.num_layers, dropout_1=args.dropout_1, dropout_2=args.dropout_2,
+            encoder_channels=tuple(args.encoder_channels),
+            goal_fusion=args.goal_fusion,
+        )
     if args.model_type is not None:
         return TemporalPolicy(
             model_type=args.model_type,
@@ -297,6 +307,164 @@ def audit_pair_actions(model, dataset, device, vmax):
     return results
 
 
+
+def make_ros2_convlstm_loaders(args, root: Path, scenario_files, train_names,
+                                val_names, test_names, seed):
+    """Stream one NPZ at a time into a compressed, episode-safe dataset.
+
+    A seeded hash selects Validation A episodes independently of file order.
+    Only training/validation scenarios are opened; test maps remain untouched.
+    """
+    train_dataset = EpisodeChunkDataset([], sequence_length=args.sequence_length,
+                                        variant=args.variant, representation=args.representation)
+    val_dataset = EpisodeChunkDataset([], sequence_length=args.sequence_length,
+                                      variant=args.variant, representation=args.representation)
+    train_count, val_count = 0, 0
+    episode_plan = None
+    wanted_train, wanted_val = set(), set()
+    discovered_train, discovered_val = set(), set()
+    source_hashes = {}
+    if args.episode_plan:
+        plan_path = args.episode_plan.expanduser().resolve(strict=True)
+        episode_plan = json.loads(plan_path.read_text())
+        if episode_plan.get("version") != 1:
+            raise ValueError("Unsupported episode plan version")
+        if episode_plan.get("train_scenarios") != sorted(set(train_names)):
+            raise ValueError("Episode plan training scenarios differ from CLI")
+        if episode_plan.get("reserved_test_scenarios") != sorted(set(test_names)):
+            raise ValueError("Episode plan test holdout differs from CLI")
+        if val_names:
+            raise ValueError("Episode plan requires episode-level validation, not --validation-scenarios")
+        def read_keys(rows, label):
+            keys = set()
+            for row in rows:
+                relative = row["run_file"]
+                p = Path(relative)
+                if p.is_absolute() or ".." in p.parts or len(p.parts) != 2 or p.suffix != ".npz":
+                    raise ValueError(f"Unsafe {label} NPZ file path: {relative}")
+                if p.parts[0] not in set(train_names):
+                    raise ValueError(f"{label} episode outside training scenarios: {relative}")
+                key = (relative, int(row["episode_id"]))
+                if key in keys:
+                    raise ValueError(f"Duplicate {label} episode: {key}")
+                keys.add(key)
+            return keys
+        wanted_train = read_keys(episode_plan["train"], "training")
+        wanted_val = read_keys(episode_plan["validation"], "validation")
+        if not wanted_train or not wanted_val or wanted_train & wanted_val:
+            raise ValueError("Plan has empty or overlapping training/validation episodes")
+        if any(Path(rel).parts[0] not in set(episode_plan.get("validation_source_scenarios", []))
+               for rel, _ in wanted_val):
+            raise ValueError("Validation includes scenarios outside the fixed validation source")
+        source_hashes = episode_plan["source_hashes"]
+        source_set = {rel for rel, _ in wanted_train | wanted_val}
+        if set(source_hashes) != source_set:
+            raise ValueError("Plan source hashes must match selected NPZ files exactly")
+
+    def add_records(dataset, episodes):
+        if not episodes:
+            return
+        temporary = EpisodeChunkDataset(
+            episodes, sequence_length=args.sequence_length, vmax=args.vmax,
+            reverse_enable=args.reverse_enable, distance_max=args.distance_max,
+            variant=args.variant, representation=args.representation,
+            skip_inconsistent_tlom=True,
+            max_frame_gap_seconds=args.max_frame_gap_seconds,
+        )
+        offset = len(dataset.samples)
+        dataset.samples.extend(temporary.samples)
+        dataset.sequence_meta.extend(temporary.sequence_meta)
+        dataset.episode_groups.extend([[i + offset for i in group]
+                                       for group in temporary.episode_groups])
+
+    for scenario in sorted(set(train_names) | set(val_names or [])):
+        for file in scenario_files[scenario]:
+            # Each NPZ is released before the next is loaded. This prevents
+            # the uncompressed 30-scenario recording from occupying RAM at once.
+            if not Path(file).resolve().is_relative_to(root.resolve()):
+                raise ValueError(f"NPZ path is outside data root: {file}")
+            relative = Path(file).relative_to(root).as_posix()
+            if episode_plan is not None:
+                if relative not in source_hashes:
+                    continue
+                digest = hashlib.sha256()
+                with Path(file).open('rb') as stream:
+                    for block in iter(lambda: stream.read(1 << 20), b''):
+                        digest.update(block)
+                if digest.hexdigest() != source_hashes[relative]:
+                    raise ValueError(f"Source NPZ changed since episode plan creation: {relative}")
+            episodes = load_episodes({scenario: [file]})
+            selected_train, selected_val = [], []
+            if episode_plan is not None:
+                for episode in episodes:
+                    key = (relative, int(episode.episode_id))
+                    if key in wanted_train:
+                        selected_train.append(episode)
+                        discovered_train.add(key)
+                    elif key in wanted_val:
+                        selected_val.append(episode)
+                        discovered_val.add(key)
+            elif scenario in set(val_names or []):
+                selected_val = episodes
+            elif val_names:
+                selected_train = episodes
+            else:
+                scored = sorted(episodes, key=lambda ep: hashlib.sha256(
+                    f"{seed}|{scenario}|{Path(file).relative_to(root)}|{ep.episode_id}".encode()
+                ).digest())
+                if len(scored) >= 2:
+                    nval = max(1, min(round(len(scored) * args.validation_a_split), len(scored) - 1))
+                    validation_ids = {ep.episode_id for ep in scored[:nval]}
+                else:
+                    validation_ids = ({scored[0].episode_id} if scored and
+                        int.from_bytes(hashlib.sha256(
+                            f"{seed}|{scenario}|{Path(file).relative_to(root)}|{scored[0].episode_id}".encode()
+                        ).digest()[:8], 'big') / 2**64 < args.validation_a_split else set())
+                for episode in episodes:
+                    (selected_val if episode.episode_id in validation_ids else selected_train).append(episode)
+            train_count += len(selected_train)
+            val_count += len(selected_val)
+            add_records(train_dataset, selected_train)
+            add_records(val_dataset, selected_val)
+            del selected_train, selected_val, episodes
+
+    if episode_plan is not None:
+        if discovered_train != wanted_train or discovered_val != wanted_val:
+            raise ValueError(f"Episode plan references missing training/validation episodes: "
+                             f"train={sorted(wanted_train-discovered_train)[:5]}, "
+                             f"validation={sorted(wanted_val-discovered_val)[:5]}")
+    if not train_dataset or not val_dataset:
+        raise RuntimeError("ConvLSTM needs nonempty training and validation episodes/chunks; "
+                           "use more episodes or explicit validation scenarios")
+    if episode_plan is not None:
+        method = 'frozen episode selection plan; common core validation; test scenarios untouched'
+    elif val_names:
+        method = 'explicit scenario validation; test scenarios untouched'
+    else:
+        method = 'seeded episode-level Validation A, per-run minimum where possible; test scenarios untouched'
+    use_pin = torch.cuda.is_available()
+    return (
+        DataLoader(train_dataset, batch_size=1,
+                   sampler=EpisodeOrderSampler(train_dataset, seed, shuffle=True),
+                   num_workers=0, pin_memory=use_pin),
+        DataLoader(val_dataset, batch_size=1,
+                   sampler=EpisodeOrderSampler(val_dataset, seed, shuffle=False),
+                   num_workers=0, pin_memory=use_pin),
+        {"dataset_format": "ros2_episode", "training_unit": "chronological_episode_chunks",
+         "train_scenarios": sorted(set(train_names)),
+         "validation_scenarios": sorted(set(val_names or [])),
+         "test_scenarios_reserved": sorted(set(test_names)),
+         "train_episodes": train_count, "validation_episodes": val_count,
+         "train_sequences": len(train_dataset), "validation_sequences": len(val_dataset),
+         "max_frame_gap_seconds": args.max_frame_gap_seconds,
+         "split": method, "stateful": True,
+         "episode_plan_sha256": hashlib.sha256(args.episode_plan.expanduser().read_bytes()).hexdigest() if episode_plan is not None else None,
+         "episode_plan_budget": episode_plan.get("budget") if episode_plan is not None else None,
+         "train_valid_frames_inventory": sum(int(row.get("valid_frames", 0)) for row in episode_plan["train"]) if episode_plan is not None else None,
+         "validation_valid_frames_inventory": sum(int(row.get("valid_frames", 0)) for row in episode_plan["validation"]) if episode_plan is not None else None,
+         "source_loading": "one_npz_at_a_time_lossless_compression"},
+    )
+
 def make_ros2_loaders(args, root: Path, seed: int):
     scenario_files = discover_npz_files(str(root))
     if not scenario_files:
@@ -311,9 +479,12 @@ def make_ros2_loaders(args, root: Path, seed: int):
     known = set(all_scenarios)
     for label, names in (("train", train_names), ("validation", val_names), ("test", test_names)):
         if names is not None:
-            unknown = sorted(set(names) - known)
+            # Explicitly reserved holdout maps need not have recordings yet.
+            # Their NPZ files must not be opened by a training campaign.
+            available = {f"E{i:02d}" for i in range(1, 31)} if label == "test" and args.episode_plan else known
+            unknown = sorted(set(names) - available)
             if unknown:
-                raise ValueError(f"Unknown {label} scenarios: {unknown}; available: {all_scenarios}")
+                raise ValueError(f"Unknown {label} scenarios: {unknown}; available: {sorted(available)}")
 
     if train_names is None:
         eligible = sorted(known - set(test_names))
@@ -328,6 +499,10 @@ def make_ros2_loaders(args, root: Path, seed: int):
     overlap = (set(train_names) & set(val_names or [])) | (set(train_names) & set(test_names)) | (set(val_names or []) & set(test_names))
     if overlap:
         raise ValueError(f"Train/validation/test scenario lists overlap: {sorted(overlap)}")
+
+    if args.model_type == "convlstm":
+        return make_ros2_convlstm_loaders(args, root, scenario_files, train_names,
+                                         val_names, test_names, seed)
 
     allowed = set(train_names) | set(val_names or [])
     all_episodes = load_episodes({name: files for name, files in scenario_files.items()
@@ -539,6 +714,41 @@ def run_epoch(model, loader, optimizer, device, legacy_batch_mean=False, action_
     return float(np.mean(batch_losses)) if legacy_batch_mean else total / count
 
 
+
+def run_convlstm_epoch(model, loader, optimizer, device, action_weights=(1.0, 1.0, 1.0)):
+    """Truncated BPTT, masked per-frame supervision, reset on segment changes."""
+    training = optimizer is not None
+    model.train(training)
+    hx, last_key = None, None
+    squared_total, valid_frames = 0.0, 0.0
+    weights = torch.tensor(action_weights, dtype=torch.float32, device=device)
+    context = torch.enable_grad if training else torch.no_grad
+    with context():
+        for x, y, mask, keys in loader:
+            if len(keys) != 1:
+                raise ValueError("Stateful ConvLSTM requires batch size one")
+            if keys[0] != last_key:
+                hx = None
+            last_key = keys[0]
+            x, y, mask = x.to(device), y.to(device), mask.to(device)
+            if training:
+                optimizer.zero_grad(set_to_none=True)
+            predictions, hx = model(x, hx, return_state=True, return_sequence=True)
+            # Never backpropagate through a previous optimizer step.
+            hx = [(h.detach(), c.detach()) for (h, c) in hx]
+            per_step = (predictions - y).square()
+            error = (per_step.mean(dim=-1) * mask).sum()
+            loss = ((per_step * weights).sum(dim=-1) / weights.sum() * mask).sum() / mask.sum().clamp_min(1)
+            if training:
+                loss.backward()
+                torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
+                optimizer.step()
+            squared_total += float(error.item())
+            valid_frames += float(mask.sum().item())
+    if not valid_frames:
+        raise RuntimeError("No valid frames in ConvLSTM epoch")
+    return squared_total / valid_frames
+
 def save_curve(
     history: list[dict],
     out: Path,
@@ -595,13 +805,24 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--data-root", type=Path, default=None)
     parser.add_argument("--pair-manifest", type=Path, help="Fixed original pairs and episode partitions")
+    parser.add_argument("--episode-plan", type=Path, default=None,
+                        help="Frozen episode-level train/validation selections for stateful ConvLSTM campaigns")
     parser.add_argument("--action-weights", type=float, nargs=3, default=(1.0, 1.0, 1.0),
                         metavar=("VX", "VY", "WZ"), help="Training loss weights; validation keeps ordinary MSE")
     parser.add_argument("--data-format", choices=("auto", "ros1_legacy", "ros2_episode"), default="auto")
     parser.add_argument("--architecture", choices=("ros1_legacy", "ros2"), default="ros2",
                         help="Old checkpoint layout; new tests use --model-type and ignore this layout.")
-    parser.add_argument("--model-type", choices=TemporalPolicy.MODEL_TYPES, default=None,
+    parser.add_argument("--model-type", choices=(*TemporalPolicy.MODEL_TYPES, "convlstm"), default=None,
                         help="Train a new frame-wise CNN+RNN/GRU/LSTM (no ros1_legacy).")
+    parser.add_argument("--spatial-hidden-channels", type=int, default=32,
+                        help="ConvLSTM spatial hidden channels (default: 32).")
+    parser.add_argument("--goal-fusion", choices=("dual", "mixed"), default="dual",
+                        help="ConvLSTM goal channels: dual broadcast or one mixed half-map.")
+    parser.add_argument("--encoder-channels", nargs=2, type=int, default=(8, 16),
+                         metavar=("FIRST", "SECOND"),
+                         help="ConvLSTM CNN filter counts. Default 8 16; ablation 32 8.")
+    parser.add_argument("--max-frame-gap-seconds", type=float, default=1.0,
+                        help="Split temporal segments when ROS timestamps differ by more than this value.")
     parser.add_argument("--train-budget", type=int, default=None,
                         help="Optional exact example budget for independent ROS2 training (pilot only).")
     parser.add_argument("--validation-budget", type=int, default=None,
@@ -687,9 +908,18 @@ def main() -> int:
             parser.error("New temporal models require --architecture ros2 and --data-format ros2_episode")
         if args.datasets_dir:
             parser.error("--datasets-dir reference manifests are only for historical RNN; use scenario selectors or a pair manifest")
-        if args.stateful:
-            parser.error("Stateful training is not enabled in this first patch. Run independent-pair pilots first.")
-    if args.stateful and not args.pair_manifest:
+        if args.model_type == "convlstm":
+            if args.pair_manifest or args.train_budget or args.validation_budget:
+                parser.error("ConvLSTM needs full episodes; pair manifests and random example budgets are not supported")
+            if args.batch_size != 1:
+                parser.error("ConvLSTM stateful training requires --batch-size 1")
+            args.stateful = True
+        elif args.stateful:
+            parser.error("Stateful mode for RNN/GRU/LSTM is not supported in this trainer")
+    if args.episode_plan and (args.model_type != "convlstm" or args.pair_manifest or args.datasets_dir
+                              or not args.train_scenarios or not args.test_scenarios or args.validation_scenarios):
+        parser.error("--episode-plan requires ConvLSTM, explicit train/test scenarios and episode-level validation")
+    if args.stateful and args.model_type != "convlstm" and not args.pair_manifest:
         parser.error("--stateful currently requires --pair-manifest with ordered episode entries")
     if (args.train_budget is not None or args.validation_budget is not None) and (args.pair_manifest or args.datasets_dir):
         parser.error("--train-budget/--validation-budget are currently supported only with ROS2 scenario selectors")
@@ -697,8 +927,16 @@ def main() -> int:
         parser.error("Example budgets must be positive")
     if args.sequence_length < 1 or args.batch_size < 1 or args.epochs < 1 or args.patience < 1:
         parser.error("sequence length, batch size, epochs and patience must be positive")
-    if args.hidden_size < 1 or args.num_layers < 1:
-        parser.error("hidden size and number of recurrent layers must be positive")
+    if args.hidden_size < 1 or args.num_layers < 1 or args.spatial_hidden_channels < 1:
+        parser.error("hidden size, spatial hidden channels and number of recurrent layers must be positive")
+    if any(v < 1 for v in args.encoder_channels):
+        parser.error("--encoder-channels must contain two positive integers")
+    if args.model_type != "convlstm" and args.goal_fusion != "dual":
+        parser.error("--goal-fusion applies only to ConvLSTM")
+    if args.model_type != "convlstm" and tuple(args.encoder_channels) != (8, 16):
+        parser.error("--encoder-channels applies only to --model-type convlstm")
+    if not np.isfinite(args.max_frame_gap_seconds) or args.max_frame_gap_seconds <= 0:
+        parser.error("--max-frame-gap-seconds must be finite and positive")
     if any(not np.isfinite(value) or value <= 0 for value in args.action_weights):
         parser.error("action weights must be finite and positive")
     if args.occupancy_max != 1 and not args.pair_manifest:
@@ -759,9 +997,19 @@ def main() -> int:
     config = {
         "format_version": 2,
         "architecture": "temporal_" + args.model_type if args.model_type is not None else args.architecture,
-        "model_family": "temporal_v1" if args.model_type is not None else "historical",
+        "model_family": ("spatiotemporal_v1" if args.model_type == "convlstm"
+                         else "temporal_v1" if args.model_type is not None else "historical"),
         "model_type": args.model_type,
-        "temporal_mode": "independent" if args.model_type is not None else ("stateful" if args.stateful else "independent"),
+        "temporal_mode": ("stateful" if args.model_type == "convlstm" else
+                          "independent" if args.model_type is not None else
+                          ("stateful" if args.stateful else "independent")),
+        "spatial_hidden_channels": args.spatial_hidden_channels if args.model_type == "convlstm" else None,
+        "encoder_channels": list(args.encoder_channels) if args.model_type == "convlstm" else None,
+        "target_fusion": ("spatial_mixed_half_map" if args.goal_fusion == "mixed" else "spatial_before_convlstm")
+                         if args.model_type == "convlstm" else None,
+        "goal_fusion": args.goal_fusion if args.model_type == "convlstm" else None,
+        "frame_supervision": "every_valid_step" if args.model_type == "convlstm" else "last_step",
+        "max_frame_gap_seconds": args.max_frame_gap_seconds if args.model_type == "convlstm" else None,
         "data_format": data_format,
         "variant": args.variant,
         "representation": args.representation,
@@ -792,7 +1040,9 @@ def main() -> int:
         "data_root": data_root.name,
         "split": split_info,
     }
-    if split_info.get("require_full_sequence") or args.model_type is not None:
+    if args.model_type == "convlstm":
+        config["require_full_sequence"] = False  # One observation per online update.
+    elif split_info.get("require_full_sequence") or args.model_type is not None:
         config["require_full_sequence"] = True
     if args.pair_manifest and args.occupancy_max == 100:
         config.update(normalize_occupancy=False, occupancy_max=100.0)
@@ -827,8 +1077,17 @@ def main() -> int:
     try:
         for epoch in range(1, args.epochs + 1):
             epoch_start = time.monotonic()
-            train_loss = run_epoch(model, train_loader, optimizer, device, legacy_batch_mean=(data_format == "ros1_legacy" or bool(args.datasets_dir)), action_weights=args.action_weights, stateful=args.stateful)
-            val_loss = run_epoch(model, val_loader, None, device, legacy_batch_mean=(data_format == "ros1_legacy" or bool(args.datasets_dir)), stateful=args.stateful)
+            if args.model_type == "convlstm":
+                train_loss = run_convlstm_epoch(model, train_loader, optimizer, device,
+                                               action_weights=args.action_weights)
+                val_loss = run_convlstm_epoch(model, val_loader, None, device)
+            else:
+                train_loss = run_epoch(model, train_loader, optimizer, device,
+                                       legacy_batch_mean=(data_format == "ros1_legacy" or bool(args.datasets_dir)),
+                                       action_weights=args.action_weights, stateful=args.stateful)
+                val_loss = run_epoch(model, val_loader, None, device,
+                                     legacy_batch_mean=(data_format == "ros1_legacy" or bool(args.datasets_dir)),
+                                     stateful=args.stateful)
             scheduler.step(val_loss)
             row = {
                 "epoch": epoch,

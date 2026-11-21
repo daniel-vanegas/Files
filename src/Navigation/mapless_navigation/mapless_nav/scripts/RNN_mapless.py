@@ -18,14 +18,18 @@ from typing import Any
 import numpy as np
 import torch
 
+from m1b_pair_live import ros_depth_to_network, stamp_to_ns, best_past_depth, pack_m1b_input
+
 try:
     import rclpy
     from geometry_msgs.msg import PointStamped, Twist
     from nav_msgs.msg import OccupancyGrid
+    from sensor_msgs.msg import Image
+    from rclpy.qos import qos_profile_sensor_data
     from rclpy.node import Node
     from std_msgs.msg import Bool, Float32MultiArray, Float64MultiArray
 except ModuleNotFoundError as exc:
-    if (exc.name or "").split('.')[0] not in ("rclpy", "geometry_msgs", "nav_msgs", "std_msgs"):
+    if (exc.name or "").split('.')[0] not in ("rclpy", "geometry_msgs", "nav_msgs", "std_msgs", "sensor_msgs"):
         raise
     rclpy, Node = None, object
 
@@ -146,10 +150,37 @@ def get_state_dict(checkpoint: Any) -> dict:
 
 
 def detect_architecture(state: dict, checkpoint: Any) -> str:
+    # Check the dedicated family before the generic legacy conv-weight heuristic.
+    config = get_nested_config(checkpoint)
+    if config.get('model_family') == 'spatiotemporal_m1b_depth_pair_v1':
+        architecture = config.get('architecture')
+        if architecture not in ('m1b_mega', 'm1b_depth_direct_v2'):
+            raise ValueError('Unsupported M1_B pair checkpoint architecture')
+        if config.get('model_type') != ('M1_B' if architecture == 'm1b_mega' else 'M1_B_Depth'):
+            raise ValueError('M1_B pair checkpoint model_type mismatch')
+        return architecture
     if isinstance(checkpoint, dict):
         claimed = checkpoint.get("architecture")
         if claimed in ("ros1_legacy", "ros2"):
             return claimed
+    if isinstance(checkpoint, dict):
+        config = get_nested_config(checkpoint)
+        if (config.get("model_family") == "spatiotemporal_m1refine_v1"
+                and config.get("model_type") in ("M1_control", "M1_B", "M1retro_vel")
+                and "conv1.weight" in state):
+            return "m1refine_" + config["model_type"].lower()
+    if isinstance(checkpoint, dict):
+        config = get_nested_config(checkpoint)
+        if (config.get("model_family") == "spatiotemporal_m123_v1"
+                and config.get("model_type") in ("M1", "M2", "M3")
+                and "conv1.weight" in state):
+            return "m123_" + config["model_type"].lower()
+    if isinstance(checkpoint, dict):
+        config = get_nested_config(checkpoint)
+        if (config.get("model_family") == "spatiotemporal_v1"
+                and config.get("model_type") == "convlstm"
+                and "encoder.0.weight" in state):
+            return "temporal_convlstm"
     if isinstance(checkpoint, dict):
         config = get_nested_config(checkpoint)
         model_type = config.get("model_type")
@@ -215,7 +246,175 @@ def make_model(architecture: str, state: dict, config: dict, sequence_length_ove
     models_dir = scripts_dir / "TorchModels"
     if str(models_dir) not in sys.path:
         sys.path.insert(0, str(models_dir))
-    from models import RNN, TemporalPolicy
+    if architecture in ('m1b_mega', 'm1b_depth_direct_v2'):
+        if (config.get('model_family') != 'spatiotemporal_m1b_depth_pair_v1'
+                or config.get('architecture') != architecture
+                or config.get('model_variant') != ('baseline' if architecture == 'm1b_mega' else 'depth')
+                or config.get('variant') != '5x4'
+                or config.get('goal_fusion') != 'mixed_rows_not_in_conv1'
+                or not config.get('normalize_occupancy')):
+            raise ValueError('Invalid M1_B pair checkpoint configuration')
+        history = int(config['history_pairs'])
+        hidden = int(config['spatial_hidden_channels'])
+        if history != 2 or hidden != 16:
+            raise ValueError('This live adapter only supports trained history_pairs=2, hidden=16')
+        kwargs = {
+            'history_pairs': history,
+            'hidden_channels': hidden,
+            'img_h': 100,
+            'img_w': 80,
+            'conv_dropouts': config.get('conv_dropouts', (.20,.15)),
+            'head_dropouts': config.get('head_dropouts', (.20,.15)),
+        }
+        if architecture == 'm1b_mega':
+            from m1b_mega_models import M1BMegaPolicy
+            model = M1BMegaPolicy(**kwargs)
+        else:
+            from m1b_depth_verified import M1BMegaDepthPolicy
+            if config.get('depth_encoding') != '16UC1_PNG_normalized_near_high':
+                raise ValueError('Unexpected Depth encoding in checkpoint')
+            if float(config.get('depth_range_max_m', 0)) != 3.5:
+                raise ValueError('Depth range does not match training')
+            model = M1BMegaDepthPolicy(**kwargs)
+        model.load_state_dict(state, strict=True)
+        settings = {
+            'sequence_length': int(config['sequence_length']),
+            'hidden_size': hidden, 'num_layers': 1,
+            'normalize_occupancy': True, 'occupancy_max': 100.0,
+            'distance_max': None,
+            'vmax': (0.5, 0.5, 1.0),
+            'reverse_enable': False,
+            'wz_normalized': True,
+            'data_format': 'ros2_episode',
+            'variant': '5x4', 'representation': 'tlom',
+            'require_full_sequence': False,
+            'temporal_mode': 'stateful_spatial',
+            'm123_dual_source': True,
+            'm1b_pair_variant': 'baseline' if architecture == 'm1b_mega' else 'depth',
+            'm1b_requires_depth': architecture == 'm1b_depth_direct_v2',
+            'depth_range_max_m': 3.5,
+        }
+        return model, settings
+
+    from models import RNN, TemporalPolicy, GoalConditionedConvLSTM
+
+    if architecture.startswith("m1refine_"):
+        from m1_refine_models import M1RefinePolicy,SPECS
+        variant_name=config.get('model_type')
+        if (config.get('model_family')!='spatiotemporal_m1refine_v1'
+                or variant_name not in SPECS
+                or architecture!='m1refine_'+variant_name.lower()
+                or config.get('architecture')!=architecture
+                or config.get('temporal_mode')!='stateful'
+                or int(config.get('input_channels',0))!=SPECS[variant_name]['history']*2
+                or config.get('velocity_feedback')!=('previous_expert_cmd_and_previous_nn'
+                    if SPECS[variant_name]['feedback'] else 'none')
+                or config.get('goal_fusion')!='mixed_rows'
+                or tuple(config.get('layer_bptt',()))!=(16,)
+                or config.get('variant')!='5x4'
+                or int(config.get('img_h',0))!=100 or int(config.get('img_w',0))!=80
+                or not config.get('episode_plan_sha256') or not config.get('source_hashes')
+                or not config.get('normalize_occupancy',False)):
+            raise ValueError('Invalid M1 refinement checkpoint metadata')
+        model=M1RefinePolicy(variant_name,100,80,
+               conv_dropouts=config.get('conv_dropouts',(0.20,0.15)),
+               head_dropouts=config.get('head_dropouts',(0.20,0.15)))
+        model.load_state_dict(state,strict=True)
+        settings={'sequence_length':16,'hidden_size':16,'num_layers':1,
+                  'normalize_occupancy':True,'occupancy_max':100.0,
+                  'distance_max':config.get('distance_max'),
+                  'vmax':config.get('vmax',(0.5,0.5,1.0)),
+                  'reverse_enable':bool(config.get('reverse_enable',False)),
+                  'wz_normalized':True,'data_format':'ros2_episode',
+                  'variant':'5x4','representation':'tlom',
+                  'require_full_sequence':False,'temporal_mode':'stateful_spatial',
+                  'm1_refine_variant':variant_name,'m123_dual_source':True}
+        return model,settings
+
+    if architecture.startswith("m123_"):
+        from m123_models import M123Policy
+        variant_name=architecture.removeprefix("m123_").upper()
+        if (variant_name not in M123Policy.SPECS
+                or config.get("model_family") != "spatiotemporal_m123_v1"
+                or config.get("model_type") != variant_name
+                or config.get("architecture") != architecture
+                or config.get("temporal_mode") != "stateful"
+                or int(config.get("input_channels",0)) != 2
+                or config.get("goal_fusion") != ("mixed_rows" if variant_name=="M1" else "mixed_columns")
+                or tuple(config.get("layer_bptt",())) != M123Policy.SPECS[variant_name]["bptt"]
+                or int(config.get("spatial_hidden_channels",0)) != 16):
+            raise ValueError("Invalid M123 architecture metadata")
+        grid_variant=config.get("variant")
+        if (grid_variant not in VARIANT_SHAPES
+                or tuple(config.get("img_h",()) if isinstance(config.get("img_h"),tuple) else
+                         (config.get("img_h"),config.get("img_w"))) != VARIANT_SHAPES[grid_variant]):
+            raise ValueError("M123 grid variant metadata mismatch")
+        if not bool(config.get("normalize_occupancy")):
+            raise ValueError("M123 expects normalized occupancy values")
+        model=M123Policy(variant_name, int(config["img_h"]), int(config["img_w"]), hidden_channels=16)
+        model.load_state_dict(state, strict=True)
+        settings={"sequence_length":16,"hidden_size":16,
+                  "num_layers":M123Policy.SPECS[variant_name]['layers'],
+                  "normalize_occupancy":True,"occupancy_max":100.0,
+                  "distance_max":config.get('distance_max'),
+                  "vmax":config.get('vmax',(0.5,0.5,1.0)),
+                  "reverse_enable":bool(config.get('reverse_enable',False)),
+                  "wz_normalized":True,"data_format":"ros2_episode",
+                  "variant":grid_variant,"representation":"tlom",
+                  "require_full_sequence":False,
+                  "temporal_mode":"stateful_spatial",
+                  "m123_variant":variant_name,
+                  "m123_dual_source":variant_name=='M1'}
+        return model,settings
+
+    if architecture == "temporal_convlstm":
+        if (config.get("model_family") != "spatiotemporal_v1"
+                or config.get("model_type") != "convlstm"
+                or config.get("temporal_mode") != "stateful"
+                or config.get("target_fusion") not in ("spatial_before_convlstm", "spatial_mixed_half_map")):
+            raise ValueError("Invalid goal-conditioned ConvLSTM checkpoint metadata")
+        goal_fusion = config.get("goal_fusion", "dual")
+        expected_fusion = ("spatial_mixed_half_map" if goal_fusion == "mixed"
+                           else "spatial_before_convlstm")
+        if goal_fusion not in ("dual", "mixed") or config["target_fusion"] != expected_fusion:
+            raise ValueError("ConvLSTM goal fusion metadata mismatch")
+        variant = config.get("variant", "5x4")
+        if (variant not in VARIANT_SHAPES
+                or (int(config["img_h"]), int(config["img_w"])) != VARIANT_SHAPES[variant]):
+            raise ValueError("ConvLSTM grid variant does not match training dimensions")
+        if config.get("representation") not in ("lom", "tlom"):
+            raise ValueError("Invalid ConvLSTM representation")
+        if not bool(config.get("normalize_occupancy", False)):
+            raise ValueError("ConvLSTM requires the recorded normalized binary occupancy")
+        if config.get("preprocessing") is not None:
+            raise ValueError("ConvLSTM uses direct ROS 2 frame preprocessing, not frozen legacy pairs")
+        model = GoalConditionedConvLSTM(
+            img_h=int(config["img_h"]), img_w=int(config["img_w"]),
+            spatial_hidden_channels=int(config["spatial_hidden_channels"]),
+            encoder_channels=tuple(config.get("encoder_channels") or (8, 16)),
+            goal_fusion=goal_fusion,
+            num_layers=int(config["num_layers"]),
+            dropout_1=float(config.get("dropout_1", 0.20)),
+            dropout_2=float(config.get("dropout_2", 0.15)),
+        )
+        model.load_state_dict(state, strict=True)
+        settings = {
+            "sequence_length": int(config["sequence_length"]),
+            "hidden_size": int(config["spatial_hidden_channels"]),
+            "num_layers": int(config["num_layers"]),
+            "normalize_occupancy": True,
+            "occupancy_max": 100.0,
+            "distance_max": config.get("distance_max"),
+            "vmax": config.get("vmax", (0.5, 0.5, 1.0)),
+            "reverse_enable": bool(config.get("reverse_enable", False)),
+            "wz_normalized": True,
+            "data_format": "ros2_episode",
+            "variant": variant,
+            "representation": config["representation"],
+            "require_full_sequence": False,
+            "temporal_mode": "stateful_spatial",
+        }
+        return model, settings
 
     if architecture.startswith("temporal_"):
         model_type = architecture.removeprefix("temporal_")
@@ -385,6 +584,8 @@ class RNNMapless(Node):
         self.declare_parameter("gain_angz", 1.0)
         self.declare_parameter("log_every_n_maps", 10)
         self.declare_parameter("stale_timeout_sec", 1.0)
+        self.declare_parameter("depth_topic", "/hardware/camera/depth/image_raw")
+        self.declare_parameter("depth_max_age_sec", 0.25)
 
         requested = str(self.get_parameter("model_filename").value).strip()
         if not requested:
@@ -448,6 +649,19 @@ class RNNMapless(Node):
 
         self.frames = deque(maxlen=self.sequence_length)
         self.hx = None
+        self._m123_previous = None
+        self._m123_lom_cache = {}
+        self._m123_tlom_cache = {}
+        self._m1b_pair = bool(self.model_settings.get('m1b_pair_variant'))
+        self._m1b_depth_required = bool(self.model_settings.get('m1b_requires_depth'))
+        self._m1b_depth_cache = []  # (sim timestamp ns, normalized depth, wall time)
+        self._m1b_pending_pairs = {}  # (lom, tlom, insertion wall time)
+        self._m1b_previous_depth = None
+        self._m1b_last_step_stamp_ns = None
+        self._m1b_last_depth_walltime = None
+        self._m1b_depth_max_age_ns = int(float(self.get_parameter('depth_max_age_sec').value) * 1e9)
+        if not 0 < self._m1b_depth_max_age_ns <= int(0.25 * 1e9):
+            raise ValueError('Depth age must be in (0, 0.25] s to match training')
         self.temporal_mode = self.model_settings.get("temporal_mode", "historical")
         self.last_goal = (0.0, 0.0)
         self.last_goal_walltime: float | None = None
@@ -466,6 +680,15 @@ class RNNMapless(Node):
         self.goal_sub = self.create_subscription(Float32MultiArray, goal_topic, self.goal_callback, 10)
         self.point_sub = self.create_subscription(PointStamped, point_topic, self.point_callback, 10)
         self.occ_sub = self.create_subscription(OccupancyGrid, grid_topic, self.occ_callback, 10)
+        self.lom_sub = None
+        if self.model_settings.get("m123_dual_source"):
+            self.lom_sub = self.create_subscription(
+                OccupancyGrid, "/mapless/local_occ_grid", self.lom_callback, 10)
+        self.depth_sub = None
+        if self._m1b_depth_required:
+            self.depth_sub = self.create_subscription(
+                Image, str(self.get_parameter('depth_topic').value),
+                self.m1b_depth_callback, qos_profile_sensor_data)
         self.goal_active_sub = self.create_subscription(Bool, "/mapless_nav/goal_active", self.goal_active_callback, 10)
         self.reached_pub = self.create_publisher(Bool, "/maples_nav/goal_reached", 10)
         self.cmd_pub = self.create_publisher(Twist, cmd_topic, 10) if self.enable_motion else None
@@ -500,16 +723,35 @@ class RNNMapless(Node):
         self.command = (0.0, 0.0, 0.0)
         self.frames.clear()
         self.hx = None
+        self._m123_previous = None
+        self._m123_lom_cache.clear()
+        self._m123_tlom_cache.clear()
+        if self._m1b_pair:
+            self._m1b_reset_temporal()
+            self._m1b_depth_cache.clear()
         self.get_logger().info(f"Clicked goal received in frame {msg.header.frame_id!r}; waiting for /NN_goal transform")
         self.publish_reached(False)
 
     def goal_active_callback(self, msg: Bool):
+        was_active = self.goal_active
         self.goal_active = bool(msg.data)
+        if self._m1b_pair and (not self.goal_active or not was_active):
+            self._m1b_reset_temporal()
+            self._m1b_depth_cache.clear()
+        if self.goal_active and not was_active:
+            self.frames.clear()
+            self.hx = None
+            self._m123_previous = None
+            self._m123_lom_cache.clear()
+            self._m123_tlom_cache.clear()
         if not self.goal_active:
+            self._m123_lom_cache.clear()
+            self._m123_tlom_cache.clear()
             self.last_goal = (0.0, 0.0)
             self.stop_command()
             self.frames.clear()
             self.hx = None
+            self._m123_previous = None
         else:
             self.last_goal_walltime = time.monotonic()
         self.publish_reached(not self.goal_active)
@@ -529,11 +771,120 @@ class RNNMapless(Node):
     def stop_command(self):
         self.command = (0.0, 0.0, 0.0)
 
-    def occ_callback(self, msg: OccupancyGrid):
+    @staticmethod
+    def _grid_stamp(msg):
+        return (int(msg.header.stamp.sec), int(msg.header.stamp.nanosec))
+
+    def _m1b_reset_temporal(self):
+        # Keep only causal state within the currently active navigation episode.
+        self.hx = None
+        self._m123_previous = None
+        self._m1b_previous_depth = None
+        self._m1b_last_step_stamp_ns = None
+        self._m1b_last_depth_walltime = None
+        self._m1b_pending_pairs.clear()
+
+    def m1b_depth_callback(self, msg: Image):
+        # The camera streams metric float32; training consumed a quantized PNG.
+        try:
+            frame = ros_depth_to_network(
+                msg, max_range_m=self.model_settings['depth_range_max_m'])
+            if not np.any(frame > 0):
+                raise ValueError('Depth has no valid pixels')
+            stamp_ns = stamp_to_ns(msg.header.stamp)
+            if stamp_ns <= 0:
+                raise ValueError('Depth timestamp missing')
+            self._m1b_depth_cache.append((stamp_ns, frame, time.monotonic()))
+            self._m1b_depth_cache.sort(key=lambda entry: entry[0])
+            self._m1b_depth_cache = self._m1b_depth_cache[-12:]
+            self._m1b_try_depth_pairs()
+        except Exception as exc:
+            self.stop_command()
+            self.get_logger().warning(f'M1_B Depth conversion failed; stopped: {exc}')
+
+    def _m1b_try_depth_pairs(self):
+        # Process pending paired grids chronologically, with causal Depth only.
+        if not self._m1b_depth_cache:
+            return
+        latest_ns = self._m1b_depth_cache[-1][0]
+        for stamp in sorted(tuple(self._m1b_pending_pairs)):
+            if stamp not in self._m1b_pending_pairs:
+                break
+            grid_ns = int(stamp[0]) * 1_000_000_000 + int(stamp[1])
+            lom, tlom, queued_wall = self._m1b_pending_pairs[stamp]
+            found = best_past_depth(
+                grid_ns, [(ts, image) for ts,image,_ in self._m1b_depth_cache],
+                self._m1b_depth_max_age_ns)
+            if found is None:
+                # Stop while waiting. Drop unrecoverable or timed-out samples.
+                self.stop_command()
+                if (latest_ns > grid_ns + self._m1b_depth_max_age_ns or
+                        time.monotonic() - queued_wall > 0.5):
+                    self._m1b_pending_pairs.pop(stamp, None)
+                    self._m1b_reset_temporal()
+                    break
+                else:
+                    break
+            self._m1b_pending_pairs.pop(stamp, None)
+            self.occ_callback(tlom, matched_lom=lom, matched_depth=found[1])
+
+    def lom_callback(self, msg: OccupancyGrid):
+        # Only M1 uses simultaneous local and temporal occupancy topics.
+        if not self.model_settings.get('m123_dual_source'):
+            return
+        stamp=self._grid_stamp(msg)
+        self._m123_lom_cache[stamp]=msg
+        self._m123_match_pair(stamp)
+
+    def _m123_match_pair(self, stamp):
+        if stamp in self._m123_lom_cache and stamp in self._m123_tlom_cache:
+            lom=self._m123_lom_cache.pop(stamp)
+            tlom=self._m123_tlom_cache.pop(stamp)
+            if self._m1b_depth_required:
+                self._m1b_pending_pairs[stamp] = (lom, tlom, time.monotonic())
+                # Avoid using an old velocity while waiting for an aligned image.
+                self.stop_command()
+                while len(self._m1b_pending_pairs) > 8:
+                    self._m1b_pending_pairs.pop(min(self._m1b_pending_pairs))
+                    self._m1b_reset_temporal()
+                self._m1b_try_depth_pairs()
+            else:
+                self.occ_callback(tlom, matched_lom=lom)
+        # Keep bounded buffers; never fuse sensor grids with different stamps.
+        for cache in (self._m123_lom_cache,self._m123_tlom_cache):
+            while len(cache)>8:
+                del cache[min(cache)]
+
+    def occ_callback(self, msg: OccupancyGrid, matched_lom=None, matched_depth=None):
+        if self.model_settings.get('m123_dual_source') and matched_lom is None:
+            stamp=self._grid_stamp(msg)
+            self._m123_tlom_cache[stamp]=msg
+            self._m123_match_pair(stamp)
+            return
+        if matched_lom is not None:
+            a,b=matched_lom.info,msg.info
+            if (a.height!=b.height or a.width!=b.width or
+                    abs(a.resolution-b.resolution)>1e-5 or
+                    abs(a.origin.position.x-b.origin.position.x)>1e-4 or
+                    abs(a.origin.position.y-b.origin.position.y)>1e-4 or
+                    len(matched_lom.data)!=len(msg.data)):
+                self.stop_command()
+                self.frames.clear()
+                self.hx=None
+                self._m123_previous=None
+                if self._m1b_pair:
+                    self._m1b_reset_temporal()
+                self.get_logger().warning('M1 LOM/T-LOM geometry mismatch; stopping')
+                return
         height, width = int(msg.info.height), int(msg.info.width)
         grid_variant = source_grid_variant((height, width), self.model_settings)
         if grid_variant is None:
             self.stop_command()
+            self.frames.clear()
+            self.hx = None
+            self._m123_previous = None
+            if self._m1b_pair:
+                self._m1b_reset_temporal()
             self.get_logger().warning(
                 f"Unexpected ROS grid {height}x{width} for variant {self.variant}; stopping"
             )
@@ -544,49 +895,153 @@ class RNNMapless(Node):
                 or abs(float(msg.info.origin.position.y) - expected_y) > 1e-4
                 or len(msg.data) != height * width):
             self.stop_command()
+            self.frames.clear()
+            self.hx = None
+            self._m123_previous = None
+            if self._m1b_pair:
+                self._m1b_reset_temporal()
             self.get_logger().warning("Unexpected grid geometry or data length; stopping")
             return
-        self.last_grid_walltime = time.monotonic()
+        now = time.monotonic()
+        if (self.last_grid_walltime is not None
+                and now - self.last_grid_walltime > self.stale_timeout):
+            self.frames.clear()
+            self.hx = None
+            self._m123_previous = None
+        self.last_grid_walltime = now
         if not self.goal_active:
             self.stop_command()
+            self.frames.clear()
+            self.hx = None
+            self._m123_previous = None
+            if self._m1b_pair:
+                self._m1b_reset_temporal()
             return
 
         distance, theta = self.last_goal
         if self.last_goal_walltime is None or time.monotonic() - self.last_goal_walltime > self.stale_timeout:
             self.stop_command()
             self.frames.clear()
+            self.hx = None
+            self._m123_previous = None
+            if self._m1b_pair:
+                self._m1b_reset_temporal()
             return
         if distance <= self.goal_tolerance:
             self.stop_command()
             self.goal_active = False
             self.frames.clear()
+            self.hx = None
+            self._m123_previous = None
+            if self._m1b_pair:
+                self._m1b_reset_temporal()
             self.publish_reached(True)
             return
 
+        if self._m1b_depth_required and matched_depth is None:
+            self.stop_command()
+            return
+        if self._m1b_pair:
+            grid_ns = int(msg.header.stamp.sec) * 1_000_000_000 + int(msg.header.stamp.nanosec)
+            last_ns = self._m1b_last_step_stamp_ns
+            if last_ns is not None:
+                if grid_ns <= last_ns:
+                    self.stop_command()
+                    self._m1b_reset_temporal()
+                    return
+                if grid_ns-last_ns > 1_000_000_000:
+                    self._m1b_reset_temporal()
+            self._m1b_last_step_stamp_ns = grid_ns
         occ_source = np.asarray(msg.data, dtype=np.float32).reshape(height, width)
         occ_source_max = float(np.max(occ_source))
         frame = prepare_observation(occ_source, distance, theta, self.model_settings)
         occ = frame[:-2]
-        self.frames.append(frame)
-        if ((self.model_settings.get("preprocessing") is not None or self.model_settings.get("require_full_sequence"))
-                and len(self.frames) < self.sequence_length):
-            self.stop_command()
-            return
-        while len(self.frames) < self.sequence_length:
-            self.frames.appendleft(frame)
-        sequence = np.stack(tuple(self.frames), axis=0)[None, ...]
+        if self._m1b_pair:
+            if matched_lom is None:
+                raise RuntimeError('M1_B requires same-stamp LOM and T-LOM')
+            local_source = np.asarray(matched_lom.data, dtype=np.float32).reshape(height,width)
+            local_settings = {**self.model_settings, 'representation': 'lom'}
+            local_frame = prepare_observation(local_source, distance, theta, local_settings)
+            current_pair = np.stack((local_frame, frame), axis=0)
+            sequence, depth_sequence = pack_m1b_input(
+                current_pair, self._m123_previous,
+                depth_current=matched_depth if self._m1b_depth_required else None,
+                depth_previous=self._m1b_previous_depth)
+            self._m123_previous = current_pair.copy()
+            if self._m1b_depth_required:
+                self._m1b_previous_depth = matched_depth.copy()
+                self._m1b_last_depth_walltime = time.monotonic()
+        elif self.model_settings.get('m1_refine_variant'):
+            variant_name=self.model_settings['m1_refine_variant']
+            if matched_lom is None:
+                raise RuntimeError('M1 refinement requires synchronized LOM and T-LOM')
+            local_source=np.asarray(matched_lom.data,dtype=np.float32).reshape(height,width)
+            local_settings={**self.model_settings,'representation':'lom'}
+            local_frame=prepare_observation(local_source,distance,theta,local_settings)
+            current_pair=np.stack((local_frame,frame))
+            if variant_name=='M1_B':
+                previous=self._m123_previous if self._m123_previous is not None else current_pair
+                packed=np.concatenate((previous,current_pair),axis=0)
+            else:
+                packed=current_pair
+            self._m123_previous=current_pair.copy()
+            sequence=packed[None,None,...]
+            last_command=np.asarray(self.command,dtype=np.float32)
+            vmax=np.asarray(self.vmax,dtype=np.float32)
+            prior_cmd=np.clip(last_command/vmax,-1.0,1.0)
+        elif self.model_settings.get('m123_variant'):
+            variant_name=self.model_settings['m123_variant']
+            if variant_name == 'M1':
+                if matched_lom is None:
+                    raise RuntimeError('M1 expected synchronized LOM/T-LOM')
+                local_source=np.asarray(matched_lom.data,dtype=np.float32).reshape(height,width)
+                local_settings={**self.model_settings,'representation':'lom'}
+                local_frame=prepare_observation(local_source,distance,theta,local_settings)
+                pair=np.stack((local_frame,frame))
+            else:
+                previous=self._m123_previous if self._m123_previous is not None else frame
+                pair=np.stack((previous,frame))
+            self._m123_previous=frame.copy()
+            sequence=pair[None,None,...]
+        elif self.temporal_mode == "stateful_spatial":
+            # A single fresh observation updates the persistent spatial memory.
+            # Never replay earlier frames with a non-zero recurrent state.
+            sequence = frame[None, None, ...]
+        else:
+            self.frames.append(frame)
+            if ((self.model_settings.get("preprocessing") is not None or self.model_settings.get("require_full_sequence"))
+                    and len(self.frames) < self.sequence_length):
+                self.stop_command()
+                return
+            while len(self.frames) < self.sequence_length:
+                self.frames.appendleft(frame)
+            sequence = np.stack(tuple(self.frames), axis=0)[None, ...]
         x = torch.as_tensor(sequence, dtype=torch.float32, device=self.device)
 
         try:
             with torch.inference_mode():
                 # New independent policies never carry hidden state over sliding windows.
                 hx = None if self.temporal_mode == "independent" else self.hx
-                output, new_hx = self.model(x, hx, return_state=True)
+                if self._m1b_depth_required:
+                    depth_tensor = torch.as_tensor(
+                        depth_sequence, dtype=torch.float32, device=self.device)
+                    output, new_hx = self.model(x, depth_tensor, hx=hx, return_state=True)
+                elif self.model_settings.get('m1_refine_variant')=='M1retro_vel':
+                    previous_command=torch.as_tensor(prior_cmd[None,None,:],
+                        dtype=torch.float32,device=self.device)
+                    output,new_hx=self.model(x,hx,return_state=True,cmd_history=previous_command)
+                else:
+                    output, new_hx = self.model(x, hx, return_state=True)
                 if self.temporal_mode != "independent" and new_hx is not None:
-                    if isinstance(new_hx, tuple):
+                    if isinstance(new_hx, dict) and set(new_hx)=={'cells','prev_nn'}:
+                        self.hx={'cells':[(h.detach(),c.detach()) for h,c in new_hx['cells']],
+                                 'prev_nn':new_hx['prev_nn'].detach()}
+                    elif isinstance(new_hx, tuple):
                         self.hx = tuple(h.detach() for h in new_hx)
                     elif isinstance(new_hx, torch.Tensor):
                         self.hx = new_hx.detach()
+                    elif self.temporal_mode == "stateful_spatial":
+                        self.hx = [(h.detach(), c.detach()) for h, c in new_hx]
                     else:
                         self.hx = [h.detach() for h in new_hx]
                 y = output.detach().cpu().reshape(-1).numpy()
@@ -623,6 +1078,11 @@ class RNNMapless(Node):
                 )
         except Exception as exc:
             self.stop_command()
+            self.frames.clear()
+            self.hx = None
+            self._m123_previous = None
+            if self._m1b_pair:
+                self._m1b_reset_temporal()
             self.get_logger().error(f"RNN inference failed; command stopped: {exc}")
 
     def publish_command(self):
@@ -631,8 +1091,11 @@ class RNNMapless(Node):
         now = time.monotonic()
         stale_grid = self.last_grid_walltime is None or now - self.last_grid_walltime > self.stale_timeout
         stale_goal = self.last_goal_walltime is None or now - self.last_goal_walltime > self.stale_timeout
-        cmd = (0.0, 0.0, 0.0) if (stale_grid or stale_goal or not self.goal_active) else self.command
-        if stale_grid or stale_goal:
+        stale_depth = (self._m1b_depth_required and (
+            self._m1b_last_depth_walltime is None or
+            now - self._m1b_last_depth_walltime > self.stale_timeout))
+        cmd = (0.0, 0.0, 0.0) if (stale_grid or stale_goal or stale_depth or not self.goal_active) else self.command
+        if stale_grid or stale_goal or stale_depth:
             self.command = (0.0, 0.0, 0.0)
         msg = Twist()
         msg.linear.x, msg.linear.y, msg.angular.z = cmd

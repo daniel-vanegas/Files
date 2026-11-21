@@ -5,6 +5,7 @@ import hashlib
 import json
 import os
 import random
+import zlib
 from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
@@ -545,6 +546,108 @@ class SequenceDataset(Dataset):
             torch.from_numpy(y).float(),
         )
 
+
+
+class EpisodeChunkDataset(Dataset):
+    """Non-overlapping ordered chunks, with per-timestep labels and valid masks.
+
+    A chunk never crosses episode boundaries or gaps marked inconsistent.
+    Source frames are compressed losslessly to reduce memory use. Neither
+    occupancy nor target values are modified by the compression. The final
+    short chunk is padded only to make batching shapes consistent.
+    """
+
+    def __init__(self, episodes: Sequence[Episode], sequence_length: int = 8,
+                 vmax=(0.5, 0.5, 1.0), reverse_enable=False, distance_max=None,
+                 variant="5x4", representation="lom", skip_inconsistent_tlom=True,
+                 max_frame_gap_seconds: float | None = 1.0):
+        if sequence_length < 1:
+            raise ValueError("sequence_length must be positive")
+        if max_frame_gap_seconds is not None and max_frame_gap_seconds <= 0:
+            raise ValueError("max_frame_gap_seconds must be positive")
+        self.sequence_length = int(sequence_length)
+        self.variant = variant
+        self.img_h = VARIANT_SLICES[variant][0].stop - VARIANT_SLICES[variant][0].start
+        self.img_w = VARIANT_SLICES[variant][1].stop - VARIANT_SLICES[variant][1].start
+        self.samples = []
+        self.sequence_meta = []
+        self.episode_groups = []
+
+        for episode in episodes:
+            parts = []
+            frames, labels, previous_timestamp = [], [], None
+
+            def flush_segment():
+                if not frames:
+                    return
+                segment_id = len(parts)
+                parts.append(segment_id)
+                key = f"{episode.scenario}/{episode.run_path}#{episode.episode_id}/segment{segment_id}"
+                indices = []
+                for start in range(0, len(frames), self.sequence_length):
+                    sub_x = np.stack(frames[start:start + self.sequence_length])
+                    sub_y = np.stack(labels[start:start + self.sequence_length])
+                    compressed = zlib.compress(sub_x.astype(np.float32).tobytes(), level=1)
+                    idx = len(self.samples)
+                    self.samples.append((compressed, len(sub_x), sub_y))
+                    self.sequence_meta.append({"episode_key": key, "scenario": episode.scenario,
+                                               "run_path": episode.run_path, "episode_id": episode.episode_id,
+                                               "start_index": start, "end_index": start + len(sub_x) - 1})
+                    indices.append(idx)
+                self.episode_groups.append(indices)
+                frames.clear()
+                labels.clear()
+
+            for sample in episode.samples:
+                timestamp = float(sample["meta"]["timestamp"])
+                if (previous_timestamp is not None and max_frame_gap_seconds is not None
+                        and timestamp - previous_timestamp > max_frame_gap_seconds):
+                    flush_segment()
+                previous_timestamp = timestamp
+                if skip_inconsistent_tlom and not sample.get("meta", {}).get("tlom_consistent", True):
+                    flush_segment()
+                    continue
+                frame, label = build_input_frame(
+                    sample, vmax=vmax, reverse_enable=reverse_enable,
+                    distance_max=distance_max, variant=variant, representation=representation,
+                )
+                frames.append(frame)
+                labels.append(label)
+            flush_segment()
+
+    def __len__(self):
+        return len(self.samples)
+
+    def __getitem__(self, index):
+        compressed, valid, labels = self.samples[index]
+        x = np.zeros((self.sequence_length, self.img_h + 2, self.img_w), dtype=np.float32)
+        x[:valid] = np.frombuffer(zlib.decompress(compressed), dtype=np.float32).reshape(
+            valid, self.img_h + 2, self.img_w
+        )
+        y = np.zeros((self.sequence_length, 3), dtype=np.float32)
+        y[:valid] = labels
+        mask = np.zeros(self.sequence_length, dtype=np.float32)
+        mask[:valid] = 1.0
+        return (torch.from_numpy(x), torch.from_numpy(y),
+                torch.from_numpy(mask), self.sequence_meta[index]["episode_key"])
+
+
+class EpisodeOrderSampler(torch.utils.data.Sampler[int]):
+    """Shuffle episodes, not time, preserving every chunk's recurrent context."""
+
+    def __init__(self, dataset: EpisodeChunkDataset, seed: int, shuffle: bool):
+        self.groups = dataset.episode_groups
+        self.shuffle = bool(shuffle)
+        self.generator = torch.Generator().manual_seed(int(seed))
+
+    def __len__(self):
+        return sum(len(group) for group in self.groups)
+
+    def __iter__(self):
+        order = (torch.randperm(len(self.groups), generator=self.generator).tolist()
+                 if self.shuffle else range(len(self.groups)))
+        for group_id in order:
+            yield from self.groups[group_id]
 
 def summarize_split(split: DatasetSplit) -> str:
     """

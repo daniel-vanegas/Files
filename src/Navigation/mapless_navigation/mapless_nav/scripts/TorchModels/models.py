@@ -279,3 +279,132 @@ class TemporalPolicy(nn.Module):
         if return_state:
             return prediction, next_state
         return prediction
+
+
+class ConvLSTMCell(nn.Module):
+    """Spatial LSTM cell. Hidden and cell state stay [B, channels, h, w]."""
+
+    def __init__(self, input_channels: int, hidden_channels: int, kernel_size: int = 3):
+        super().__init__()
+        if kernel_size % 2 != 1:
+            raise ValueError("ConvLSTM kernel_size must be odd")
+        self.hidden_channels = int(hidden_channels)
+        self.gates = nn.Conv2d(input_channels + hidden_channels, 4 * hidden_channels,
+                               kernel_size=kernel_size, padding=kernel_size // 2)
+        # Encourage keeping information at the beginning of training.
+        with torch.no_grad():
+            self.gates.bias[self.hidden_channels:2 * self.hidden_channels].fill_(1.0)
+
+    def forward(self, x: torch.Tensor, state=None):
+        if state is None:
+            shape = (x.shape[0], self.hidden_channels, x.shape[-2], x.shape[-1])
+            h, c = x.new_zeros(shape), x.new_zeros(shape)
+        else:
+            h, c = state
+        i, f, o, g = self.gates(torch.cat((x, h), dim=1)).chunk(4, dim=1)
+        c = torch.sigmoid(f) * c + torch.sigmoid(i) * torch.tanh(g)
+        h = torch.sigmoid(o) * torch.tanh(c)
+        return h, c
+
+
+class GoalConditionedConvLSTM(nn.Module):
+    """Fuse target spatially *before* recurrent processing.
+
+    Input is the existing [B, T, H + 2, W] frame format. The last two
+    rows hold distance and theta. No flatten or global pooling takes
+    place before ConvLSTM. The returned state can be reused across ROS
+    callbacks, or detached between training chunks of the same episode.
+    """
+
+    def __init__(self, img_h: int = 100, img_w: int = 80,
+                 spatial_hidden_channels: int = 32, num_layers: int = 1,
+                 dropout_1: float = 0.20, dropout_2: float = 0.15,
+                 encoder_channels: tuple[int, int] = (8, 16),
+                 goal_fusion: str = "dual"):
+        super().__init__()
+        if min(img_h, img_w, spatial_hidden_channels, num_layers) < 1:
+            raise ValueError("Dimensions and recurrent depth must be positive")
+        self.img_h = int(img_h)
+        self.img_w = int(img_w)
+        self.spatial_hidden_channels = int(spatial_hidden_channels)
+        self.num_layers = int(num_layers)
+        if len(encoder_channels) != 2 or any(int(c) < 1 for c in encoder_channels):
+            raise ValueError("encoder_channels must contain two positive filter counts")
+        self.encoder_channels = tuple(int(c) for c in encoder_channels)
+        if goal_fusion not in ("dual", "mixed"):
+            raise ValueError("goal_fusion must be dual or mixed")
+        self.goal_fusion = goal_fusion
+        intermediate, last = self.encoder_channels
+        self.encoder = nn.Sequential(
+            nn.Conv2d(1, intermediate, kernel_size=3, stride=2, padding=1), nn.ReLU(),
+            nn.Conv2d(intermediate, last, kernel_size=3, stride=2, padding=1), nn.ReLU(),
+        )
+        self.spatial_cells = nn.ModuleList([
+            ConvLSTMCell(last + (2 if self.goal_fusion == "dual" else 1) if idx == 0 else spatial_hidden_channels,
+                         spatial_hidden_channels)
+            for idx in range(num_layers)
+        ])
+        # Spatial compression is allowed only AFTER recurrent processing.
+        self.head = nn.Sequential(
+            nn.AdaptiveAvgPool2d((4, 4)), nn.Flatten(),
+            nn.Linear(spatial_hidden_channels * 4 * 4, 120), nn.ReLU(),
+            nn.Dropout(dropout_1), nn.Linear(120, 80), nn.ReLU(),
+            nn.Dropout(dropout_2), nn.Linear(80, 3), nn.Tanh(),
+        )
+
+    @staticmethod
+    def make_target_maps(target: torch.Tensor, height: int, width: int,
+                         mode: str = "dual") -> torch.Tensor:
+        """Encode (distance, theta) into spatial maps without pooling/flattening.
+
+        In mixed mode the upper ceil(H/2) rows contain distance, while
+        lower rows contain theta.  For 4x4 and (2, .5), the result is
+        [[2,2,2,2], [2,2,2,2], [.5,.5,.5,.5], [.5,.5,.5,.5]].
+        """
+        if target.shape[-1] != 2 or height < 2 or width < 1:
+            raise ValueError("Expected two target values and an image at least two rows tall")
+        if mode == "dual":
+            return target[..., None, None].expand(*target.shape[:-1], 2, height, width)
+        if mode == "mixed":
+            top = (height + 1) // 2
+            d = target[..., 0, None, None, None].expand(*target.shape[:-1], 1, top, width)
+            theta = target[..., 1, None, None, None].expand(*target.shape[:-1], 1, height-top, width)
+            return torch.cat((d, theta), dim=-2)
+        raise ValueError("goal_fusion must be dual or mixed")
+
+    def forward(self, x: torch.Tensor, hx=None, return_state: bool = False,
+                return_sequence: bool = False):
+        if x.ndim != 4 or tuple(x.shape[2:]) != (self.img_h + 2, self.img_w):
+            raise ValueError(
+                f"Expected [batch,steps,{self.img_h + 2},{self.img_w}], got {tuple(x.shape)}"
+            )
+        batch, steps = x.shape[:2]
+        if steps < 1:
+            raise ValueError("At least one observation is required")
+        if hx is not None and len(hx) != self.num_layers:
+            raise ValueError(f"Expected {self.num_layers} spatial states, got {len(hx)}")
+        # Apply the encoder independently per observation while keeping (h, w).
+        occupancy = x[:, :, :self.img_h, :].reshape(batch * steps, 1, self.img_h, self.img_w)
+        encoded = self.encoder(occupancy)
+        _, channels, height, width = encoded.shape
+        encoded = encoded.reshape(batch, steps, channels, height, width)
+        target = x[:, :, -2:, 0]  # [B, T, 2], one (d, theta) per observation
+        target_maps = self.make_target_maps(target, height, width, self.goal_fusion)
+        fused = torch.cat((encoded, target_maps), dim=2)
+
+        state = list(hx) if hx is not None else [None] * self.num_layers
+        outputs = []
+        for step in range(steps):
+            z = fused[:, step]
+            next_state = []
+            for layer, cell in enumerate(self.spatial_cells):
+                h, c = cell(z, state[layer])
+                z = h
+                next_state.append((h, c))
+            state = next_state
+            if return_sequence:
+                outputs.append(self.head(z))
+        prediction = torch.stack(outputs, dim=1) if return_sequence else self.head(z)
+        if return_state:
+            return prediction, state
+        return prediction
